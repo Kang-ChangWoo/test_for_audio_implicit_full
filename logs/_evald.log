@@ -1,0 +1,139 @@
+[evald] start, 93 jobs known
+[evald] EVAL A1_rayonly_s0 on gpu0 (free 28450MiB)  [14 more queued]
+[evald] EVAL A1_rayonly_s1 on gpu1 (free 28450MiB)  [13 more queued]
+[evald] EVAL A2_raymlp_s0 on gpu7 (free 28450MiB)  [12 more queued]
+[evald] EVAL A2_raymlp_s1 on gpu2 (free 26632MiB)  [11 more queued]
+[evald] EVAL A2_raymlp_s2 on gpu3 (free 25410MiB)  [10 more queued]
+[evald] EVAL A2_shuf_s0 on gpu5 (free 25410MiB)  [9 more queued]
+[evald] EVAL A2_shuf_s1 on gpu6 (free 25410MiB)  [8 more queued]
+[evald] EVAL A4_cross_s0 on gpu4 (free 23874MiB)  [7 more queued]
+[evald] OK eval A1_rayonly_s0 (gpu0)
+[evald] OK eval A1_rayonly_s1 (gpu1)
+[evald] EVAL A4_cross_s1 on gpu0 (free 28450MiB)  [6 more queued]
+[evald] EVAL A4_cross_s2 on gpu1 (free 28450MiB)  [5 more queued]
+[evald] OK eval A2_shuf_s1 (gpu6)
+[evald] EVAL A4_cross_shuf_s0 on gpu6 (free 25410MiB)  [4 more queued]
+[evald] OK eval A2_raymlp_s0 (gpu7)
+[evald] OK eval A2_raymlp_s1 (gpu2)
+[evald] OK eval A2_shuf_s0 (gpu5)
+[evald] EVAL A3_crossSH_s0 on gpu7 (free 28450MiB)  [3 more queued]
+[evald] EVAL A5_crossMic_s0 on gpu2 (free 26632MiB)  [2 more queued]
+[evald] EVAL A4_ffmask_s0 on gpu5 (free 25410MiB)  [1 more queued]
+[evald] OK eval A2_raymlp_s2 (gpu3)
+[evald] EVAL A8_hybrid_s0 on gpu3 (free 25410MiB)  [0 more queued]
+[evald] OK eval A4_cross_s2 (gpu1)
+[evald] OK eval A4_cross_s1 (gpu0)
+[evald] OK eval A4_cross_s0 (gpu4)
+[evald] OK eval A4_cross_shuf_s0 (gpu6)
+[evald] OK eval A5_crossMic_s0 (gpu2)
+[evald] OK eval A4_ffmask_s0 (gpu5)
+[evald] OK eval A3_crossSH_s0 (gpu7)
+[evald] OK eval A8_hybrid_s0 (gpu3)
+[evald] EVAL T_mlpskip on gpu0 (free 28450MiB)  [0 more queued]
+[evald] EVAL T_film on gpu4 (free 30034MiB)  [0 more queued]
+[evald] OK eval T_mlpskip (gpu0)
+[evald] EVAL A6_crossself_s1 on gpu1 (free 48540MiB)  [0 more queued]
+[evald] EVAL A6_crossself_s0 on gpu0 (free 28450MiB)  [0 more queued]
+[evald] OK eval T_film (gpu4)
+[evald] EVAL A6sec_s0 on gpu2 (free 26912MiB)  [0 more queued]
+[evald] EVAL A6sec_s1 on gpu5 (free 48540MiB)  [0 more queued]
+[evald] EVAL A6sec_s2 on gpu4 (free 23886MiB)  [0 more queued]
+[evald] EVAL A6_crossself_s2 on gpu6 (free 23814MiB)  [0 more queued]
+[evald] EVAL A9_fullmap_s0 on gpu7 (free 23790MiB)  [0 more queued]
+[evald] OK eval A9_fullmap_s0 (gpu7)
+[evald] EVAL T_progpe on gpu7 (free 23790MiB)  [0 more queued]
+[evald] OK eval A6_crossself_s1 (gpu1)
+[evald] OK eval A6_crossself_s0 (gpu0)
+[evald] EVAL A10_cross_s0 on gpu3 (free 48540MiB)  [0 more queued]
+[evald] OK eval A10_cross_s0 (gpu3)
+[evald] OK eval T_progpe (gpu7)
+[evald] OK eval A6sec_s0 (gpu2)
+[evald] OK eval A6sec_s1 (gpu5)
+[evald] EVAL A11_shaux_s0 on gpu0 (free 38364MiB)  [0 more queued]
+[evald] OK eval A11_shaux_s0 (gpu0)
+[evald] OK eval A6sec_s2 (gpu4)
+[evald] EVAL A9_fullmap_s1 on gpu0 (free 38362MiB)  [0 more queued]
+[evald] OK eval A6_crossself_s2 (gpu6)
+[evald] OK eval A9_fullmap_s1 (gpu0)
+[evald] EVAL A11_shaux_s1 on gpu7 (free 38364MiB)  [0 more queued]
+[evald] OK eval A11_shaux_s1 (gpu7)
+[evald] EVAL Aunet_s0 on gpu0 (free 48537MiB)  [0 more queued]
+[evald] OK eval Aunet_s0 (gpu0)
+[evald] EVAL A9_fullmap_s2 on gpu6 (free 38362MiB)  [0 more queued]
+[evald] OK eval A9_fullmap_s2 (gpu6)
+[evald] EVAL T_sector on gpu4 (free 44960MiB)  [0 more queued]
+[evald] EVAL Aunet_s1 on gpu7 (free 38362MiB)  [0 more queued]
+[evald] OK eval Aunet_s1 (gpu7)
+[evald] EVAL T_all on gpu1 (free 45024MiB)  [0 more queued]
+[evald] EVAL Aunet_s2 on gpu5 (free 36930MiB)  [0 more queued]
+[evald] OK eval Aunet_s2 (gpu5)
+[evald] EVAL A11_shaux_s2 on gpu2 (free 48540MiB)  [0 more queued]
+[evald] OK eval A11_shaux_s2 (gpu2)
+[evald] EVAL A15_bigunet_s0 on gpu0 (free 38364MiB)  [0 more queued]
+[evald] OK eval A15_bigunet_s0 (gpu0)
+[evald] EVAL A15_bigunet_s1 on gpu5 (free 48152MiB)  [0 more queued]
+[evald] OK eval A15_bigunet_s1 (gpu5)
+[evald] EVAL A12_film_s0 on gpu3 (free 48100MiB)  [0 more queued]
+[evald] OK eval A12_film_s0 (gpu3)
+[evald] EVAL A18_unet64reg_s0 on gpu2 (free 48540MiB)  [0 more queued]
+[evald] OK eval A18_unet64reg_s0 (gpu2)
+[evald] EVAL A16_raymod8x16_s0 on gpu6 (free 48540MiB)  [0 more queued]
+[evald] OK eval A16_raymod8x16_s0 (gpu6)
+[evald] EVAL A18_unet64reg_s1 on gpu0 (free 48540MiB)  [0 more queued]
+[evald] OK eval A18_unet64reg_s1 (gpu0)
+[evald] EVAL A18_unet64reg_s2 on gpu3 (free 33664MiB)  [0 more queued]
+[evald] OK eval A18_unet64reg_s2 (gpu3)
+[evald] EVAL A16_raymod8x16_s2 on gpu7 (free 38364MiB)  [0 more queued]
+[evald] OK eval A16_raymod8x16_s2 (gpu7)
+[evald] EVAL A18_raymod64reg_s0 on gpu3 (free 38364MiB)  [0 more queued]
+[evald] OK eval A18_raymod64reg_s0 (gpu3)
+[evald] EVAL A18_raymod64reg_s1 on gpu2 (free 48152MiB)  [0 more queued]
+[evald] OK eval A18_raymod64reg_s1 (gpu2)
+[evald] EVAL A18_unet64reg_fv_s0 on gpu7 (free 48540MiB)  [0 more queued]
+[evald] OK eval A18_unet64reg_fv_s0 (gpu7)
+[evald] OK eval T_sector (gpu4)
+[evald] OK eval T_all (gpu1)
+[evald] EVAL A19_raymodStrong_s0 on gpu2 (free 38362MiB)  [0 more queued]
+[evald] OK eval A19_raymodStrong_s0 (gpu2)
+[evald] EVAL A15_bigunet_s2 on gpu2 (free 38362MiB)  [0 more queued]
+[evald] OK eval A15_bigunet_s2 (gpu2)
+[evald] EVAL A19_raymodStrong_s1 on gpu0 (free 48540MiB)  [0 more queued]
+[evald] OK eval A19_raymodStrong_s1 (gpu0)
+[evald] EVAL A18_unet64reg_fv_s1 on gpu3 (free 48540MiB)  [0 more queued]
+[evald] OK eval A18_unet64reg_fv_s1 (gpu3)
+[evald] EVAL A19_raymodStrong_s2 on gpu5 (free 48540MiB)  [0 more queued]
+[evald] OK eval A19_raymodStrong_s2 (gpu5)
+[evald] EVAL A18_unet64reg_fv_s2 on gpu2 (free 48540MiB)  [0 more queued]
+[evald] OK eval A18_unet64reg_fv_s2 (gpu2)
+[evald] EVAL A16_raymod8x16_s1 on gpu1 (free 48008MiB)  [0 more queued]
+[evald] OK eval A16_raymod8x16_s1 (gpu1)
+[evald] EVAL A19_raymodStrong_fv_s0 on gpu7 (free 48540MiB)  [0 more queued]
+[evald] OK eval A19_raymodStrong_fv_s0 (gpu7)
+[evald] EVAL A19_raymodStrong_fv_s1 on gpu6 (free 39324MiB)  [0 more queued]
+[evald] OK eval A19_raymodStrong_fv_s1 (gpu6)
+[evald] EVAL A19_raymodStrong_fv_s2 on gpu4 (free 45483MiB)  [0 more queued]
+[evald] OK eval A19_raymodStrong_fv_s2 (gpu4)
+[evald] EVAL A15_bigunet_fv_s0 on gpu0 (free 48540MiB)  [0 more queued]
+[evald] OK eval A15_bigunet_fv_s0 (gpu0)
+[evald] EVAL A15_bigunet_fv_s1 on gpu3 (free 48540MiB)  [0 more queued]
+[evald] OK eval A15_bigunet_fv_s1 (gpu3)
+[evald] EVAL A15_bigunet_fv_s2 on gpu5 (free 48540MiB)  [0 more queued]
+[evald] OK eval A15_bigunet_fv_s2 (gpu5)
+[evald] EVAL A20_unet64_aug_s0 on gpu0 (free 39248MiB)  [0 more queued]
+[evald] OK eval A20_unet64_aug_s0 (gpu0)
+[evald] EVAL A16_raymod_fv_s0 on gpu2 (free 48537MiB)  [0 more queued]
+[evald] OK eval A16_raymod_fv_s0 (gpu2)
+[evald] EVAL A16_raymod_fv_s1 on gpu0 (free 39248MiB)  [0 more queued]
+[evald] EVAL A20_unet64_aug_s1 on gpu6 (free 32898MiB)  [0 more queued]
+[evald] OK eval A16_raymod_fv_s1 (gpu0)
+[evald] OK eval A20_unet64_aug_s1 (gpu6)
+[evald] EVAL A20_unet64_aug_s2 on gpu0 (free 38250MiB)  [0 more queued]
+[evald] OK eval A20_unet64_aug_s2 (gpu0)
+[evald] EVAL A16_raymod_fv_s2 on gpu3 (free 48537MiB)  [1 more queued]
+[evald] EVAL A21_raymodStrong_aug_s0 on gpu6 (free 32896MiB)  [0 more queued]
+[evald] OK eval A21_raymodStrong_aug_s0 (gpu6)
+[evald] EVAL A21_raymodStrong_aug_s1 on gpu5 (free 48537MiB)  [0 more queued]
+[evald] OK eval A16_raymod_fv_s2 (gpu3)
+[evald] OK eval A21_raymodStrong_aug_s1 (gpu5)
+[evald] EVAL A21_raymodStrong_aug_s2 on gpu6 (free 48540MiB)  [0 more queued]
+[evald] OK eval A21_raymodStrong_aug_s2 (gpu6)

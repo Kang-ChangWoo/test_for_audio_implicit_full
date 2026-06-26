@@ -1,0 +1,18 @@
+[val] 3543 samples / 9 scenes (raw 256x512, in_ch=3)
+  cache[val ic3] 3200/3543
+[cache] val ic3: 3543 -> /root/implicit_full_cache/ic3_256x512
+[test] 3600 samples / 9 scenes (raw 256x512, in_ch=3)
+  cache[test ic3] 3200/3600
+[cache] test ic3: 3600 -> /root/implicit_full_cache/ic3_256x512
+[train] 28800 samples / 72 scenes (raw 256x512, in_ch=3)
+  cache[train ic3] 3200/28800
+  cache[train ic3] 6400/28800
+  cache[train ic3] 9600/28800
+  cache[train ic3] 12800/28800
+  cache[train ic3] 16000/28800
+  cache[train ic3] 19200/28800
+  cache[train ic3] 22400/28800
+  cache[train ic3] 25600/28800
+  cache[train ic3] 28800/28800
+[cache] train ic3: 28800 -> /root/implicit_full_cache/ic3_256x512
+BUILD_CACHE_DONE
