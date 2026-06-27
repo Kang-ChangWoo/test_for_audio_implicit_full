@@ -20,7 +20,7 @@ import torch.nn.functional as F
 from types import SimpleNamespace
 
 from config import get_cfg
-from data import make_loader, apply_audio_mode, shuffle_audio_batch
+from data import make_loader, apply_audio_mode, shuffle_audio_batch, swap_audio_lr
 from ray_features import RayBank, log_depth_bins
 from model import RayDepthModel
 from losses import compute_loss
@@ -101,6 +101,12 @@ def main():
     print(f"[cfg] {vars(cfg)}", flush=True)
 
     bank = RayBank(cfg, device=device)
+    # sector-weighted loss: upweight front+back rays (cone-of-confusion, hardest)
+    sec_w = torch.ones(bank.N, device=device)
+    if getattr(cfg, "front_back_w", 1.0) != 1.0:
+        sec_w[bank.sector_pools[0]] = cfg.front_back_w   # front (|az|<45)
+        sec_w[bank.sector_pools[2]] = cfg.front_back_w   # back  (|az|>=135)
+        print(f"[loss] front_back_w={cfg.front_back_w} on front+back rays", flush=True)
     sh_full = build_sh_coarse(cfg, device) if cfg.model == "hybrid" else None
     centers = log_depth_bins(cfg.n_bins, device=device) if cfg.use_depth_bins else None
     model = RayDepthModel(cfg, bank.feat_dim, centers).to(device)
@@ -125,8 +131,17 @@ def main():
         model.train(); t0 = time.time(); run = {}
         for b in tr:
             spec = prep_audio(b["spec"].to(device, non_blocking=True), cfg)
-            depth = b["depth"].to(device).view(spec.size(0), -1)   # (B,N)
-            mask = b["mask"].to(device).view(spec.size(0), -1)
+            depth4 = b["depth"].to(device)                         # (B,1,H,W)
+            mask4 = b["mask"].to(device)
+            if getattr(cfg, "flip_aug", False):                   # correct L/R mirror aug (no spec-time-flip)
+                fm = torch.rand(spec.size(0), device=device) < 0.5
+                if fm.any():
+                    spec = spec.clone(); depth4 = depth4.clone(); mask4 = mask4.clone()
+                    spec[fm] = swap_audio_lr(spec[fm])            # swap ears (azimuth mirror)
+                    depth4[fm] = torch.flip(depth4[fm], dims=[-1])   # mirror ERP azimuth (W)
+                    mask4[fm] = torch.flip(mask4[fm], dims=[-1])
+            depth = depth4.view(spec.size(0), -1)                 # (B,N)
+            mask = mask4.view(spec.size(0), -1)
             B = spec.size(0)
             if getattr(cfg, "sector_sample", False):                # tip4: half uniform + half sector-balanced
                 nh = cfg.n_rays // 2
@@ -145,7 +160,7 @@ def main():
                 rf = rf.clone(); rf[..., s:e] = rf[..., s:e] * bw
             gstep += 1
             gt = depth.gather(1, idx)                               # (B,M)
-            w = bank.area[idx] * mask.gather(1, idx)                # (B,M)
+            w = bank.area[idx] * mask.gather(1, idx) * sec_w[idx]   # (B,M) sector-weighted
             if cfg.mask_farfield:                                   # drop 10m-clamp rays
                 w = w * (gt < 0.999).float()
             shc = sh_full[idx] if cfg.model == "hybrid" else None

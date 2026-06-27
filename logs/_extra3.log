@@ -1,0 +1,13 @@
+[19:05:19] extra3 queued — waiting for scheduler + run_extra2 to finish ...
+[front_pool] 6 jobs (idle-GPU pool)
+[03:54:29] launched Bnode2_cross_frontwt_s0 gpu6 pid 2428023
+[03:54:29] launched Bnode2_cross_hitok_s0 gpu7 pid 2428025
+[front_pool] 9 jobs (idle-GPU pool)
+[06:18:56] launched Bnode2_cross_frontwt_s0 gpu6 pid 2654786
+[06:18:56] launched Bnode2_cross_hitok_s0 gpu7 pid 2654788
+[06:26:18] launched Bnode2_cross_5chflip_s0 gpu1 pid 2667031
+[06:27:59] launched Bnode2_cross_frontwt_s1 gpu5 pid 2669807
+[06:28:19] launched Bnode2_cross_hitok_s1 gpu2 pid 2670533
+[06:28:59] launched Bnode2_cross_5chflip_s1 gpu0 pid 2671767
+[06:30:19] launched Bnode2_cross_frontwt_s2 gpu3 pid 2674047
+[06:37:21] launched Bnode2_cross_hitok_s2 gpu4 pid 2682153

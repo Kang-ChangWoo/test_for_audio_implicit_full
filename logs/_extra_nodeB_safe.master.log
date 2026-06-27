@@ -1,0 +1,30 @@
+[08:56:05] === node-B SAFE launcher start (2 GPU [0, 1], workers=4, 18 runs) ===
+[08:56:05] ic2 no-log cache: present
+[08:56:05] ic5 no-log cache: present
+[08:56:05] gpu0 START B_unet8nolog_s0
+[08:56:25] gpu1 START B_unet8nolog_aug_s0
+[09:02:16] === node-B SAFE launcher start (2 GPU [0, 1], workers=4, 18 runs) ===
+[09:02:16] ic2 no-log cache: present
+[09:02:16] ic5 no-log cache: present
+[09:02:16] gpu0 START B_cross_nolog_s0 [cross]
+[09:02:36] gpu1 START B_unet8nolog_s0 [unet]
+[09:34:31] gpu1 DONE  B_unet8nolog_s0 rc=0 (32 min)
+[09:34:31] gpu1 START B_unet8nolog_aug_s0 [unet]
+[10:06:56] gpu1 DONE  B_unet8nolog_aug_s0 rc=0 (32 min)
+[10:06:56] gpu1 START B_unet8_5ch_s0 [unet]
+[10:40:40] gpu1 DONE  B_unet8_5ch_s0 rc=0 (34 min)
+[10:40:40] gpu1 START B_unet8nolog_s1 [unet]
+[11:12:31] gpu1 DONE  B_unet8nolog_s1 rc=0 (32 min)
+[11:12:31] gpu1 START B_unet8nolog_aug_s1 [unet]
+[11:44:36] gpu1 DONE  B_unet8nolog_aug_s1 rc=0 (32 min)
+[11:44:36] gpu1 START B_unet8_5ch_s1 [unet]
+[12:18:14] gpu1 DONE  B_unet8_5ch_s1 rc=0 (34 min)
+[12:18:14] gpu1 START B_unet8nolog_s2 [unet]
+[12:50:04] gpu1 DONE  B_unet8nolog_s2 rc=0 (32 min)
+[12:50:04] gpu1 START B_unet8nolog_aug_s2 [unet]
+[13:18:10] gpu0 DONE  B_cross_nolog_s0 rc=0 (256 min)
+[13:18:10] gpu0 START B_cross_nolog_aug_s0 [cross]
+[13:22:03] gpu1 DONE  B_unet8nolog_aug_s2 rc=0 (32 min)
+[13:22:03] gpu1 START B_unet8_5ch_s2 [unet]
+[13:55:39] gpu1 DONE  B_unet8_5ch_s2 rc=0 (34 min)
+[13:55:39] gpu1 START B_cross_5ch_s0 [cross]

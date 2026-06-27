@@ -1,147 +1,53 @@
-[sched] 93 jobs, gpus=[0, 1, 2, 3, 4, 5, 6, 7], cache builds=2
-[sched] LAUNCH A1_rayonly_s0 on gpu0  (92 pending, 1 running)
-[sched] LAUNCH A1_rayonly_s1 on gpu1  (91 pending, 2 running)
-[sched] LAUNCH A2_raymlp_s0 on gpu2  (90 pending, 3 running)
-[sched] LAUNCH A2_raymlp_s1 on gpu3  (89 pending, 4 running)
-[sched] LAUNCH A2_raymlp_s2 on gpu4  (88 pending, 5 running)
-[sched] LAUNCH A2_shuf_s0 on gpu5  (87 pending, 6 running)
-[sched] LAUNCH A2_shuf_s1 on gpu6  (86 pending, 7 running)
-[sched] LAUNCH A4_cross_s0 on gpu7  (85 pending, 8 running)
-[sched] DONE A1_rayonly_s1 (1130s) -> gpu1 free
-[sched] LAUNCH A4_cross_s1 on gpu1  (84 pending, 8 running)
-[sched] DONE A1_rayonly_s0 (1150s) -> gpu0 free
-[sched] LAUNCH A4_cross_s2 on gpu0  (83 pending, 8 running)
-[sched] DONE A2_shuf_s1 (7480s) -> gpu6 free
-[sched] LAUNCH A4_cross_shuf_s0 on gpu6  (82 pending, 8 running)
-[sched] DONE A2_raymlp_s0 (7560s) -> gpu2 free
-[sched] DONE A2_shuf_s0 (7560s) -> gpu5 free
-[sched] LAUNCH A3_crossSH_s0 on gpu2  (81 pending, 7 running)
-[sched] LAUNCH A5_crossMic_s0 on gpu5  (80 pending, 8 running)
-[sched] DONE A2_raymlp_s1 (7590s) -> gpu3 free
-[sched] LAUNCH A4_ffmask_s0 on gpu3  (79 pending, 8 running)
-[sched] DONE A2_raymlp_s2 (8210s) -> gpu4 free
-[sched] LAUNCH A8_hybrid_s0 on gpu4  (78 pending, 8 running)
-[sched] DONE A4_cross_s0 (20350s) -> gpu7 free
-[sched] LAUNCH A6_crossself_s0 on gpu7  (77 pending, 8 running)
-[sched] DONE A4_cross_s1 (20341s) -> gpu1 free
-[sched] LAUNCH A6_crossself_s1 on gpu1  (76 pending, 8 running)
-[sched] DONE A4_cross_s2 (20441s) -> gpu0 free
-[sched] LAUNCH A6_crossself_s2 on gpu0  (75 pending, 8 running)
-[sched] DONE A4_cross_shuf_s0 (20100s) -> gpu6 free
-[sched] LAUNCH A6sec_s0 on gpu6  (74 pending, 8 running)
-[sched] DONE A5_crossMic_s0 (20530s) -> gpu5 free
-[sched] DONE A4_ffmask_s0 (20500s) -> gpu3 free
-[sched] LAUNCH A6sec_s1 on gpu5  (73 pending, 7 running)
-[sched] LAUNCH A6sec_s2 on gpu3  (72 pending, 8 running)
-[sched] DONE A3_crossSH_s0 (20580s) -> gpu2 free
-[sched] LAUNCH T_mlpskip on gpu2  (71 pending, 8 running)
-[sched] DONE A8_hybrid_s0 (22181s) -> gpu4 free
-[sched] LAUNCH T_film on gpu4  (70 pending, 8 running)
-[sched] DONE T_mlpskip (26980s) -> gpu2 free
-[sched] LAUNCH T_progpe on gpu2  (69 pending, 8 running)
-[sched] DONE T_film (27110s) -> gpu4 free
-[sched] LAUNCH T_sector on gpu4  (68 pending, 8 running)
-[sched] DONE A6_crossself_s1 (43451s) -> gpu1 free
-[sched] LAUNCH T_all on gpu1  (67 pending, 8 running)
-[sched] DONE A6_crossself_s0 (44861s) -> gpu7 free
-[sched] LAUNCH A9_fullmap_s0 on gpu7  (66 pending, 8 running)
-[sched] DONE A6sec_s0 (44241s) -> gpu6 free
-[sched] LAUNCH A9_fullmap_s1 on gpu6  (65 pending, 8 running)
-[sched] DONE A6sec_s1 (44981s) -> gpu5 free
-[sched] LAUNCH A9_fullmap_s2 on gpu5  (64 pending, 8 running)
-[sched] DONE A6sec_s2 (45151s) -> gpu3 free
-[sched] LAUNCH A10_cross_s0 on gpu3  (63 pending, 8 running)
-[sched] DONE A6_crossself_s2 (53991s) -> gpu0 free
-[sched] LAUNCH A11_shaux_s0 on gpu0  (62 pending, 8 running)
-[sched] DONE A9_fullmap_s0 (11850s) -> gpu7 free
-[sched] LAUNCH A11_shaux_s1 on gpu7  (61 pending, 8 running)
-[sched] DONE T_progpe (24741s) -> gpu2 free
-[sched] LAUNCH A11_shaux_s2 on gpu2  (60 pending, 8 running)
-[sched] DONE A10_cross_s0 (13240s) -> gpu3 free
-[sched] LAUNCH A12_film_s0 on gpu3  (59 pending, 8 running)
-[sched] DONE A11_shaux_s0 (15760s) -> gpu0 free
-[sched] LAUNCH Aunet_s0 on gpu0  (58 pending, 8 running)
-[sched] DONE A9_fullmap_s1 (20871s) -> gpu6 free
-[sched] LAUNCH Aunet_s1 on gpu6  (57 pending, 8 running)
-[sched] DONE A11_shaux_s1 (16360s) -> gpu7 free
-[sched] LAUNCH Aunet_s2 on gpu7  (56 pending, 8 running)
-[sched] DONE Aunet_s0 (2550s) -> gpu0 free
-[sched] LAUNCH A15_bigunet_s0 on gpu0  (55 pending, 8 running)
-[sched] DONE A9_fullmap_s2 (21271s) -> gpu5 free
-[sched] LAUNCH A15_bigunet_s1 on gpu5  (54 pending, 8 running)
-[sched] DONE T_sector (37451s) -> gpu4 free
-[sched] LAUNCH A15_bigunet_s2 on gpu4  (53 pending, 8 running)
-[sched] DONE Aunet_s1 (2470s) -> gpu6 free
-[sched] LAUNCH A16_raymod8x16_s0 on gpu6  (52 pending, 8 running)
-[sched] DONE T_all (30631s) -> gpu1 free
-[sched] LAUNCH A16_raymod8x16_s1 on gpu1  (51 pending, 8 running)
-[sched] DONE Aunet_s2 (2490s) -> gpu7 free
-[sched] LAUNCH A16_raymod8x16_s2 on gpu7  (50 pending, 8 running)
-[sched] DONE A11_shaux_s2 (16920s) -> gpu2 free
-[sched] LAUNCH A18_unet64reg_s0 on gpu2  (49 pending, 8 running)
-[sched] DONE A15_bigunet_s0 (4360s) -> gpu0 free
-[sched] LAUNCH A18_unet64reg_s1 on gpu0  (48 pending, 8 running)
-[sched] DONE A15_bigunet_s1 (4360s) -> gpu5 free
-[sched] LAUNCH A18_unet64reg_s2 on gpu5  (47 pending, 8 running)
-[sched] DONE A12_film_s0 (12360s) -> gpu3 free
-[sched] LAUNCH A18_raymod64reg_s0 on gpu3  (46 pending, 8 running)
-[sched] DONE A18_unet64reg_s0 (2490s) -> gpu2 free
-[sched] LAUNCH A18_raymod64reg_s1 on gpu2  (45 pending, 8 running)
-[sched] DONE A16_raymod8x16_s0 (5330s) -> gpu6 free
-[sched] LAUNCH A19_raymodStrong_s0 on gpu6  (44 pending, 8 running)
-[sched] DONE A18_unet64reg_s1 (2460s) -> gpu0 free
-[sched] LAUNCH A19_raymodStrong_s1 on gpu0  (43 pending, 8 running)
-[sched] DONE A18_unet64reg_s2 (2460s) -> gpu5 free
-[sched] LAUNCH A19_raymodStrong_s2 on gpu5  (42 pending, 8 running)
-[sched] DONE A16_raymod8x16_s2 (5390s) -> gpu7 free
-[sched] LAUNCH A18_unet64reg_fv_s0 on gpu7  (41 pending, 8 running)
-[sched] DONE A18_raymod64reg_s0 (3480s) -> gpu3 free
-[sched] LAUNCH A18_unet64reg_fv_s1 on gpu3  (40 pending, 8 running)
-[sched] DONE A18_raymod64reg_s1 (3400s) -> gpu2 free
-[sched] LAUNCH A18_unet64reg_fv_s2 on gpu2  (39 pending, 8 running)
-[sched] DONE A18_unet64reg_fv_s0 (2460s) -> gpu7 free
-[sched] LAUNCH A19_raymodStrong_fv_s0 on gpu7  (38 pending, 8 running)
-[sched] DONE A19_raymodStrong_s0 (3710s) -> gpu6 free
-[sched] LAUNCH A19_raymodStrong_fv_s1 on gpu6  (37 pending, 8 running)
-[sched] DONE A15_bigunet_s2 (9360s) -> gpu4 free
-[sched] LAUNCH A19_raymodStrong_fv_s2 on gpu4  (36 pending, 8 running)
-[sched] DONE A19_raymodStrong_s1 (3730s) -> gpu0 free
-[sched] LAUNCH A15_bigunet_fv_s0 on gpu0  (35 pending, 8 running)
-[sched] DONE A18_unet64reg_fv_s1 (2460s) -> gpu3 free
-[sched] LAUNCH A15_bigunet_fv_s1 on gpu3  (34 pending, 8 running)
-[sched] DONE A19_raymodStrong_s2 (3720s) -> gpu5 free
-[sched] LAUNCH A15_bigunet_fv_s2 on gpu5  (33 pending, 8 running)
-[sched] DONE A18_unet64reg_fv_s2 (2510s) -> gpu2 free
-[sched] LAUNCH A16_raymod_fv_s0 on gpu2  (32 pending, 8 running)
-[sched] DONE A16_raymod8x16_s1 (9910s) -> gpu1 free
-[sched] LAUNCH A16_raymod_fv_s1 on gpu1  (31 pending, 8 running)
-[sched] DONE A19_raymodStrong_fv_s0 (3710s) -> gpu7 free
-[sched] LAUNCH A16_raymod_fv_s2 on gpu7  (30 pending, 8 running)
-[sched] DONE A19_raymodStrong_fv_s1 (3660s) -> gpu6 free
-[sched] LAUNCH A20_unet64_aug_s0 on gpu6  (29 pending, 8 running)
-[sched] DONE A19_raymodStrong_fv_s2 (4020s) -> gpu4 free
-[sched] LAUNCH A20_unet64_aug_s1 on gpu4  (28 pending, 8 running)
-[sched] DONE A15_bigunet_fv_s0 (4380s) -> gpu0 free
-[sched] LAUNCH A20_unet64_aug_s2 on gpu0  (27 pending, 8 running)
-[sched] DONE A15_bigunet_fv_s1 (4380s) -> gpu3 free
-[sched] LAUNCH A21_raymodStrong_aug_s0 on gpu3  (26 pending, 8 running)
-[sched] DONE A15_bigunet_fv_s2 (4380s) -> gpu5 free
-[sched] LAUNCH A21_raymodStrong_aug_s1 on gpu5  (25 pending, 8 running)
-[sched] DONE A20_unet64_aug_s0 (2450s) -> gpu6 free
-[sched] LAUNCH A21_raymodStrong_aug_s2 on gpu6  (24 pending, 8 running)
-[sched] DONE A16_raymod_fv_s0 (5420s) -> gpu2 free
-[sched] LAUNCH A22_vit_aug_s0 on gpu2  (23 pending, 8 running)
-[sched] DONE A16_raymod_fv_s1 (5430s) -> gpu1 free
-[sched] LAUNCH A22_vit_aug_s1 on gpu1  (22 pending, 8 running)
-[sched] DONE A20_unet64_aug_s1 (2660s) -> gpu4 free
-[sched] LAUNCH A22_vit_aug_s2 on gpu4  (21 pending, 8 running)
-[sched] DONE A20_unet64_aug_s2 (2520s) -> gpu0 free
-[sched] LAUNCH A23_vit_fourier_s0 on gpu0  (20 pending, 8 running)
-[sched] DONE A16_raymod_fv_s2 (5430s) -> gpu7 free
-[sched] LAUNCH A23_vit_fourier_s1 on gpu7  (19 pending, 8 running)
-[sched] DONE A21_raymodStrong_aug_s0 (3750s) -> gpu3 free
-[sched] LAUNCH A23_vit_fourier_s2 on gpu3  (18 pending, 8 running)
-[sched] DONE A21_raymodStrong_aug_s1 (3750s) -> gpu5 free
-[sched] LAUNCH A23_vit_sh_s0 on gpu5  (17 pending, 8 running)
-[sched] DONE A21_raymodStrong_aug_s2 (3710s) -> gpu6 free
-[sched] LAUNCH A23_vit_sh_s1 on gpu6  (16 pending, 8 running)
+[sched] 102 jobs, gpus=[0, 1, 2, 3, 4, 5, 6, 7], cache builds=0
+[sched] 77 already done, skipping
+[sched] LAUNCH Bnode2_unet8nolog_s0 on gpu0  (24 pending, 1 running)
+[sched] LAUNCH Bnode2_cross_nolog_s0 on gpu1  (23 pending, 2 running)
+[sched] LAUNCH Bnode2_cross_flip_s0 on gpu2  (22 pending, 3 running)
+[sched] LAUNCH Bnode2_unet8nolog_s1 on gpu3  (21 pending, 4 running)
+[sched] LAUNCH Bnode2_cross_nolog_s1 on gpu4  (20 pending, 5 running)
+[sched] LAUNCH Bnode2_cross_flip_s1 on gpu5  (19 pending, 6 running)
+[sched] LAUNCH Bnode2_unet8nolog_s2 on gpu6  (18 pending, 7 running)
+[sched] LAUNCH Bnode2_cross_nolog_s2 on gpu7  (17 pending, 8 running)
+[sched] DONE Bnode2_unet8nolog_s2 (2480s) -> gpu6 free
+[sched] LAUNCH Bnode2_cross_flip_s2 on gpu6  (16 pending, 8 running)
+[sched] DONE Bnode2_unet8nolog_s0 (2500s) -> gpu0 free
+[sched] LAUNCH A23_vit_sh_s2 on gpu0  (15 pending, 8 running)
+[sched] DONE Bnode2_unet8nolog_s1 (2520s) -> gpu3 free
+[sched] LAUNCH A23_vit_both_s0 on gpu3  (14 pending, 8 running)
+[sched] DONE Bnode2_cross_nolog_s0 (20350s) -> gpu1 free
+[sched] DONE Bnode2_cross_nolog_s2 (20350s) -> gpu7 free
+[sched] LAUNCH A23_vit_both_s1 on gpu1  (13 pending, 7 running)
+[sched] LAUNCH A23_vit_both_s2 on gpu7  (12 pending, 8 running)
+[sched] DONE Bnode2_cross_flip_s0 (20410s) -> gpu2 free
+[sched] LAUNCH P_k1 on gpu2  (11 pending, 8 running)
+[sched] DONE Bnode2_cross_flip_s1 (20460s) -> gpu5 free
+[sched] LAUNCH P_k5 on gpu5  (10 pending, 8 running)
+[sched] DONE A23_vit_both_s0 (18410s) -> gpu3 free
+[sched] LAUNCH P_k10 on gpu3  (9 pending, 8 running)
+[sched] DONE A23_vit_sh_s2 (18730s) -> gpu0 free
+[sched] LAUNCH A13_mag2_s0 on gpu0  (8 pending, 8 running)
+[sched] DONE Bnode2_cross_nolog_s1 (22150s) -> gpu4 free
+[sched] LAUNCH A13_ild3_s0 on gpu4  (7 pending, 8 running)
+[sched] DONE Bnode2_cross_flip_s2 (20350s) -> gpu6 free
+[sched] LAUNCH A13_ipd5_s0 on gpu6  (6 pending, 8 running)
+[sched] DONE P_k5 (11550s) -> gpu5 free
+[sched] LAUNCH A13_ipd5_s1 on gpu5  (5 pending, 8 running)
+[sched] DONE P_k10 (11970s) -> gpu3 free
+[sched] LAUNCH A13_ipd5_s2 on gpu3  (4 pending, 8 running)
+[sched] DONE P_k1 (15740s) -> gpu2 free
+[sched] LAUNCH A14_logmag_s0 on gpu2  (3 pending, 8 running)
+[sched] DONE A13_mag2_s0 (15880s) -> gpu0 free
+[sched] LAUNCH A14_logmag_s1 on gpu0  (2 pending, 8 running)
+[sched] DONE A13_ipd5_s0 (16160s) -> gpu6 free
+[sched] LAUNCH A14_frozen_s0 on gpu6  (1 pending, 8 running)
+[sched] DONE A13_ild3_s0 (17550s) -> gpu4 free
+[sched] LAUNCH A14_rir5_s0 on gpu4  (0 pending, 8 running)
+[sched] DONE A23_vit_both_s1 (22620s) -> gpu1 free
+[sched] DONE A23_vit_both_s2 (22660s) -> gpu7 free
+[sched] DONE A14_frozen_s0 (4930s) -> gpu6 free
+[sched] DONE A13_ipd5_s1 (12060s) -> gpu5 free
+[sched] DONE A13_ipd5_s2 (12090s) -> gpu3 free
+[sched] DONE A14_logmag_s0 (13190s) -> gpu2 free
+[sched] DONE A14_logmag_s1 (13320s) -> gpu0 free
+[sched] DONE A14_rir5_s0 (14350s) -> gpu4 free
+[sched] ALL JOBS COMPLETE

@@ -48,6 +48,10 @@ DEFAULTS = dict(
     sh_order=4,               # -> (sh_order+1)**2 dims
     use_mic_pe=False,         # ear-axis (binaural) geometry features
     head_r=0.0875,            # head radius [m] for the +/- y ear rig
+    # front/back are the cone-of-confusion (spectral-only) directions; two levers:
+    front_back_w=1.0,         # sector-weighted loss: upweight front+back rays (1.0=off)
+    hi_tokens=False,          # tap audio tokens at /4 (finer spectrum) vs /8 for cross-attn
+    cross_enc="conv",         # cross/crossself audio encoder: conv (default) | vit (ViT-B/16 tokens)
 
     # --- attention sizes (cross / self models) ---
     n_heads=4, n_cross=2, n_self=2,

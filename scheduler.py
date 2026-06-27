@@ -162,6 +162,24 @@ for s in (0, 1, 2):
                    extra="--unet-downs 8 --log-spec False"))
     JOBS.append(imp(f"B_cross_nolog_s{s}", "cross", s, lr="3e-4", extra="--log-spec False"))
 
+# ---- node-A PRIORITY set (distinct 'Bnode2_' names so they don't clash with node B's B_*) ----
+# Run the comparison FIRST: baseline-faithful U-Net (8-down, no-log) vs our best (cross)
+# under matched settings — cross_nolog (matched to U-Net) and cross_flip (matched to ViT:
+# log + flip-aug, isolates whether ViT's edge is just augmentation).
+PRIORITY = []
+for s in (0, 1, 2):
+    PRIORITY.append(fm(f"Bnode2_unet8nolog_s{s}", s, arch="unet", bs=64,
+                       extra="--unet-downs 8 --log-spec False"))
+    PRIORITY.append(imp(f"Bnode2_cross_nolog_s{s}", "cross", s, lr="3e-4", extra="--log-spec False"))
+    PRIORITY.append(imp(f"Bnode2_cross_flip_s{s}", "cross", s, lr="3e-4", extra="--flip-aug True"))
+# follow-up: give cross the winning ingredients — richer 5ch (phase/IPD) input, and
+# band-limited hybrid (SH-coarse + implicit residual) to stop detail-chasing.
+for s in (0, 1, 2):
+    PRIORITY.append(imp(f"Bnode2_cross5ch_s{s}", "cross", s, lr="3e-4", in_ch=5))
+    PRIORITY.append(imp(f"Bnode2_hybrid5ch_s{s}", "hybrid", s, lr="3e-4", in_ch=5))
+# PRIORITY first, then the remaining main runs; drop the B_* (those belong to node B).
+JOBS = PRIORITY + [j for j in JOBS if not j["name"].startswith("B_")]
+
 
 def done(name):
     return os.path.exists(os.path.join("out", name, "train_done.json"))

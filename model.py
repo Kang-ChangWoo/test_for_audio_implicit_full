@@ -38,8 +38,10 @@ class Refine(nn.Module):
 class AudioEncoder(nn.Module):
     """spec (B,2,H,W) -> global latent (B,audio_dim) and tokens (B,T,dim)."""
 
-    def __init__(self, width=48, audio_dim=256, dim=192, in_ch=2):
+    def __init__(self, width=48, audio_dim=256, dim=192, in_ch=2, hi_tokens=False):
         super().__init__()
+        # kept as a single Sequential (param names unchanged -> old checkpoints load).
+        # net[:6] -> /4 (width*2, finer spectrum), net[6:] -> /8 (width*4, global).
         self.net = nn.Sequential(
             conv_bn(in_ch, width), conv_bn(width, width, s=2), Refine(width),
             conv_bn(width, width*2), conv_bn(width*2, width*2, s=2), Refine(width*2),
@@ -47,16 +49,22 @@ class AudioEncoder(nn.Module):
         c = width * 4
         self.gpool = nn.Sequential(nn.AdaptiveAvgPool2d(1), nn.Flatten(),
                                    nn.Linear(c, audio_dim), nn.GELU())
-        self.tok = nn.Linear(c, dim)
+        self.tok = nn.Linear(c, dim)                # /8 tokens
+        self.hi_tokens = hi_tokens
+        if hi_tokens:
+            self.tok_hi = nn.Linear(width * 2, dim)  # /4 tokens (4x more, keeps fine spectrum)
         self.tok_dim = dim
 
     def forward(self, spec, want_tokens=False):
-        fmap = self.net(spec)                       # (B,C,h,w)
+        f4 = self.net[:6](spec)                     # (B, width*2, H/4, W/4)
+        fmap = self.net[6:](f4)                     # (B, width*4, H/8, W/8)
         z = self.gpool(fmap)                        # (B,audio_dim)
         if not want_tokens:
             return z, None
-        B, C, h, w = fmap.shape
-        tok = self.tok(fmap.flatten(2).transpose(1, 2))   # (B, h*w, dim)
+        if self.hi_tokens:
+            tok = self.tok_hi(f4.flatten(2).transpose(1, 2))     # (B, H/4*W/4, dim)
+        else:
+            tok = self.tok(fmap.flatten(2).transpose(1, 2))      # (B, H/8*W/8, dim)
         return z, tok
 
 
@@ -153,8 +161,17 @@ class RayDepthModel(nn.Module):
         self.ray_film = getattr(cfg, "ray_film", False)
 
         if self.use_audio:
-            self.audio = AudioEncoder(cfg.width, cfg.audio_dim, cfg.dim,
-                                      in_ch=getattr(cfg, "in_ch", 2))
+            if getattr(cfg, "cross_enc", "conv") == "vit":
+                from model_cross_vit import ViTTokenEncoder
+                self.audio = ViTTokenEncoder(cfg.width, cfg.audio_dim, cfg.dim,
+                                             in_ch=getattr(cfg, "in_ch", 2),
+                                             img_h=cfg.img_h, img_w=cfg.img_w,
+                                             pretrained=getattr(cfg, "vit_pretrained", True),
+                                             freeze=getattr(cfg, "vit_freeze", False))
+            else:
+                self.audio = AudioEncoder(cfg.width, cfg.audio_dim, cfg.dim,
+                                          in_ch=getattr(cfg, "in_ch", 2),
+                                          hi_tokens=getattr(cfg, "hi_tokens", False))
 
         # ray embedding (tip6: optional skip-MLP)
         if getattr(cfg, "ray_mlp_skip", False):
