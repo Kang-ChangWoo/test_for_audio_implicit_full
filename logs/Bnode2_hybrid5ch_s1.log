@@ -654,3 +654,31 @@
   d = {k: torch.from_numpy(np.ascontiguousarray(self.arr[k][i])).float() for k in self.arr}
 /root/storage/implementation/shared_audio/test_for_audio_implicit_full/data.py:179: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)
   d = {k: torch.from_numpy(np.ascontiguousarray(self.arr[k][i])).float() for k in self.arr}
+[mono] MAE=4.4698 MAE_low=4.4692
+/root/storage/implementation/shared_audio/test_for_audio_implicit_full/data.py:179: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)
+  d = {k: torch.from_numpy(np.ascontiguousarray(self.arr[k][i])).float() for k in self.arr}
+/root/storage/implementation/shared_audio/test_for_audio_implicit_full/data.py:179: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)
+  d = {k: torch.from_numpy(np.ascontiguousarray(self.arr[k][i])).float() for k in self.arr}
+/root/storage/implementation/shared_audio/test_for_audio_implicit_full/data.py:179: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)
+  d = {k: torch.from_numpy(np.ascontiguousarray(self.arr[k][i])).float() for k in self.arr}
+/root/storage/implementation/shared_audio/test_for_audio_implicit_full/data.py:179: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)
+  d = {k: torch.from_numpy(np.ascontiguousarray(self.arr[k][i])).float() for k in self.arr}
+/root/storage/implementation/shared_audio/test_for_audio_implicit_full/data.py:179: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)
+  d = {k: torch.from_numpy(np.ascontiguousarray(self.arr[k][i])).float() for k in self.arr}
+/root/storage/implementation/shared_audio/test_for_audio_implicit_full/data.py:179: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /pytorch/torch/csrc/utils/tensor_numpy.cpp:203.)
+  d = {k: torch.from_numpy(np.ascontiguousarray(self.arr[k][i])).float() for k in self.arr}
+Traceback (most recent call last):
+  File "/root/storage/implementation/shared_audio/test_for_audio_implicit_full/eval.py", line 110, in <module>
+    main()
+  File "/root/storage/implementation/shared_audio/test_for_audio_implicit_full/eval.py", line 99, in main
+    r = eval_condition(model, loader, bank, cfg, sh_full, device, max_n=max_n, **kw)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/storage/implementation/shared_audio/test_for_audio_implicit_full/eval.py", line 52, in eval_condition
+    spec = apply_audio_mode(spec0, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/storage/implementation/shared_audio/test_for_audio_implicit_full/data.py", line 234, in apply_audio_mode
+    raise ValueError(f"unsupported audio_mode={mode} for C={C}")
+ValueError: unsupported audio_mode=left for C=5
