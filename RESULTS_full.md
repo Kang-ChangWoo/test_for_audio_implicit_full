@@ -2,7 +2,7 @@
 
 Radial depth, scene_split (72/9/9), loaded from actual files at 256x512 (no 64x128 downsampling). cos-lat weighted metrics. seed = mean ± std.
 
-**Progress: 122/130 trained runs evaluated (of 93 total jobs).**
+**Progress: 119/127 trained runs evaluated (of 93 total jobs).**
 
 | model (seed-grouped) | n | test MAE ↓ | MAE_plain | (64×128 plain) | MAE_low | δ<1.25 ↑ | shuffle MAE | mirror_better |
 |---|---|---|---|---|---|---|---|---|
@@ -29,7 +29,6 @@ Radial depth, scene_split (72/9/9), loaded from actual files at 256x512 (no 64x1
 | A4_cross | 3 | 0.9258 ± 0.0012 | 0.7805 ± 0.0028 | 0.7789 | 0.8881 ± 0.0007 | 0.435 ± 0.001 | 1.1414 ± 0.0077 | 0.260 ± 0.007 |
 | A6sec | 3 | 0.9270 ± 0.0038 | 0.7810 ± 0.0040 | 0.7816 | 0.8893 ± 0.0033 | 0.433 ± 0.003 | 1.1459 ± 0.0114 | 0.260 ± 0.006 |
 | A6_crossself | 3 | 0.9271 ± 0.0035 | 0.7804 ± 0.0049 | 0.7753 | 0.8891 ± 0.0040 | 0.439 ± 0.006 | 1.1463 ± 0.0058 | 0.259 ± 0.005 |
-| Bnode2_cross_frontwt | 3 | 0.9284 ± 0.0036 | 0.7805 ± 0.0049 | — | 0.8905 ± 0.0040 | 0.433 ± 0.003 | 1.1423 ± 0.0021 | 0.260 ± 0.007 |
 | T_all | 1 | 0.9293 | 0.7831 | 0.7819 | 0.8883 | 0.432 | 1.1258 | 0.254 |
 | T_progpe | 1 | 0.9304 | 0.7831 | 0.8227 | 0.8870 | 0.431 | 1.1325 | 0.244 |
 | A19_raymodStrong | 3 | 0.9457 ± 0.0093 | 0.7940 ± 0.0076 | 0.7709 | 0.9075 ± 0.0091 | 0.423 ± 0.003 | 1.1261 ± 0.0057 | 0.301 ± 0.010 |

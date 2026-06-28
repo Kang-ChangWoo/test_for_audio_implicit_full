@@ -28,8 +28,7 @@ def prob(name, seed, extra, bs, cache=None):
 IC5 = f"{CK}/ic5_256x512"; IC5W = f"{CK}/ic5_256x512_w20"; FOA = f"{CK}/ic4_256x512_foa"
 JOBS = []
 for s in (0, 1, 2):
-    # --- front-strengthening (anti-discreteness) ---
-    JOBS += [imp(f"Bnode2_cross_frontwt_s{s}", "cross", s, "3e-4", "--in-ch 2 --front-back-w 2.0", 24)]
+    # --- front-strengthening (anti-discreteness) ---  (front-weighted-loss removed: no effect)
     JOBS += [imp(f"Bnode2_cross_hitok_s{s}", "cross", s, "3e-4", "--in-ch 2 --hi-tokens True", 12)]
     JOBS += [imp(f"Bnode2_cross_5chflip_s{s}", "cross", s, "3e-4", "--in-ch 5 --flip-aug True", 24, IC5)]
     # --- ViT encoder for cross / pix2pix U-Net encoder for cross (front-strong tokens) ---
@@ -55,6 +54,10 @@ for s in (0, 1):
 for s in (0, 1, 2):
     JOBS.append(fm(f"Bnode2_foa_unet8_s{s}", s, "unet", "2e-3", "--ngf 64 --unet-downs 8 --in-ch 4 --audio-src foa --flip-aug True", 48, FOA))
     JOBS.append(imp(f"Bnode2_foa_cross_s{s}", "cross", s, "3e-4", "--in-ch 4 --audio-src foa --flip-aug True", 16, FOA))
+
+
+# priority: run cross_unetenc (8-down pix2pix encoder for ray cross-attn) FIRST
+JOBS = [j for j in JOBS if "cross_unetenc" in j["name"]] + [j for j in JOBS if "cross_unetenc" not in j["name"]]
 
 
 def done(j): return os.path.exists(os.path.join("out", j["name"], j["art"]))
