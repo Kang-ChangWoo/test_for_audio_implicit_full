@@ -43,6 +43,10 @@ def load(run_dir, device):
     elif getattr(cfg, "arch", "fullmap") == "rayconv":
         from model_rayconv import RayConvNet
         m = RayConvNet(cfg).to(device).eval()
+    elif getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res"):
+        from model_unet_coarse import UNetCoarse, UNetSH, UNetRayCoarse, UNetCoarseResidual
+        m = {"unet_coarse": UNetCoarse, "unet_sh": UNetSH,
+             "unet_raycoarse": UNetRayCoarse, "unet_coarse_res": UNetCoarseResidual}[cfg.arch](cfg).to(device).eval()
     else:
         m = FullMapNet(cfg).to(device).eval()
     m.load_state_dict(ck["state_dict"])

@@ -57,8 +57,20 @@ for s in (0, 1, 2):
     JOBS.append(imp(f"Bnode2_foa_cross_s{s}", "cross", s, "3e-4", "--in-ch 4 --audio-src foa --flip-aug True", 16, FOA))
 
 
-# priority: run cross_unetenc (8-down pix2pix encoder for ray cross-attn) FIRST
-JOBS = [j for j in JOBS if "cross_unetenc" in j["name"]] + [j for j in JOBS if "cross_unetenc" not in j["name"]]
+# --- coarse-layout heads on U-Net8 encoder (band-limited; ray as 16x32 coarse field) ---
+for s in (0, 1, 2):
+    CL = "--in-ch 5 --unet-downs 8 --flip-aug True"
+    JOBS.append(fm(f"C_unet8_coarse16_5chflip_s{s}", s, "unet_coarse", "2e-3", CL + " --coarse-head-h 16 --coarse-head-w 32", 48, IC5))
+    JOBS.append(fm(f"C_unet8_coarse32_5chflip_s{s}", s, "unet_coarse", "2e-3", CL + " --coarse-head-h 32 --coarse-head-w 64", 48, IC5))
+    JOBS.append(fm(f"C_unet8_sh4_5chflip_s{s}", s, "unet_sh", "2e-3", CL + " --coarse-sh-order 4", 48, IC5))
+    JOBS.append(fm(f"C_unet8_sh6_5chflip_s{s}", s, "unet_sh", "2e-3", CL + " --coarse-sh-order 6", 48, IC5))
+    JOBS.append(fm(f"C_unet8_raycoarse16_5chflip_s{s}", s, "unet_raycoarse", "2e-3", CL + " --ray-coarse-h 16 --ray-coarse-w 32", 32, IC5))
+    JOBS.append(fm(f"C_unet8_coarseres_5chflip_s{s}", s, "unet_coarse_res", "2e-3", CL, 48, IC5))
+    JOBS.append(fm(f"Bnode2_rayconv5d_s{s}", s, "rayconv", "2e-3", "--in-ch 5 --coarse-h 64 --coarse-w 128 --flip-aug True", 8, IC5))
+
+# priority: coarse-layout / dense-rayconv / cross_unetenc research focus run FIRST
+def _pri(n): return n.startswith("C_unet8") or "rayconv5d" in n or "cross_unetenc" in n
+JOBS = [j for j in JOBS if _pri(j["name"])] + [j for j in JOBS if not _pri(j["name"])]
 
 
 # optional split: restrict to a GPU subset and/or skip a name substring (run elsewhere)

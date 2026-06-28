@@ -1,3 +1,6 @@
 launched Bnode2_rayconv5_s0 gpu0 pid 1279188
 launched Bnode2_rayconv5_s1 gpu1 pid 1279189
 launched Bnode2_rayconv5_s2 gpu2 pid 1279190
+run_rayconv_fast.sh: line 12: 1279188 Killed                  CUDA_VISIBLE_DEVICES=$g bash -c "python train_fullmap.py --arch rayconv --run-name $n --seed $s --epochs 25 --batch-size 16       --num-workers 6 --lr 2e-3 --in-ch 5 --coarse-h 16 --coarse-w 32 --flip-aug True     && python eval_fullmap.py --run-name $n --controls True" > logs/$n.log 2>&1
+run_rayconv_fast.sh: line 13: 1279190 Killed                  CUDA_VISIBLE_DEVICES=$g bash -c "python train_fullmap.py --arch rayconv --run-name $n --seed $s --epochs 25 --batch-size 16       --num-workers 6 --lr 2e-3 --in-ch 5 --coarse-h 16 --coarse-w 32 --flip-aug True     && python eval_fullmap.py --run-name $n --controls True" > logs/$n.log 2>&1
+RAYCONV5 FAST DONE Sun Jun 28 18:52:18 Asia 2026

@@ -17,6 +17,7 @@ import time
 import copy
 import numpy as np
 import torch
+import torch.nn.functional as F
 from types import SimpleNamespace
 
 from config import get_cfg
@@ -117,8 +118,13 @@ def main():
     elif getattr(cfg, "arch", "fullmap") == "rayconv":
         from model_rayconv import RayConvNet
         model = RayConvNet(cfg).to(device)
+    elif getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res"):
+        from model_unet_coarse import UNetCoarse, UNetSH, UNetRayCoarse, UNetCoarseResidual
+        model = {"unet_coarse": UNetCoarse, "unet_sh": UNetSH,
+                 "unet_raycoarse": UNetRayCoarse, "unet_coarse_res": UNetCoarseResidual}[cfg.arch](cfg).to(device)
     else:
         model = FullMapNet(cfg).to(device)
+    COARSE_ARCH = getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res")
     if cfg.init_decoder:
         warm_start(model, cfg.init_decoder, cfg.freeze_decoder, device)
     print(f"[model] params={sum(p.numel() for p in model.parameters())/1e6:.2f}M", flush=True)
@@ -146,8 +152,25 @@ def main():
                     gt[fm] = torch.flip(gt[fm], dims=[-1])
                     mask[fm] = torch.flip(mask[fm], dims=[-1])
             out = model(spec, extra.get("coarse_feat"), extra.get("sh_basis"))
-            loss = masked_mae(out["D"], gt, mask)
-            logs = {"mae": float(loss.detach())}
+            main = masked_mae(out["D"], gt, mask)
+            logs = {"mae": float(main.detach())}
+            if COARSE_ARCH:
+                # band-limited objective: dense + coarse-layout + low-pass (+ residual TV)
+                loss = cfg.w_dense * main
+                gt_c = F.adaptive_avg_pool2d(gt, (cfg.coarse_head_h, cfg.coarse_head_w))
+                m_c = F.adaptive_avg_pool2d(mask, (cfg.coarse_head_h, cfg.coarse_head_w))
+                if "D_coarse" in out["extras"] and out["extras"]["D_coarse"].shape[-2:] == gt_c.shape[-2:]:
+                    lc = masked_mae(out["extras"]["D_coarse"], gt_c, m_c)
+                else:
+                    lc = masked_mae(F.adaptive_avg_pool2d(out["D"], (cfg.coarse_head_h, cfg.coarse_head_w)), gt_c, m_c)
+                ll = masked_mae(gaussian_blur_erp(out["D"], 3.0), gaussian_blur_erp(gt, 3.0), mask)
+                loss = loss + cfg.w_coarse_layout * lc + cfg.w_low * ll
+                logs["lc"] = float(lc.detach()); logs["llow"] = float(ll.detach())
+                if "residual" in out["extras"]:
+                    tvr = tv(out["extras"]["residual"]); loss = loss + cfg.w_tv_res * tvr
+                    logs["tvr"] = float(tvr.detach())
+            else:
+                loss = main
             if cfg.correction == "sh":
                 gt_coef = (gt.view(gt.size(0), -1) @ extra["sh_pinv"].T)     # (B,Kc)
                 aux = (out["extras"]["coef"] - gt_coef).abs().mean()

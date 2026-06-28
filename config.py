@@ -54,6 +54,14 @@ DEFAULTS = dict(
     front_back_w=1.0,         # sector-weighted loss: upweight front+back rays (1.0=off)
     hi_tokens=False,          # tap audio tokens at /4 (finer spectrum) vs /8 for cross-attn
     cross_enc="conv",         # cross/crossself audio encoder: conv (default) | vit (ViT-B/16 tokens)
+    # --- coarse-layout heads on the U-Net8 encoder (model_unet_coarse.py) ---
+    coarse_head_h=16, coarse_head_w=32,   # coarse ERP depth-head resolution
+    coarse_sh_order=4,                    # SH order for unet_sh head
+    residual_scale=0.1, residual_h=32, residual_w=64,   # constrained low-pass residual
+    ray_coarse_h=16, ray_coarse_w=32,     # coarse ray-token grid for unet_raycoarse
+    ray_cross_layers=2, ray_self_layers=1,
+    # coarse-arch loss weights (only applied for arch in the coarse family)
+    w_dense=1.0, w_coarse_layout=1.0, w_low=0.5, w_tv_res=0.01,
 
     # --- attention sizes (cross / self models) ---
     n_heads=4, n_cross=2, n_self=2,
