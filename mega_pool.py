@@ -34,6 +34,7 @@ for s in (0, 1, 2):
     # --- ViT encoder for cross / pix2pix U-Net encoder for cross (front-strong tokens) ---
     JOBS += [imp(f"Bnode2_cross_vitenc_s{s}", "cross", s, "3e-4", "--in-ch 2 --cross-enc vit --flip-aug True", 16)]
     JOBS += [imp(f"Bnode2_cross_unetenc_s{s}", "cross", s, "3e-4", "--in-ch 2 --cross-enc unet --ngf 64 --flip-aug True", 16)]
+    JOBS += [imp(f"Bnode2_cross_unetenc5_s{s}", "cross", s, "3e-4", "--in-ch 5 --cross-enc unet --ngf 64 --flip-aug True", 16, IC5)]
     # --- #1 combo + #2 richer window (U-Net) ---
     JOBS += [fm(f"Bnode2_unet8_5chflip_s{s}", s, "unet", "2e-3", "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True", 48, IC5)]
     JOBS += [fm(f"Bnode2_unet8_5chflip_w20_s{s}", s, "unet", "2e-3", "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --audio-window-m 20", 48, IC5W)]
@@ -60,11 +61,19 @@ for s in (0, 1, 2):
 JOBS = [j for j in JOBS if "cross_unetenc" in j["name"]] + [j for j in JOBS if "cross_unetenc" not in j["name"]]
 
 
+# optional split: restrict to a GPU subset and/or skip a name substring (run elsewhere)
+ALLOW = set(int(x) for x in os.environ.get("MEGA_GPUS", "0,1,2,3,4,5,6,7").split(","))
+SKIP = os.environ.get("MEGA_SKIP", "")
+if SKIP:
+    JOBS = [j for j in JOBS if SKIP not in j["name"]]
+
+
 def done(j): return os.path.exists(os.path.join("out", j["name"], j["art"]))
 def cache_ready(j): return j["cache"] is None or os.path.exists(j["cache"] + "/train_spec.npy")
 def idle_gpus():
     o = subprocess.check_output(["nvidia-smi","--query-gpu=index,memory.used","--format=csv,noheader,nounits"]).decode()
-    return [int(l.split(",")[0]) for l in o.strip().splitlines() if int(l.split(",")[1]) < 1500]
+    return [int(l.split(",")[0]) for l in o.strip().splitlines()
+            if int(l.split(",")[1]) < 1500 and int(l.split(",")[0]) in ALLOW]
 
 
 def main():

@@ -1,9 +1,12 @@
 [mega] 42 jobs total
-[mega] launch Bnode2_cross_unetenc_s0 gpu0 (34 left)
-[mega] launch Bnode2_cross_unetenc_s1 gpu1 (34 left)
-[mega] launch Bnode2_cross_unetenc_s2 gpu2 (34 left)
-[mega] launch Bnode2_cross_hitok_s0 gpu3 (34 left)
-[mega] launch Bnode2_cross_vitenc_s0 gpu4 (34 left)
-[mega] launch Bnode2_crossself_flip_s0 gpu5 (34 left)
-[mega] launch Bnode2_cross_hitokflip_s0 gpu6 (34 left)
-[mega] launch Bnode2_crossself_hitokflip_s0 gpu7 (34 left)
+[mega] launch Bnode2_cross_unetenc_s0 gpu3 (34 left)
+[mega] launch Bnode2_cross_unetenc_s1 gpu4 (34 left)
+[mega] launch Bnode2_cross_unetenc_s2 gpu5 (34 left)
+[mega] launch Bnode2_cross_hitok_s0 gpu6 (34 left)
+[mega] launch Bnode2_cross_vitenc_s0 gpu7 (34 left)
+[mega] finished Bnode2_cross_unetenc_s2 gpu5
+[mega] launch Bnode2_crossself_flip_s0 gpu5 (33 left)
+[mega] finished Bnode2_cross_unetenc_s0 gpu3
+[mega] launch Bnode2_cross_hitokflip_s0 gpu3 (32 left)
+[mega] finished Bnode2_cross_unetenc_s1 gpu4
+[mega] launch Bnode2_crossself_hitokflip_s0 gpu4 (31 left)
