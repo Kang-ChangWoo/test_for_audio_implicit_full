@@ -19,7 +19,7 @@ from sh import SHGrid  # noqa: E402
 
 def build_extra(cfg, device):
     extra = {}
-    if cfg.correction in ("cross", "cross_sup") or getattr(cfg, "arch", "fullmap") == "unet_raymod":
+    if cfg.correction in ("cross", "cross_sup") or getattr(cfg, "arch", "fullmap") in ("unet_raymod", "rayconv"):
         ccfg = copy.copy(cfg); ccfg.img_h, ccfg.img_w = cfg.coarse_h, cfg.coarse_w
         extra["coarse_feat"] = RayBank(ccfg, device=device).feat
     elif cfg.correction == "sh":
@@ -40,6 +40,9 @@ def load(run_dir, device):
     elif getattr(cfg, "arch", "fullmap") == "vit":
         from model_vit import ViTDepth
         m = ViTDepth(cfg).to(device).eval()
+    elif getattr(cfg, "arch", "fullmap") == "rayconv":
+        from model_rayconv import RayConvNet
+        m = RayConvNet(cfg).to(device).eval()
     else:
         m = FullMapNet(cfg).to(device).eval()
     m.load_state_dict(ck["state_dict"])

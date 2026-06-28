@@ -93,7 +93,7 @@ def main():
 
     # correction-branch precompute (also build the ray bank for unet_raymod modulation)
     extra = {}
-    if cfg.correction in ("cross", "cross_sup") or getattr(cfg, "arch", "fullmap") == "unet_raymod":
+    if cfg.correction in ("cross", "cross_sup") or getattr(cfg, "arch", "fullmap") in ("unet_raymod", "rayconv"):
         ccfg = copy.copy(cfg); ccfg.img_h, ccfg.img_w = cfg.coarse_h, cfg.coarse_w
         cbank = RayBank(ccfg, device=device)
         cfg.coarse_feat_dim = cbank.feat_dim
@@ -114,6 +114,9 @@ def main():
     elif getattr(cfg, "arch", "fullmap") == "vit":
         from model_vit import ViTDepth
         model = ViTDepth(cfg).to(device)
+    elif getattr(cfg, "arch", "fullmap") == "rayconv":
+        from model_rayconv import RayConvNet
+        model = RayConvNet(cfg).to(device)
     else:
         model = FullMapNet(cfg).to(device)
     if cfg.init_decoder:
