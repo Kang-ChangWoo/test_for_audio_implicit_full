@@ -32,8 +32,9 @@ for s in (0, 1, 2):
     JOBS += [imp(f"Bnode2_cross_frontwt_s{s}", "cross", s, "3e-4", "--in-ch 2 --front-back-w 2.0", 24)]
     JOBS += [imp(f"Bnode2_cross_hitok_s{s}", "cross", s, "3e-4", "--in-ch 2 --hi-tokens True", 12)]
     JOBS += [imp(f"Bnode2_cross_5chflip_s{s}", "cross", s, "3e-4", "--in-ch 5 --flip-aug True", 24, IC5)]
-    # --- ViT encoder for cross ---
+    # --- ViT encoder for cross / pix2pix U-Net encoder for cross (front-strong tokens) ---
     JOBS += [imp(f"Bnode2_cross_vitenc_s{s}", "cross", s, "3e-4", "--in-ch 2 --cross-enc vit --flip-aug True", 16)]
+    JOBS += [imp(f"Bnode2_cross_unetenc_s{s}", "cross", s, "3e-4", "--in-ch 2 --cross-enc unet --ngf 64 --flip-aug True", 16)]
     # --- #1 combo + #2 richer window (U-Net) ---
     JOBS += [fm(f"Bnode2_unet8_5chflip_s{s}", s, "unet", "2e-3", "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True", 48, IC5)]
     JOBS += [fm(f"Bnode2_unet8_5chflip_w20_s{s}", s, "unet", "2e-3", "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --audio-window-m 20", 48, IC5W)]

@@ -168,6 +168,11 @@ class RayDepthModel(nn.Module):
                                              img_h=cfg.img_h, img_w=cfg.img_w,
                                              pretrained=getattr(cfg, "vit_pretrained", True),
                                              freeze=getattr(cfg, "vit_freeze", False))
+            elif getattr(cfg, "cross_enc", "conv") == "unet":
+                from model_cross_unet import UNetTokenEncoder
+                self.audio = UNetTokenEncoder(cfg.width, cfg.audio_dim, cfg.dim,
+                                              in_ch=getattr(cfg, "in_ch", 2),
+                                              ngf=getattr(cfg, "ngf", 64))
             else:
                 self.audio = AudioEncoder(cfg.width, cfg.audio_dim, cfg.dim,
                                           in_ch=getattr(cfg, "in_ch", 2),
