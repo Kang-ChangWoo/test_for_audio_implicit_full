@@ -93,10 +93,15 @@ def main():
           flush=True)
 
     if args.controls:
-        for name, kw in [("mono", dict(mode="mono")), ("left", dict(mode="left")),
-                         ("right", dict(mode="right")), ("shuffle", dict(shuffle=True)),
-                         ("swap", dict(swap=True))]:
-            r = eval_condition(model, loader, bank, cfg, sh_full, device, max_n=max_n, **kw)
+        controls = [("mono", dict(mode="mono")), ("shuffle", dict(shuffle=True)),
+                    ("swap", dict(swap=True))]
+        if getattr(cfg, "in_ch", 2) == 2:        # left/right only defined for 2ch
+            controls[1:1] = [("left", dict(mode="left")), ("right", dict(mode="right"))]
+        for name, kw in controls:
+            try:
+                r = eval_condition(model, loader, bank, cfg, sh_full, device, max_n=max_n, **kw)
+            except Exception as e:               # never let one control block the report
+                print(f"[{name}] skipped ({e})", flush=True); continue
             report[name] = r
             tail = (f"  swap_mirror_consistency={r['swap_mirror_consistency']:.4f}"
                     if "swap_mirror_consistency" in r else "")

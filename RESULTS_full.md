@@ -2,10 +2,12 @@
 
 Radial depth, scene_split (72/9/9), loaded from actual files at 256x512 (no 64x128 downsampling). cos-lat weighted metrics. seed = mean ± std.
 
-**Progress: 107/118 trained runs evaluated (of 93 total jobs).**
+**Progress: 122/130 trained runs evaluated (of 93 total jobs).**
 
 | model (seed-grouped) | n | test MAE ↓ | MAE_plain | (64×128 plain) | MAE_low | δ<1.25 ↑ | shuffle MAE | mirror_better |
 |---|---|---|---|---|---|---|---|---|
+| Bnode2_unet8_5chflip | 2 | 0.8898 ± 0.0035 | 0.7463 ± 0.0038 | — | 0.8524 ± 0.0036 | 0.454 ± 0.001 | 1.1431 ± 0.0023 | 0.273 ± 0.005 |
+| Bnode2_unet8_5chflip_w20 | 2 | 0.8917 ± 0.0013 | 0.7480 ± 0.0017 | — | 0.8541 ± 0.0015 | 0.454 ± 0.003 | 1.1493 ± 0.0064 | 0.277 ± 0.006 |
 | B_unet8_5ch | 3 | 0.8969 ± 0.0007 | 0.7528 ± 0.0019 | — | 0.8587 ± 0.0009 | 0.454 ± 0.003 | 1.1536 ± 0.0055 | 0.265 ± 0.009 |
 | A22_vit_aug | 3 | 0.9046 ± 0.0029 | 0.7605 ± 0.0025 | 0.7804 | 0.8671 ± 0.0030 | 0.449 ± 0.002 | 1.1327 ± 0.0076 | 0.265 ± 0.014 |
 | B_unet8nolog_aug | 3 | 0.9050 ± 0.0039 | 0.7582 ± 0.0036 | — | 0.8664 ± 0.0035 | 0.448 ± 0.006 | 1.1210 ± 0.0093 | 0.281 ± 0.006 |
@@ -15,6 +17,7 @@ Radial depth, scene_split (72/9/9), loaded from actual files at 256x512 (no 64x1
 | B_cross_nolog | 1 | 0.9122 | 0.7682 | — | 0.8741 | 0.436 | 1.1281 | 0.244 |
 | B_unet8nolog | 3 | 0.9124 ± 0.0041 | 0.7637 ± 0.0029 | — | 0.8741 ± 0.0044 | 0.448 ± 0.003 | 1.1290 ± 0.0114 | 0.292 ± 0.006 |
 | Bnode2_unet8nolog | 3 | 0.9125 ± 0.0052 | 0.7628 ± 0.0033 | — | 0.8746 ± 0.0054 | 0.445 ± 0.002 | 1.1301 ± 0.0130 | 0.288 ± 0.005 |
+| Bnode2_cross_5chflip | 2 | 0.9126 ± 0.0003 | 0.7697 ± 0.0019 | — | 0.8741 ± 0.0008 | 0.442 ± 0.000 | 1.1438 ± 0.0004 | 0.252 ± 0.003 |
 | A3_crossSH | 1 | 0.9170 | 0.7738 | — | 0.8801 | 0.434 | 1.1396 | 0.243 |
 | A4_ffmask | 1 | 0.9184 | 0.7711 | — | 0.8812 | 0.442 | 1.1481 | 0.251 |
 | A5_crossMic | 1 | 0.9188 | 0.7724 | — | 0.8811 | 0.437 | 1.1494 | 0.241 |
@@ -26,10 +29,12 @@ Radial depth, scene_split (72/9/9), loaded from actual files at 256x512 (no 64x1
 | A4_cross | 3 | 0.9258 ± 0.0012 | 0.7805 ± 0.0028 | 0.7789 | 0.8881 ± 0.0007 | 0.435 ± 0.001 | 1.1414 ± 0.0077 | 0.260 ± 0.007 |
 | A6sec | 3 | 0.9270 ± 0.0038 | 0.7810 ± 0.0040 | 0.7816 | 0.8893 ± 0.0033 | 0.433 ± 0.003 | 1.1459 ± 0.0114 | 0.260 ± 0.006 |
 | A6_crossself | 3 | 0.9271 ± 0.0035 | 0.7804 ± 0.0049 | 0.7753 | 0.8891 ± 0.0040 | 0.439 ± 0.006 | 1.1463 ± 0.0058 | 0.259 ± 0.005 |
+| Bnode2_cross_frontwt | 3 | 0.9284 ± 0.0036 | 0.7805 ± 0.0049 | — | 0.8905 ± 0.0040 | 0.433 ± 0.003 | 1.1423 ± 0.0021 | 0.260 ± 0.007 |
 | T_all | 1 | 0.9293 | 0.7831 | 0.7819 | 0.8883 | 0.432 | 1.1258 | 0.254 |
 | T_progpe | 1 | 0.9304 | 0.7831 | 0.8227 | 0.8870 | 0.431 | 1.1325 | 0.244 |
 | A19_raymodStrong | 3 | 0.9457 ± 0.0093 | 0.7940 ± 0.0076 | 0.7709 | 0.9075 ± 0.0091 | 0.423 ± 0.003 | 1.1261 ± 0.0057 | 0.301 ± 0.010 |
 | A14_rir5 | 1 | 0.9461 | 0.7939 | 0.7907 | 0.9071 | 0.414 | 1.1187 | 0.328 |
+| Bnode2_cross5ch | 3 | 0.9462 ± 0.0049 | 0.7994 ± 0.0043 | — | 0.9089 ± 0.0051 | 0.420 ± 0.006 | 1.1403 ± 0.0056 | 0.272 ± 0.005 |
 | A12_film | 1 | 0.9476 | 0.7931 | 0.7935 | 0.9090 | 0.416 | 1.1118 | 0.284 |
 | A8_hybrid | 1 | 0.9482 | 0.8004 | — | 0.9110 | 0.403 | 1.1235 | 0.286 |
 | A19_raymodStrong_fv | 3 | 0.9493 ± 0.0052 | 0.7944 ± 0.0047 | 0.7714 | 0.9104 ± 0.0048 | 0.420 ± 0.002 | 1.1210 ± 0.0097 | 0.299 ± 0.003 |
@@ -46,6 +51,7 @@ Radial depth, scene_split (72/9/9), loaded from actual files at 256x512 (no 64x1
 | A13_ipd5 | 1 | 0.9630 | 0.8084 | 0.7811 | 0.9245 | 0.411 | 1.1279 | 0.314 |
 | A18_raymod64reg | 2 | 0.9705 ± 0.0118 | 0.8121 ± 0.0079 | 0.7766 | 0.9315 ± 0.0117 | 0.414 ± 0.001 | 1.1201 ± 0.0067 | 0.322 ± 0.005 |
 | A20_unet64_aug | 3 | 0.9734 ± 0.0035 | 0.8166 ± 0.0034 | 0.7653 | 0.9349 ± 0.0037 | 0.416 ± 0.003 | 1.1313 ± 0.0062 | 0.319 ± 0.005 |
+| Bnode2_hybrid5ch | 3 | 0.9736 ± 0.0085 | 0.8233 ± 0.0070 | — | 0.9361 ± 0.0084 | 0.396 ± 0.003 | 1.1499 ± 0.0191 | 0.300 ± 0.003 |
 | A21_raymodStrong_aug | 3 | 0.9762 ± 0.0387 | 0.8179 ± 0.0311 | 0.7674 | 0.9376 ± 0.0389 | 0.403 ± 0.021 | 1.0963 ± 0.0209 | 0.364 ± 0.082 |
 | A18_unet64reg_fv | 3 | 0.9813 ± 0.0028 | 0.8222 ± 0.0027 | 0.7713 | 0.9422 ± 0.0031 | 0.411 ± 0.002 | 1.1299 ± 0.0111 | 0.324 ± 0.001 |
 | A15_bigunet_fv | 3 | 0.9818 ± 0.0095 | 0.8220 ± 0.0073 | 0.7757 | 0.9425 ± 0.0086 | 0.410 ± 0.001 | 1.1248 ± 0.0095 | 0.323 ± 0.013 |
@@ -60,8 +66,10 @@ Radial depth, scene_split (72/9/9), loaded from actual files at 256x512 (no 64x1
 
 | run | keys |
 |---|---|
+| P_5ch_k5_s0 | mean_of_K=0.85, best_of_K=0.6828, best_of_K_ctrl=0.7188, oracle_gain=0.1672, oracle_gain_ctrl=0.1312, real_multimodal_gain=0.036, diversity=0.62, uncert_corr=0.7031, baseline_det=0.78, vs_baseline_mea |
+| P_5ch_k5_s1 | mean_of_K=0.8512, best_of_K=0.6804, best_of_K_ctrl=0.7468, oracle_gain=0.1709, oracle_gain_ctrl=0.1044, real_multimodal_gain=0.0664, diversity=0.6044, uncert_corr=0.6913, baseline_det=0.78, vs_baselin |
 | P_k1 | mean_of_K=0.8174, best_of_K=0.8174, best_of_K_ctrl=0.8635, oracle_gain=0.0, oracle_gain_ctrl=-0.0462, real_multimodal_gain=0.0462, diversity=nan, uncert_corr=0.6441, baseline_det=0.78, vs_baseline_mea |
 | P_k10 | mean_of_K=0.8601, best_of_K=0.6379, best_of_K_ctrl=0.6365, oracle_gain=0.2223, oracle_gain_ctrl=0.2236, real_multimodal_gain=-0.0013, diversity=0.6693, uncert_corr=0.6896, baseline_det=0.78, vs_baseli |
 | P_k5 | mean_of_K=0.8498, best_of_K=0.6799, best_of_K_ctrl=0.6865, oracle_gain=0.1699, oracle_gain_ctrl=0.1633, real_multimodal_gain=0.0066, diversity=0.6001, uncert_corr=0.6603, baseline_det=0.78, vs_baselin |
 
-_Pending eval (11): A13_ipd5_s1, A13_ipd5_s2, Bnode2_cross5ch_s0, Bnode2_cross5ch_s1, Bnode2_cross5ch_s2, Bnode2_hybrid5ch_s0, Bnode2_hybrid5ch_s1, Bnode2_hybrid5ch_s2, P_k1, P_k10, P_k5_
+_Pending eval (8): A13_ipd5_s1, A13_ipd5_s2, Bnode2_cross_5chflip_s2, P_5ch_k5_s0, P_5ch_k5_s1, P_k1, P_k10, P_k5_

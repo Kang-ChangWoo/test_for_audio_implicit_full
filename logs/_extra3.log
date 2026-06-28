@@ -11,3 +11,9 @@
 [06:28:59] launched Bnode2_cross_5chflip_s1 gpu0 pid 2671767
 [06:30:19] launched Bnode2_cross_frontwt_s2 gpu3 pid 2674047
 [06:37:21] launched Bnode2_cross_hitok_s2 gpu4 pid 2682153
+[front_pool] OK Bnode2_cross_5chflip_s0 gpu1
+[13:50:18] launched Bnode2_cross_5chflip_s2 gpu1 pid 3214819
+[front_pool] OK Bnode2_cross_5chflip_s1 gpu0
+[front_pool] OK Bnode2_cross_frontwt_s1 gpu5
+[front_pool] OK Bnode2_cross_frontwt_s2 gpu3
+[front_pool] OK Bnode2_cross_frontwt_s0 gpu6

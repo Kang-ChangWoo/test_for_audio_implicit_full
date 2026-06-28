@@ -38,7 +38,9 @@ class RawDataset(Dataset):
         self.H, self.W, self.md, self.sr = cfg.img_h, cfg.img_w, cfg.max_depth, cfg.sample_rate
         self.in_ch = getattr(cfg, "in_ch", 2)
         self.log_spec = getattr(cfg, "log_spec", True)   # 2ch mag: log1p vs raw
-        self.cut = int(2.0 * self.md / _C * self.sr)
+        self.win_m = getattr(cfg, "audio_window_m", 0) or self.md   # truncation window [m]
+        self.cut = int(2.0 * self.win_m / _C * self.sr)
+        self.src = getattr(cfg, "audio_src", "binaural")            # binaural | foa
         self.spec = T.Spectrogram(n_fft=_NFFT, win_length=_WIN, hop_length=_HOP, power=1.0)
         self._win = torch.hann_window(_WIN)
         scenes = json.load(open(os.path.join(self.root, SPLIT)))[split]
@@ -51,12 +53,18 @@ class RawDataset(Dataset):
         for s in scenes:
             adir = os.path.join(self.root, s, "audio_wav")
             ddir = os.path.join(self.root, s, "erp_depth_radial")
+            fdir = os.path.join(self.root, s, "ambi1_npy")
             if not (os.path.isdir(adir) and os.path.isdir(ddir)):
+                continue
+            if self.src == "foa" and not os.path.isdir(fdir):
                 continue
             for af in sorted(f for f in os.listdir(adir) if f.endswith(".wav")):
                 idx = af.replace("audio_", "").replace(".wav", "")
-                if os.path.exists(os.path.join(ddir, f"erp_depth_{idx}.npy")):
-                    out.append((s, idx))
+                if not os.path.exists(os.path.join(ddir, f"erp_depth_{idx}.npy")):
+                    continue
+                if self.src == "foa" and not os.path.exists(os.path.join(fdir, f"ambi1_{idx}.npy")):
+                    continue
+                out.append((s, idx))
         lim = os.environ.get("DEBUG_LIMIT")          # fast end-to-end smoke only
         if lim:
             out = out[:int(lim)]
@@ -94,6 +102,24 @@ class RawDataset(Dataset):
         feat = torch.stack([lmag, rmag, ild, torch.cos(ipd), torch.sin(ipd)], 0)[:n]  # (n,F,T')
         return F.interpolate(feat.unsqueeze(0), (self.H, self.W), mode="nearest").squeeze(0).float()
 
+    def _specfoa(self, s, idx):
+        """4ch FOA (1st-order ambisonics, ACN [W,Y,Z,X]) log-mag spectrogram, resized
+        to (H,W). Rotated to the agent's canonical frame (world->agent) so the FOA
+        directional axes align with the agent-centred ERP depth."""
+        ir = np.load(os.path.join(self.root, s, "ambi1_npy", f"ambi1_{idx}.npy")).astype(np.float32)
+        vm = int(idx) % 4                              # 4-yaw capture cycle: 0,-90,-180,-270
+        if vm:                                         # rotate yaw: mixes (Y=1, X=3) only
+            Y, X = ir[1].copy(), ir[3].copy()
+            if vm == 1:   ir[1], ir[3] = X, -Y
+            elif vm == 2: ir[1], ir[3] = -Y, -X
+            elif vm == 3: ir[1], ir[3] = -X, Y
+        x = torch.from_numpy(ir[:, :self.cut])
+        if x.shape[1] < self.cut:
+            x = F.pad(x, (0, self.cut - x.shape[1]))
+        st = torch.stft(x, _NFFT, _HOP, _WIN, self._win, return_complex=True)   # (4,F,T')
+        feat = torch.log1p(st.abs())                                            # (4,F,T')
+        return F.interpolate(feat.unsqueeze(0), (self.H, self.W), mode="nearest").squeeze(0).float()
+
     def _depth(self, s, idx):
         d = np.nan_to_num(np.load(os.path.join(self.root, s, "erp_depth_radial",
                                                f"erp_depth_{idx}.npy")).astype(np.float32))
@@ -105,8 +131,11 @@ class RawDataset(Dataset):
     def __getitem__(self, i):
         s, idx = self.samples[i]
         try:
-            wav = self._wave(s, idx)
-            spec = self._spec2(wav) if self.in_ch == 2 else self._specN(wav, self.in_ch)
+            if self.src == "foa":
+                spec = self._specfoa(s, idx)
+            else:
+                wav = self._wave(s, idx)
+                spec = self._spec2(wav) if self.in_ch == 2 else self._specN(wav, self.in_ch)
             depth, mask = self._depth(s, idx)
         except Exception as e:
             print(f"[skip {s}/{idx}] {e}", flush=True)
@@ -129,6 +158,11 @@ def collate(b):
 def _cache_dir(cfg):
     base = getattr(cfg, "cache_dir", "") or "/root/implicit_full_cache"
     tag = "" if getattr(cfg, "log_spec", True) else "_nolog"
+    w = getattr(cfg, "audio_window_m", 10.0) or 10.0
+    if abs(w - cfg.max_depth) > 1e-6:
+        tag += f"_w{int(w)}"
+    if getattr(cfg, "audio_src", "binaural") == "foa":
+        tag += "_foa"
     return os.path.join(base, f"ic{getattr(cfg,'in_ch',2)}_{cfg.img_h}x{cfg.img_w}{tag}")
 
 
@@ -231,6 +265,8 @@ def apply_audio_mode(spec, mode):
         if C >= 5:
             y[:, 3:4] = 1.0; y[:, 4:5] = 0.0                 # cos(IPD)=1, sin(IPD)=0
         return y
+    if C == 4 and mode == "mono":                            # FOA: keep W, zero directional
+        y = spec.clone(); y[:, 1:] = 0.0; return y
     raise ValueError(f"unsupported audio_mode={mode} for C={C}")
 
 
@@ -240,6 +276,8 @@ def swap_audio_lr(spec):
     C = spec.shape[1]
     if C == 2:
         return spec[:, [1, 0]]
+    if C == 4:                                # FOA ACN [W,Y,Z,X]: az->-az flips Y sign
+        y = spec.clone(); y[:, 1] = -spec[:, 1]; return y
     y = spec.clone()
     y[:, 0] = spec[:, 1]; y[:, 1] = spec[:, 0]
     if C >= 3:

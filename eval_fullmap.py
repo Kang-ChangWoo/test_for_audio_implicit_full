@@ -90,7 +90,10 @@ def main():
           f"delta1={rep['test']['delta1']:.3f}" + (f" alpha={a:+.3f}" if a is not None else ""), flush=True)
     if args.controls:
         for nm, kw in [("mono", dict(mode="mono")), ("shuffle", dict(shuffle=True)), ("swap", dict(swap=True))]:
-            rep[nm] = evrun(model, loader, cfg, extra, device, max_n=mx, **kw)
+            try:
+                rep[nm] = evrun(model, loader, cfg, extra, device, max_n=mx, **kw)
+            except Exception as e:
+                print(f"[{nm}] skipped ({e})", flush=True); continue
             print(f"[{nm}] MAE={rep[nm]['MAE']:.4f} MAE_low={rep[nm]['MAE_low']:.4f}", flush=True)
     if a is not None:
         rep["alpha"] = a

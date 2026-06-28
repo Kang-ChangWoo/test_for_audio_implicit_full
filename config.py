@@ -32,6 +32,8 @@ DEFAULTS = dict(
     # The real erp_depth_radial files are 512x1024; we resize to this (no 64x128 cache).
     img_h=256, img_w=512, max_depth=10.0, sample_rate=48000,
     log_spec=True,            # 2ch magnitude spectrogram: log1p (True) vs raw (False)
+    audio_window_m=10.0,      # audio truncation window [m round-trip basis]; >max_depth = richer (later reflections)
+    audio_src="binaural",     # binaural (2-ear wav) | foa (1st-order ambisonics, 4ch ACN, rotated to agent frame)
 
     # --- input channels (2 = log-mag binaural; 5 = RIR spatial feature, A13) ---
     in_ch=2,
