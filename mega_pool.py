@@ -85,11 +85,22 @@ for s in (0, 1, 2):
     JOBS.append(fm(f"Bnode2_wave_unet8_s{s}", s, "wave", "2e-3",
                    "--ngf 64 --unet-downs 8 --in-ch 5 --audio-src wave --flip-aug True", 40, IC_WAVE))
 
-# priority: richer-input + coarse-layout / dense-rayconv / cross_unetenc research focus run FIRST
-def _pri(n): return (n.startswith("Bnode2_gcc_") or n.startswith("Bnode2_wave_")
-                     or n.startswith("C_cross_align") or n.startswith("C_unet8")
-                     or "rayconv5d" in n or "cross_unetenc" in n)
-JOBS = [j for j in JOBS if _pri(j["name"])] + [j for j in JOBS if not _pri(j["name"])]
+# --- RayDPT: ray-conditioned multi-scale DPT decoder (global audio cross-attn at
+# coarse tokens + e2 DPT skip + local spherical window attention) ---
+for s in (0, 1, 2):
+    JOBS.append(fm(f"C_raydpt_5chflip_s{s}", s, "raydpt", "3e-4",
+                   "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2", 16, IC5))
+
+# explicit front-of-queue ordering: just-added RayDPT runs FIRST, then the other
+# richer-input / research-focus jobs, then everything else (stable within a rank).
+FRONT = ["C_raydpt", "Bnode2_gcc_", "Bnode2_wave_", "C_cross_align",
+         "C_unet8", "rayconv5d", "cross_unetenc"]
+def _rank(n):
+    for i, p in enumerate(FRONT):
+        if p in n:
+            return i
+    return len(FRONT)
+JOBS = sorted(JOBS, key=lambda j: _rank(j["name"]))      # stable sort preserves order within a rank
 
 
 # optional split: restrict to a GPU subset and/or skip a name substring (run elsewhere)

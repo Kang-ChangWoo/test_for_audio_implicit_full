@@ -127,13 +127,16 @@ def main():
     elif getattr(cfg, "arch", "fullmap") == "wave":
         from model_wave import WaveUNet
         model = WaveUNet(cfg).to(device)
+    elif getattr(cfg, "arch", "fullmap") == "raydpt":
+        from model_raydpt import RayDPT
+        model = RayDPT(cfg).to(device)
     elif getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res"):
         from model_unet_coarse import UNetCoarse, UNetSH, UNetRayCoarse, UNetCoarseResidual
         model = {"unet_coarse": UNetCoarse, "unet_sh": UNetSH,
                  "unet_raycoarse": UNetRayCoarse, "unet_coarse_res": UNetCoarseResidual}[cfg.arch](cfg).to(device)
     else:
         model = FullMapNet(cfg).to(device)
-    COARSE_ARCH = getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res")
+    COARSE_ARCH = getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res", "raydpt")
     WAVE_ARCH = getattr(cfg, "arch", "fullmap") == "wave"
     if cfg.init_decoder:
         warm_start(model, cfg.init_decoder, cfg.freeze_decoder, device)

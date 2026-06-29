@@ -63,6 +63,7 @@ DEFAULTS = dict(
     residual_scale=0.1, residual_h=32, residual_w=64,   # constrained low-pass residual
     ray_coarse_h=16, ray_coarse_w=32,     # coarse ray-token grid for unet_raycoarse
     ray_cross_layers=2, ray_self_layers=1,
+    raydpt_win32=5, raydpt_win64=3,       # RayDPT local spherical-attention window per scale
     # coarse-arch loss weights (only applied for arch in the coarse family)
     w_dense=1.0, w_coarse_layout=1.0, w_low=0.5, w_tv_res=0.01,
 

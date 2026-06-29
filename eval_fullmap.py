@@ -49,6 +49,9 @@ def load(run_dir, device):
     elif getattr(cfg, "arch", "fullmap") == "wave":
         from model_wave import WaveUNet
         m = WaveUNet(cfg).to(device).eval()
+    elif getattr(cfg, "arch", "fullmap") == "raydpt":
+        from model_raydpt import RayDPT
+        m = RayDPT(cfg).to(device).eval()
     elif getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res"):
         from model_unet_coarse import UNetCoarse, UNetSH, UNetRayCoarse, UNetCoarseResidual
         m = {"unet_coarse": UNetCoarse, "unet_sh": UNetSH,
