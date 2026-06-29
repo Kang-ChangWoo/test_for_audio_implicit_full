@@ -44577,3 +44577,143 @@
 [evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
 [evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
 [evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu0 (free 48540MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu5 (free 48540MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu0)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu5)
+[evald] EVAL A13_ipd5_s1 on gpu0 (free 48540MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu5 (free 48540MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu0)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu5)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
+[evald] FAIL(rc=1) eval A13_ipd5_s1 (gpu1)
+[evald] FAIL(rc=1) eval A13_ipd5_s2 (gpu7)
+[evald] EVAL A13_ipd5_s1 on gpu1 (free 38338MiB)  [1 more queued]
+[evald] EVAL A13_ipd5_s2 on gpu7 (free 35184MiB)  [0 more queued]
