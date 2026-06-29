@@ -109,7 +109,9 @@ def _rank(n):
 JOBS = sorted(JOBS, key=lambda j: _rank(j["name"]))      # stable sort preserves order within a rank
 
 # explicit drops: pulled from the queue (e.g. underperforming, free the slot for RayDPT)
-DROP = {"C_cross_align_5chflip_s2"}
+DROP = {"C_cross_align_5chflip_s2",
+        "C_cross_align_5chflip_s0", "C_cross_align_5chflip_s1",   # killed: non-contender, free GPU for RayDPT
+        "Bnode2_crossself_flip_s0", "Bnode2_cross_vitenc_s0"}     # killed eval; keep best.pth, skip re-run
 JOBS = [j for j in JOBS if j["name"] not in DROP]
 
 
