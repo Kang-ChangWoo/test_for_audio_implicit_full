@@ -90,6 +90,12 @@ for s in (0, 1, 2):
 for s in (0, 1, 2):
     JOBS.append(fm(f"C_raydpt_5chflip_s{s}", s, "raydpt", "3e-4",
                    "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2", 16, IC5))
+# Ray-DPT FULL-DECODE: learned upsample 64x128->256x512 (+e1 skip), fair vs U-Net's
+# full-res learned decoder (instead of parameter-free bilinear x4). shared ray-proj.
+for s in (0, 1, 2):
+    JOBS.append(fm(f"C_raydptfd_5chflip_s{s}", s, "raydpt", "3e-4",
+                   "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 "
+                   "--raydpt-full-decode True", 16, IC5))
 # Ray-DPT SHARED ray-proj across scales (direction-based feats -> one MLP, scale-consistent).
 for s in (0, 1, 2):
     JOBS.append(fm(f"C_raydptsh_5chflip_s{s}", s, "raydpt", "3e-4",
@@ -103,8 +109,8 @@ for s in (0, 1, 2):
 
 # explicit front-of-queue ordering: just-added RayDPT runs FIRST, then the other
 # richer-input / research-focus jobs, then everything else (stable within a rank).
-FRONT = ["C_raydpt_5chflip", "C_raydptsh", "C_raydptlite", "Bnode2_gcc_", "Bnode2_wave_",
-         "C_cross_align", "C_unet8", "rayconv5d", "cross_unetenc"]
+FRONT = ["C_raydptfd", "C_raydpt_5chflip", "C_raydptsh", "C_raydptlite", "Bnode2_gcc_",
+         "Bnode2_wave_", "C_cross_align", "C_unet8", "rayconv5d", "cross_unetenc"]
 def _rank(n):
     for i, p in enumerate(FRONT):
         if p in n:
