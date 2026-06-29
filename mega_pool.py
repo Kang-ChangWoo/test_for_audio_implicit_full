@@ -90,6 +90,10 @@ for s in (0, 1, 2):
 for s in (0, 1, 2):
     JOBS.append(fm(f"C_raydpt_5chflip_s{s}", s, "raydpt", "3e-4",
                    "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2", 16, IC5))
+# Ray-DPT SHARED ray-proj across scales (direction-based feats -> one MLP, scale-consistent).
+for s in (0, 1, 2):
+    JOBS.append(fm(f"C_raydptsh_5chflip_s{s}", s, "raydpt", "3e-4",
+                   "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2", 16, IC5))
 # Ray-DPT-lite: 2-scale (32,64), single ray cross-attn + e2 skip + local spherical attn.
 # Staged variant to isolate the fusion gain; loss dense+0.5*coarse+0.5*low.
 for s in (0, 1, 2):
@@ -99,7 +103,7 @@ for s in (0, 1, 2):
 
 # explicit front-of-queue ordering: just-added RayDPT runs FIRST, then the other
 # richer-input / research-focus jobs, then everything else (stable within a rank).
-FRONT = ["C_raydpt_5chflip", "C_raydptlite", "Bnode2_gcc_", "Bnode2_wave_",
+FRONT = ["C_raydpt_5chflip", "C_raydptsh", "C_raydptlite", "Bnode2_gcc_", "Bnode2_wave_",
          "C_cross_align", "C_unet8", "rayconv5d", "cross_unetenc"]
 def _rank(n):
     for i, p in enumerate(FRONT):
@@ -111,7 +115,8 @@ JOBS = sorted(JOBS, key=lambda j: _rank(j["name"]))      # stable sort preserves
 # explicit drops: pulled from the queue (e.g. underperforming, free the slot for RayDPT)
 DROP = {"C_cross_align_5chflip_s2",
         "C_cross_align_5chflip_s0", "C_cross_align_5chflip_s1",   # killed: non-contender, free GPU for RayDPT
-        "Bnode2_crossself_flip_s0", "Bnode2_cross_vitenc_s0"}     # killed eval; keep best.pth, skip re-run
+        "Bnode2_crossself_flip_s0", "Bnode2_cross_vitenc_s0",     # killed eval; keep best.pth, skip re-run
+        "C_raydpt_5chflip_s2"}                                    # separate-proj legacy: keep s0/s1 only (shared = C_raydptsh)
 JOBS = [j for j in JOBS if j["name"] not in DROP]
 
 
