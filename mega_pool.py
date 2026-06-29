@@ -108,6 +108,10 @@ def _rank(n):
     return len(FRONT)
 JOBS = sorted(JOBS, key=lambda j: _rank(j["name"]))      # stable sort preserves order within a rank
 
+# explicit drops: pulled from the queue (e.g. underperforming, free the slot for RayDPT)
+DROP = {"C_cross_align_5chflip_s2"}
+JOBS = [j for j in JOBS if j["name"] not in DROP]
+
 
 # optional split: restrict to a GPU subset and/or skip a name substring (run elsewhere)
 ALLOW = set(int(x) for x in os.environ.get("MEGA_GPUS", "0,1,2,3,4,5,6,7").split(","))
