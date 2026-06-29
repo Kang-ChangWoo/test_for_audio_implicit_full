@@ -1,0 +1,250 @@
+{
+  "best_val_mae_m": 1.2242640158113558,
+  "hist": [
+    {
+      "epoch": 0,
+      "val_mae_m": 1.345183989260295,
+      "alpha": null,
+      "mae": 0.09249820870243841
+    },
+    {
+      "epoch": 1,
+      "val_mae_m": 1.3457352180281295,
+      "alpha": null,
+      "mae": 0.0851091936054743
+    },
+    {
+      "epoch": 2,
+      "val_mae_m": 1.2970923611231717,
+      "alpha": null,
+      "mae": 0.08386966417336629
+    },
+    {
+      "epoch": 3,
+      "val_mae_m": 1.3623825407465313,
+      "alpha": null,
+      "mae": 0.08336965000463857
+    },
+    {
+      "epoch": 4,
+      "val_mae_m": 1.3051830275579182,
+      "alpha": null,
+      "mae": 0.08324991918686364
+    },
+    {
+      "epoch": 5,
+      "val_mae_m": 1.2862272967396977,
+      "alpha": null,
+      "mae": 0.08243236561305821
+    },
+    {
+      "epoch": 6,
+      "val_mae_m": 1.2968989490804428,
+      "alpha": null,
+      "mae": 0.0820124289796998
+    },
+    {
+      "epoch": 7,
+      "val_mae_m": 1.274722078166255,
+      "alpha": null,
+      "mae": 0.08155849316260881
+    },
+    {
+      "epoch": 8,
+      "val_mae_m": 1.249288779458544,
+      "alpha": null,
+      "mae": 0.0813932112356027
+    },
+    {
+      "epoch": 9,
+      "val_mae_m": 1.2439705229983897,
+      "alpha": null,
+      "mae": 0.08124047935422923
+    },
+    {
+      "epoch": 10,
+      "val_mae_m": 1.255913145758711,
+      "alpha": null,
+      "mae": 0.0808720358616362
+    },
+    {
+      "epoch": 11,
+      "val_mae_m": 1.2634640331500742,
+      "alpha": null,
+      "mae": 0.0805098748859018
+    },
+    {
+      "epoch": 12,
+      "val_mae_m": 1.2484537908262336,
+      "alpha": null,
+      "mae": 0.08014025605283677
+    },
+    {
+      "epoch": 13,
+      "val_mae_m": 1.249466871337765,
+      "alpha": null,
+      "mae": 0.07976440746854577
+    },
+    {
+      "epoch": 14,
+      "val_mae_m": 1.2436439267317096,
+      "alpha": null,
+      "mae": 0.07962577612449726
+    },
+    {
+      "epoch": 15,
+      "val_mae_m": 1.2405236268127762,
+      "alpha": null,
+      "mae": 0.07923122336053186
+    },
+    {
+      "epoch": 16,
+      "val_mae_m": 1.2392341364229946,
+      "alpha": null,
+      "mae": 0.07887545133423474
+    },
+    {
+      "epoch": 17,
+      "val_mae_m": 1.2291705622299878,
+      "alpha": null,
+      "mae": 0.07859042106610205
+    },
+    {
+      "epoch": 18,
+      "val_mae_m": 1.2310313106473625,
+      "alpha": null,
+      "mae": 0.07839693175732261
+    },
+    {
+      "epoch": 19,
+      "val_mae_m": 1.2287154139887895,
+      "alpha": null,
+      "mae": 0.07817473748284909
+    },
+    {
+      "epoch": 20,
+      "val_mae_m": 1.224983021494016,
+      "alpha": null,
+      "mae": 0.0778434906858537
+    },
+    {
+      "epoch": 21,
+      "val_mae_m": 1.2249031680587492,
+      "alpha": null,
+      "mae": 0.07771150917228725
+    },
+    {
+      "epoch": 22,
+      "val_mae_m": 1.2268069791307057,
+      "alpha": null,
+      "mae": 0.07756962411416074
+    },
+    {
+      "epoch": 23,
+      "val_mae_m": 1.2244715680070613,
+      "alpha": null,
+      "mae": 0.0775538405455235
+    },
+    {
+      "epoch": 24,
+      "val_mae_m": 1.2242640158113558,
+      "alpha": null,
+      "mae": 0.07749258402838476
+    }
+  ],
+  "cfg": {
+    "dataset_dir": "/root/storage/matterport3d_0303renew",
+    "cache_dir": "/root/implicit_full_cache",
+    "img_h": 256,
+    "img_w": 512,
+    "max_depth": 10.0,
+    "sample_rate": 48000,
+    "log_spec": true,
+    "audio_window_m": 10.0,
+    "audio_src": "binaural",
+    "in_ch": 5,
+    "model": "raymlp",
+    "width": 48,
+    "embed_dim": 128,
+    "dim": 192,
+    "audio_dim": 256,
+    "use_xyz": true,
+    "use_fourier_pe": true,
+    "fourier_bands": 6,
+    "use_sh_pe": false,
+    "sh_order": 4,
+    "use_mic_pe": false,
+    "head_r": 0.0875,
+    "front_back_w": 1.0,
+    "hi_tokens": false,
+    "cross_enc": "conv",
+    "coarse_head_h": 16,
+    "coarse_head_w": 32,
+    "coarse_sh_order": 4,
+    "residual_scale": 0.1,
+    "residual_h": 32,
+    "residual_w": 64,
+    "ray_coarse_h": 16,
+    "ray_coarse_w": 32,
+    "ray_cross_layers": 2,
+    "ray_self_layers": 1,
+    "w_dense": 1.0,
+    "w_coarse_layout": 1.0,
+    "w_low": 0.5,
+    "w_tv_res": 0.01,
+    "n_heads": 4,
+    "n_cross": 2,
+    "n_self": 2,
+    "ray_mlp_skip": false,
+    "ray_film": false,
+    "prog_pe": false,
+    "sector_sample": false,
+    "use_depth_bins": false,
+    "n_bins": 64,
+    "hybrid_sh_order": 3,
+    "w_coarse": 0.5,
+    "w_res": 0.02,
+    "arch": "rayconv",
+    "ngf": 64,
+    "unet_downs": 6,
+    "ray_mod_scale": 0.1,
+    "ray_mod_stage": "e3",
+    "vit_pretrained": true,
+    "vit_freeze": false,
+    "vit_pe": "planar",
+    "correction": "none",
+    "coarse_h": 64,
+    "coarse_w": 128,
+    "corr_sh_order": 3,
+    "w_sh_aux": 1.0,
+    "init_decoder": "",
+    "freeze_decoder": false,
+    "res_scale": 0.3,
+    "w_res_sup": 1.0,
+    "w_tv": 0.01,
+    "chan_norm": false,
+    "w_swap_eq": 0.0,
+    "prob_k": 5,
+    "prob_eps": 0.05,
+    "prob_w_nll": 0.2,
+    "prob_coarse": true,
+    "prob_head_h": 16,
+    "prob_head_w": 32,
+    "n_rays": 2048,
+    "eval_chunk": 4096,
+    "flip_aug": true,
+    "epochs": 25,
+    "batch_size": 8,
+    "lr": 0.002,
+    "weight_decay": 0.0001,
+    "num_workers": 6,
+    "seed": 1,
+    "device": "cuda",
+    "out_dir": "out",
+    "run_name": "Bnode2_rayconv5d_s1",
+    "audio_mode": "stereo",
+    "shuffle_audio": false,
+    "mask_farfield": false,
+    "coarse_feat_dim": 39
+  }
+}

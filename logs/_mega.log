@@ -1,9 +1,3 @@
-[mega] 66 jobs total
-[mega] launch C_unet8_coarse16_5chflip_s0 gpu0 (52 left)
-[mega] launch C_unet8_coarse32_5chflip_s0 gpu1 (52 left)
-[mega] launch C_unet8_sh4_5chflip_s0 gpu2 (52 left)
-[mega] launch C_unet8_sh6_5chflip_s0 gpu3 (52 left)
-[mega] launch C_unet8_raycoarse16_5chflip_s0 gpu4 (52 left)
-[mega] launch C_unet8_coarseres_5chflip_s0 gpu5 (52 left)
-[mega] launch Bnode2_rayconv5d_s0 gpu6 (52 left)
-[mega] launch C_unet8_coarse16_5chflip_s1 gpu7 (52 left)
+[mega] 75 jobs total
+[mega] launch C_cross_align_5chflip_s0 gpu0 (40 left)
+[mega] launch C_cross_align_5chflip_s1 gpu5 (40 left)
