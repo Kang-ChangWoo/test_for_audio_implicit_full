@@ -46,6 +46,9 @@ def load(run_dir, device):
     elif getattr(cfg, "arch", "fullmap") == "cross_align":
         from model_cross_align import CrossAlign
         m = CrossAlign(cfg).to(device).eval()
+    elif getattr(cfg, "arch", "fullmap") == "wave":
+        from model_wave import WaveUNet
+        m = WaveUNet(cfg).to(device).eval()
     elif getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res"):
         from model_unet_coarse import UNetCoarse, UNetSH, UNetRayCoarse, UNetCoarseResidual
         m = {"unet_coarse": UNetCoarse, "unet_sh": UNetSH,
@@ -62,6 +65,7 @@ def load(run_dir, device):
 @torch.no_grad()
 def evrun(model, loader, cfg, extra, device, mode="stereo", shuffle=False, swap=False, max_n=None):
     mb = MetricBank(cfg.img_h, cfg.img_w, cfg.max_depth, device=device); seen = 0
+    wave_arch = getattr(cfg, "arch", "fullmap") == "wave"
     for b in loader:
         spec = b["spec"].to(device)
         if spec.shape[1] > getattr(cfg,"in_ch",2):
@@ -73,7 +77,11 @@ def evrun(model, loader, cfg, extra, device, mode="stereo", shuffle=False, swap=
             spec = swap_audio_lr(spec)
         if "norm" in extra:
             spec = (spec - extra["norm"][0]) / extra["norm"][1]
-        D = model(spec, extra.get("coarse_feat"), extra.get("sh_basis"))["D"] * cfg.max_depth
+        wave = b["wave"].to(device) if "wave" in b else None
+        if wave is not None and swap:
+            wave = wave[:, [1, 0]]
+        D = (model(spec, wave) if wave_arch else
+             model(spec, extra.get("coarse_feat"), extra.get("sh_basis")))["D"] * cfg.max_depth
         mb.add(D, b["depth"].to(device) * cfg.max_depth, b["mask"].to(device))
         seen += spec.size(0)
         if max_n and seen >= max_n:

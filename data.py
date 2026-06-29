@@ -102,6 +102,27 @@ class RawDataset(Dataset):
         feat = torch.stack([lmag, rmag, ild, torch.cos(ipd), torch.sin(ipd)], 0)[:n]  # (n,F,T')
         return F.interpolate(feat.unsqueeze(0), (self.H, self.W), mode="nearest").squeeze(0).float()
 
+    def _gcc(self, wav):
+        """GCC-PHAT cross-correlation map (1,H,W): lag axis = ITD/time-of-flight, the
+        fine binaural timing that log-mag throws away. Derived from the raw waveform."""
+        x = wav
+        if x.shape[1] < self.cut:
+            x = F.pad(x, (0, self.cut - x.shape[1]))
+        st = torch.stft(x, _NFFT, _HOP, _WIN, self._win, return_complex=True)   # (2,F,T')
+        X = st[0] * torch.conj(st[1])                                           # cross-spectrum
+        Xp = X / (X.abs() + 1e-6)                                               # PHAT weighting
+        g = torch.fft.irfft(Xp, n=_NFFT, dim=0)                                 # (NFFT,T') lag x time
+        g = torch.fft.fftshift(g, dim=0)                                        # zero-lag centred
+        g = (g - g.mean()) / (g.std() + 1e-6)                                   # standardise scale
+        return F.interpolate(g[None, None], (self.H, self.W), mode="nearest").squeeze(0).float()
+
+    def _wave_fixed(self, wav):
+        """Raw binaural waveform, fixed length (2, cut) for the WaveUNet 1D-CNN branch."""
+        x = wav
+        if x.shape[1] < self.cut:
+            x = F.pad(x, (0, self.cut - x.shape[1]))
+        return x[:, :self.cut].contiguous().float()
+
     def _specfoa(self, s, idx):
         """4ch FOA (1st-order ambisonics, ACN [W,Y,Z,X]) log-mag spectrogram, resized
         to (H,W). Rotated to the agent's canonical frame (world->agent) so the FOA
@@ -130,9 +151,17 @@ class RawDataset(Dataset):
 
     def __getitem__(self, i):
         s, idx = self.samples[i]
+        wave = None
         try:
             if self.src == "foa":
                 spec = self._specfoa(s, idx)
+            elif self.src == "gcc":
+                wav = self._wave(s, idx)
+                spec = torch.cat([self._specN(wav, 5), self._gcc(wav)], 0)   # (6,H,W)
+            elif self.src == "wave":
+                wav = self._wave(s, idx)
+                spec = self._specN(wav, 5)                                   # 5ch main path
+                wave = self._wave_fixed(wav)                                 # (2,cut) raw
             else:
                 wav = self._wave(s, idx)
                 spec = self._spec2(wav) if self.in_ch == 2 else self._specN(wav, self.in_ch)
@@ -140,7 +169,10 @@ class RawDataset(Dataset):
         except Exception as e:
             print(f"[skip {s}/{idx}] {e}", flush=True)
             return self[(i + 1) % len(self)]
-        return {"spec": spec, "depth": depth, "mask": mask, "key": f"{s}/{idx}"}
+        out = {"spec": spec, "depth": depth, "mask": mask, "key": f"{s}/{idx}"}
+        if wave is not None:
+            out["wave"] = wave
+        return out
 
 
 def collate(b):
@@ -161,27 +193,40 @@ def _cache_dir(cfg):
     w = getattr(cfg, "audio_window_m", 10.0) or 10.0
     if abs(w - cfg.max_depth) > 1e-6:
         tag += f"_w{int(w)}"
-    if getattr(cfg, "audio_src", "binaural") == "foa":
+    src = getattr(cfg, "audio_src", "binaural")
+    if src == "foa":
         tag += "_foa"
+    elif src == "gcc":
+        tag += "_gcc"          # 5ch RIR + GCC-PHAT lag map (6ch, waveform-derived)
+    elif src == "wave":
+        tag += "_wave"         # 5ch RIR spec + raw binaural waveform (extra array)
     return os.path.join(base, f"ic{getattr(cfg,'in_ch',2)}_{cfg.img_h}x{cfg.img_w}{tag}")
 
 
-def _cache_paths(cdir, split):
-    return ({k: os.path.join(cdir, f"{split}_{k}.npy") for k in ("spec", "depth", "mask")},
+def _arr_keys(cfg):
+    """Array tensors stored in the cache. 'wave' adds the raw waveform branch input."""
+    return ["spec", "depth", "mask"] + (["wave"] if getattr(cfg, "audio_src", "binaural") == "wave" else [])
+
+
+def _cache_paths(cdir, split, cfg=None):
+    ks = _arr_keys(cfg) if cfg is not None else ["spec", "depth", "mask"]
+    return ({k: os.path.join(cdir, f"{split}_{k}.npy") for k in ks},
             os.path.join(cdir, f"{split}_keys.json"))
 
 
 def cache_exists(cfg, split):
-    paths, kp = _cache_paths(_cache_dir(cfg), split)
+    paths, kp = _cache_paths(_cache_dir(cfg), split, cfg)
     return os.path.exists(kp) and all(os.path.exists(p) for p in paths.values())
 
 
 def build_cache(cfg, split):
     cdir = _cache_dir(cfg); os.makedirs(cdir, exist_ok=True)
-    paths, kp = _cache_paths(cdir, split)
+    paths, kp = _cache_paths(cdir, split, cfg)
     ds = RawDataset(cfg, split); N = len(ds); H, W, C = cfg.img_h, cfg.img_w, getattr(cfg, "in_ch", 2)
     dt = {"spec": np.float16, "depth": np.float16, "mask": np.uint8}
     sh = {"spec": (N, C, H, W), "depth": (N, 1, H, W), "mask": (N, 1, H, W)}
+    if getattr(cfg, "audio_src", "binaural") == "wave":               # raw waveform branch input
+        dt["wave"] = np.float16; sh["wave"] = (N, 2, ds.cut)
     mm = {k: np.lib.format.open_memmap(paths[k] + ".tmp", mode="w+", dtype=dt[k], shape=sh[k]) for k in dt}
     keys = [None] * N
     dl = DataLoader(ds, batch_size=64, shuffle=False, num_workers=cfg.num_workers, collate_fn=collate)
@@ -201,7 +246,7 @@ def build_cache(cfg, split):
 
 class CachedDataset(Dataset):
     def __init__(self, cfg, split):
-        paths, kp = _cache_paths(_cache_dir(cfg), split)
+        paths, kp = _cache_paths(_cache_dir(cfg), split, cfg)
         self.keys = json.load(open(kp))
         self.arr = {k: np.load(p, mmap_mode="r") for k, p in paths.items()}
         print(f"[{split}] {len(self.keys)} (cache {_cache_dir(cfg)})", flush=True)
@@ -278,6 +323,12 @@ def swap_audio_lr(spec):
         return spec[:, [1, 0]]
     if C == 4:                                # FOA ACN [W,Y,Z,X]: az->-az flips Y sign
         y = spec.clone(); y[:, 1] = -spec[:, 1]; return y
+    if C == 6:                                # 5ch RIR + GCC-PHAT lag map
+        y = spec.clone()
+        y[:, 0] = spec[:, 1]; y[:, 1] = spec[:, 0]; y[:, 2] = -spec[:, 2]
+        y[:, 3] = spec[:, 3]; y[:, 4] = -spec[:, 4]
+        y[:, 5] = torch.flip(spec[:, 5], dims=[-2])     # L<->R reverses GCC lag axis
+        return y
     y = spec.clone()
     y[:, 0] = spec[:, 1]; y[:, 1] = spec[:, 0]
     if C >= 3:

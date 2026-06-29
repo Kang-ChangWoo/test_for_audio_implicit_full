@@ -74,10 +74,13 @@ def chan_stats(cfg, device):
 @torch.no_grad()
 def quick_val(model, loader, cfg, device, extra, wlat, norm=None):
     model.eval(); tot = 0.0; wn = 0.0; seen = 0
+    wave_arch = getattr(cfg, "arch", "fullmap") == "wave"
     for b in loader:
         spec = prep_audio(b["spec"].to(device), cfg, norm)
         gt = b["depth"].to(device); mask = b["mask"].to(device)
-        D = model(spec, extra.get("coarse_feat"), extra.get("sh_basis"))["D"] * cfg.max_depth
+        wave = b["wave"].to(device) if "wave" in b else None
+        D = (model(spec, wave) if wave_arch else
+             model(spec, extra.get("coarse_feat"), extra.get("sh_basis")))["D"] * cfg.max_depth
         w = wlat * mask
         tot += ((D - gt * cfg.max_depth).abs() * w).sum().item(); wn += w.sum().item()
         seen += spec.size(0)
@@ -121,6 +124,9 @@ def main():
     elif getattr(cfg, "arch", "fullmap") == "cross_align":
         from model_cross_align import CrossAlign
         model = CrossAlign(cfg).to(device)
+    elif getattr(cfg, "arch", "fullmap") == "wave":
+        from model_wave import WaveUNet
+        model = WaveUNet(cfg).to(device)
     elif getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res"):
         from model_unet_coarse import UNetCoarse, UNetSH, UNetRayCoarse, UNetCoarseResidual
         model = {"unet_coarse": UNetCoarse, "unet_sh": UNetSH,
@@ -128,6 +134,7 @@ def main():
     else:
         model = FullMapNet(cfg).to(device)
     COARSE_ARCH = getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res")
+    WAVE_ARCH = getattr(cfg, "arch", "fullmap") == "wave"
     if cfg.init_decoder:
         warm_start(model, cfg.init_decoder, cfg.freeze_decoder, device)
     print(f"[model] params={sum(p.numel() for p in model.parameters())/1e6:.2f}M", flush=True)
@@ -147,6 +154,7 @@ def main():
         for b in tr:
             spec = prep_audio(b["spec"].to(device, non_blocking=True), cfg, norm)
             gt = b["depth"].to(device); mask = b["mask"].to(device)
+            wave = b["wave"].to(device, non_blocking=True) if "wave" in b else None
             if getattr(cfg, "flip_aug", False):              # correct L/R mirror aug (no spec-time-flip)
                 fm = torch.rand(spec.size(0), device=device) < 0.5
                 if fm.any():
@@ -154,7 +162,9 @@ def main():
                     spec[fm] = swap_audio_lr(spec[fm])
                     gt[fm] = torch.flip(gt[fm], dims=[-1])
                     mask[fm] = torch.flip(mask[fm], dims=[-1])
-            out = model(spec, extra.get("coarse_feat"), extra.get("sh_basis"))
+                    if wave is not None:
+                        wave = wave.clone(); wave[fm] = wave[fm][:, [1, 0]]   # swap ears
+            out = model(spec, wave) if WAVE_ARCH else model(spec, extra.get("coarse_feat"), extra.get("sh_basis"))
             main = masked_mae(out["D"], gt, mask)
             logs = {"mae": float(main.detach())}
             if COARSE_ARCH:

@@ -33,7 +33,8 @@ DEFAULTS = dict(
     img_h=256, img_w=512, max_depth=10.0, sample_rate=48000,
     log_spec=True,            # 2ch magnitude spectrogram: log1p (True) vs raw (False)
     audio_window_m=10.0,      # audio truncation window [m round-trip basis]; >max_depth = richer (later reflections)
-    audio_src="binaural",     # binaural (2-ear wav) | foa (1st-order ambisonics, 4ch ACN, rotated to agent frame)
+    audio_src="binaural",     # binaural | foa | gcc (5ch+GCC-PHAT, 6ch) | wave (5ch+raw waveform)
+    wave_ch=8, wave_ngf=32,   # WaveUNet: raw-waveform 1D-CNN global embedding width
 
     # --- input channels (2 = log-mag binaural; 5 = RIR spatial feature, A13) ---
     in_ch=2,

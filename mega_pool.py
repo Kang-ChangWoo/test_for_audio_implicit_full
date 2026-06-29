@@ -26,6 +26,7 @@ def prob(name, seed, extra, bs, cache=None):
     return dict(name=name, cmd=cmd, cache=cache, art="prob_eval.json")
 
 IC5 = f"{CK}/ic5_256x512"; IC5W = f"{CK}/ic5_256x512_w20"; FOA = f"{CK}/ic4_256x512_foa"
+IC_GCC = f"{CK}/ic6_256x512_gcc"; IC_WAVE = f"{CK}/ic5_256x512_wave"
 JOBS = []
 for s in (0, 1, 2):
     # --- front-strengthening (anti-discreteness) ---  (front-weighted-loss removed: no effect)
@@ -75,8 +76,19 @@ for s in (0, 1, 2):
     JOBS.append(fm(f"C_cross_align_5chflip_s{s}", s, "cross_align",
                    "3e-4", "--in-ch 5 --flip-aug True --ray-cross-layers 2", 24, IC5))
 
-# priority: coarse-layout / dense-rayconv / cross_unetenc research focus run FIRST
-def _pri(n): return n.startswith("C_cross_align") or n.startswith("C_unet8") or "rayconv5d" in n or "cross_unetenc" in n
+# --- richer-input bets: GCC-PHAT (waveform-derived ITD, 6ch) + raw-waveform WaveUNet ---
+# GCC-PHAT recovers the fine binaural timing log-mag throws away (handedness/range);
+# WaveUNet feeds the RAW waveform through a 1D-CNN global prior (EchoDiffusion-style).
+for s in (0, 1, 2):
+    JOBS.append(fm(f"Bnode2_gcc_unet8_s{s}", s, "unet", "2e-3",
+                   "--ngf 64 --unet-downs 8 --in-ch 6 --audio-src gcc --flip-aug True", 48, IC_GCC))
+    JOBS.append(fm(f"Bnode2_wave_unet8_s{s}", s, "wave", "2e-3",
+                   "--ngf 64 --unet-downs 8 --in-ch 5 --audio-src wave --flip-aug True", 40, IC_WAVE))
+
+# priority: richer-input + coarse-layout / dense-rayconv / cross_unetenc research focus run FIRST
+def _pri(n): return (n.startswith("Bnode2_gcc_") or n.startswith("Bnode2_wave_")
+                     or n.startswith("C_cross_align") or n.startswith("C_unet8")
+                     or "rayconv5d" in n or "cross_unetenc" in n)
 JOBS = [j for j in JOBS if _pri(j["name"])] + [j for j in JOBS if not _pri(j["name"])]
 
 
