@@ -108,6 +108,13 @@ def main():
         sec_w[bank.sector_pools[2]] = cfg.front_back_w   # back  (|az|>=135)
         print(f"[loss] front_back_w={cfg.front_back_w} on front+back rays", flush=True)
     sh_full = build_sh_coarse(cfg, device) if cfg.model == "hybrid" else None
+    # ray TV-smoothness: fixed coarse grid + total-variation penalty (anti-discrete)
+    tvbank = None
+    if getattr(cfg, "ray_tv_w", 0.0) > 0:
+        import copy as _cp
+        gc = _cp.copy(cfg); gc.img_h, gc.img_w = cfg.ray_tv_grid_h, cfg.ray_tv_grid_w
+        tvbank = RayBank(gc, device=device)
+        print(f"[ray_tv] grid {gc.img_h}x{gc.img_w} w={cfg.ray_tv_w}", flush=True)
     centers = log_depth_bins(cfg.n_bins, device=device) if cfg.use_depth_bins else None
     model = RayDepthModel(cfg, bank.feat_dim, centers).to(device)
     nparam = sum(p.numel() for p in model.parameters())
@@ -143,6 +150,25 @@ def main():
             depth = depth4.view(spec.size(0), -1)                 # (B,N)
             mask = mask4.view(spec.size(0), -1)
             B = spec.size(0)
+            if tvbank is not None:                                 # grid prediction + TV smoothness
+                gh, gw = cfg.ray_tv_grid_h, cfg.ray_tv_grid_w
+                rf = tvbank.feat[None].expand(B, -1, -1)
+                pred = model(spec, rf, None)["depth"].view(B, 1, gh, gw)
+                gt_g = F.interpolate(depth4, (gh, gw), mode="nearest")
+                m_g = F.interpolate(mask4, (gh, gw), mode="nearest")
+                wl = tvbank.area.view(1, 1, gh, gw) * m_g
+                mae = ((pred - gt_g).abs() * wl).sum() / wl.sum().clamp(min=1e-6)
+                tvl = ((pred[..., :, 1:] - pred[..., :, :-1]).abs().mean()
+                       + (pred[..., 1:, :] - pred[..., :-1, :]).abs().mean())
+                loss = mae + cfg.ray_tv_w * tvl
+                gstep += 1
+                opt.zero_grad(); loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                opt.step(); sched.step()
+                for k, v in {"total": float(loss.detach()), "mae": float(mae.detach()),
+                             "tv": float(tvl.detach())}.items():
+                    run[k] = run.get(k, 0.0) + v
+                continue
             if getattr(cfg, "sector_sample", False):                # tip4: half uniform + half sector-balanced
                 nh = cfg.n_rays // 2
                 u = torch.randint(0, bank.N, (B, cfg.n_rays - nh), device=device)

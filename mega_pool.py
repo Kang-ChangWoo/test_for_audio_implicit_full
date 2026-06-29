@@ -68,8 +68,15 @@ for s in (0, 1, 2):
     JOBS.append(fm(f"C_unet8_coarseres_5chflip_s{s}", s, "unet_coarse_res", "2e-3", CL, 48, IC5))
     JOBS.append(fm(f"Bnode2_rayconv5d_s{s}", s, "rayconv", "2e-3", "--in-ch 5 --coarse-h 64 --coarse-w 128 --flip-aug True", 8, IC5))
 
+# --- cross_align: high-res audio feature (e2 64x128) + ray cross-attn + conv smoothing ---
+# Fixes ray "discreteness": each ray gets its own aligned local feature + neighbour
+# coupling via conv, instead of only global tokens. Judge vs cross_flip / U-Net.
+for s in (0, 1, 2):
+    JOBS.append(fm(f"C_cross_align_5chflip_s{s}", s, "cross_align",
+                   "3e-4", "--in-ch 5 --flip-aug True --ray-cross-layers 2", 24, IC5))
+
 # priority: coarse-layout / dense-rayconv / cross_unetenc research focus run FIRST
-def _pri(n): return n.startswith("C_unet8") or "rayconv5d" in n or "cross_unetenc" in n
+def _pri(n): return n.startswith("C_cross_align") or n.startswith("C_unet8") or "rayconv5d" in n or "cross_unetenc" in n
 JOBS = [j for j in JOBS if _pri(j["name"])] + [j for j in JOBS if not _pri(j["name"])]
 
 

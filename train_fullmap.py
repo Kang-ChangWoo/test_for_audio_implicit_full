@@ -118,6 +118,9 @@ def main():
     elif getattr(cfg, "arch", "fullmap") == "rayconv":
         from model_rayconv import RayConvNet
         model = RayConvNet(cfg).to(device)
+    elif getattr(cfg, "arch", "fullmap") == "cross_align":
+        from model_cross_align import CrossAlign
+        model = CrossAlign(cfg).to(device)
     elif getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res"):
         from model_unet_coarse import UNetCoarse, UNetSH, UNetRayCoarse, UNetCoarseResidual
         model = {"unet_coarse": UNetCoarse, "unet_sh": UNetSH,

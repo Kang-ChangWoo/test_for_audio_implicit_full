@@ -53,6 +53,8 @@ DEFAULTS = dict(
     # front/back are the cone-of-confusion (spectral-only) directions; two levers:
     front_back_w=1.0,         # sector-weighted loss: upweight front+back rays (1.0=off)
     hi_tokens=False,          # tap audio tokens at /4 (finer spectrum) vs /8 for cross-attn
+    # ray TV-smoothness: predict on a fixed grid + total-variation penalty (anti-discrete)
+    ray_tv_w=0.0, ray_tv_grid_h=64, ray_tv_grid_w=128,
     cross_enc="conv",         # cross/crossself audio encoder: conv (default) | vit (ViT-B/16 tokens)
     # --- coarse-layout heads on the U-Net8 encoder (model_unet_coarse.py) ---
     coarse_head_h=16, coarse_head_w=32,   # coarse ERP depth-head resolution
