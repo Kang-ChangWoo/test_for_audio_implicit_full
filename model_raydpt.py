@@ -115,6 +115,7 @@ class RayDPT(nn.Module):
         self.lsa64 = LocalSphericalAttention(dim, heads, 64, 128, getattr(cfg, "raydpt_win64", 3))
         self.coarse_head = nn.Conv2d(dim, 1, 1)
         self.head = nn.Sequential(conv_bn(dim, ngf), conv_bn(ngf, ngf), nn.Conv2d(ngf, 1, 3, 1, 1))
+        self.lite = getattr(cfg, "raydpt_lite", False)        # 2-scale (32,64) lite variant
 
     def _cross(self, rp, rf, blocks, kv, B, h, w):
         q = rp(rf)[None].expand(B, -1, -1)
@@ -126,17 +127,23 @@ class RayDPT(nn.Module):
         B = spec.size(0)
         e1 = self.enc.e1(spec); e2 = self.enc.e2(e1); e3 = self.enc.e3(e2); e4 = self.enc.e4(e3)
         kv4 = self.kv_e4(e4.flatten(2).transpose(1, 2))        # (B,512,dim)
-        kv3 = self.kv_e3(e3.flatten(2).transpose(1, 2))        # (B,2048,dim)
-        F16 = self._cross(self.rp16, self.rf16, self.cr16, kv4, B, 16, 32)
-        F32 = self._cross(self.rp32, self.rf32, self.cr32, kv3, B, 32, 64)
-        F64 = self._cross(self.rp64, self.rf64, self.cr64, kv4, B, 64, 128)
-
-        m16 = F16 + self.se4(e4)                                # 16x32
-        d_c = torch.sigmoid(self.coarse_head(m16))             # (B,1,16,32) coarse layout
-        x = self.refine32(self.up(m16) + F32 + self.se3(e3))   # 32x64
-        x = self.lsa32(x)
-        x = self.refine64(self.up(x) + F64 + self.se2(e2))     # 64x128
-        x = self.lsa64(x)
+        if self.lite:
+            # 2-scale lite: ONE ray cross-attn at 32x64 (Q32 <- e4), e3/e2 projection
+            # skips + local spherical attn. Isolates the DPT-fusion / ray-grid gain.
+            F32 = self._cross(self.rp32, self.rf32, self.cr32, kv4, B, 32, 64)
+            m = F32 + self.se3(e3)                              # 32x64
+            d_c = torch.sigmoid(self.coarse_head(F.adaptive_avg_pool2d(m, (16, 32))))
+            x = self.lsa32(self.refine32(m))                   # 32x64
+            x = self.lsa64(self.refine64(self.up(x) + self.se2(e2)))   # 64x128
+        else:
+            kv3 = self.kv_e3(e3.flatten(2).transpose(1, 2))    # (B,2048,dim)
+            F16 = self._cross(self.rp16, self.rf16, self.cr16, kv4, B, 16, 32)
+            F32 = self._cross(self.rp32, self.rf32, self.cr32, kv3, B, 32, 64)
+            F64 = self._cross(self.rp64, self.rf64, self.cr64, kv4, B, 64, 128)
+            m16 = F16 + self.se4(e4)                            # 16x32
+            d_c = torch.sigmoid(self.coarse_head(m16))         # (B,1,16,32) coarse layout
+            x = self.lsa32(self.refine32(self.up(m16) + F32 + self.se3(e3)))   # 32x64
+            x = self.lsa64(self.refine64(self.up(x) + F64 + self.se2(e2)))     # 64x128
         D = torch.sigmoid(self.head(x))
         D = F.interpolate(D, (self.H, self.W), mode="bilinear", align_corners=False)
         return {"D": D, "D0": D, "extras": {"D_coarse": d_c}}

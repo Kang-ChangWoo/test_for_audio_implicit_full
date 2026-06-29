@@ -64,6 +64,7 @@ DEFAULTS = dict(
     ray_coarse_h=16, ray_coarse_w=32,     # coarse ray-token grid for unet_raycoarse
     ray_cross_layers=2, ray_self_layers=1,
     raydpt_win32=5, raydpt_win64=3,       # RayDPT local spherical-attention window per scale
+    raydpt_lite=False,                    # 2-scale (32,64) lite Ray-DPT variant (single ray cross-attn)
     # coarse-arch loss weights (only applied for arch in the coarse family)
     w_dense=1.0, w_coarse_layout=1.0, w_low=0.5, w_tv_res=0.01,
 

@@ -90,11 +90,17 @@ for s in (0, 1, 2):
 for s in (0, 1, 2):
     JOBS.append(fm(f"C_raydpt_5chflip_s{s}", s, "raydpt", "3e-4",
                    "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2", 16, IC5))
+# Ray-DPT-lite: 2-scale (32,64), single ray cross-attn + e2 skip + local spherical attn.
+# Staged variant to isolate the fusion gain; loss dense+0.5*coarse+0.5*low.
+for s in (0, 1, 2):
+    JOBS.append(fm(f"C_raydptlite_5chflip_s{s}", s, "raydpt", "3e-4",
+                   "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --raydpt-lite True "
+                   "--ray-cross-layers 2 --w-coarse-layout 0.5", 16, IC5))
 
 # explicit front-of-queue ordering: just-added RayDPT runs FIRST, then the other
 # richer-input / research-focus jobs, then everything else (stable within a rank).
-FRONT = ["C_raydpt", "Bnode2_gcc_", "Bnode2_wave_", "C_cross_align",
-         "C_unet8", "rayconv5d", "cross_unetenc"]
+FRONT = ["C_raydpt_5chflip", "C_raydptlite", "Bnode2_gcc_", "Bnode2_wave_",
+         "C_cross_align", "C_unet8", "rayconv5d", "cross_unetenc"]
 def _rank(n):
     for i, p in enumerate(FRONT):
         if p in n:
