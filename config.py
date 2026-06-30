@@ -111,6 +111,18 @@ DEFAULTS = dict(
     w_tv=0.01,                # total-variation reg on Dcorr
     chan_norm=False,          # per-channel train-set input normalisation (for 5ch A13/A14)
     w_swap_eq=0.0,            # tip8: weak swap-equivariance reg: f(swap_LR(x)) ~ mirror(f(x))
+    # --- 3D-space auxiliary losses (on the ERP point cloud p = depth * ray_dir) ---
+    w_normal=0.0,             # type-3: surface-normal cosine loss (edge-aware, anti-blob)
+    w_chamfer=0.0,            # type-2: subsampled symmetric Chamfer distance in 3D
+    chamfer_k=1024,           # points subsampled per sample for Chamfer
+    # --- best training recipe ported from sibling repo audioresearch_audio (E2) ---
+    w_rel=0.0,                # relative-depth (AbsRel-style) loss weight; E2 best = 0.1
+    amp=False,                # AMP bf16 autocast (E0b: enables bs32, faster, small gain)
+    # --- per-scene SCALE guide: match predicted mean to GT mean (RMSE-optimal central
+    # tendency). oracle mean-match = -5.4% RMSE. does NOT touch spatial distribution. ---
+    w_scale=0.0,
+    # --- EchoBin: distance-binned binaural directional weak guide (model_echo.EchoBin) ---
+    echo_kbins=32, echo_dmax=8.0,
 
     # --- probabilistic coarse head (train_prob.py): model the coarse-layout AMBIGUITY ---
     # Finding (oracle decomp): error = coarse-layout multi-modality + unobservable fine detail.

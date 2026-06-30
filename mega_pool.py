@@ -106,9 +106,36 @@ for s in (0, 1, 2):
     JOBS.append(fm(f"E_echo_ray_s{s}", s, "echo_ray", "3e-4",
                    "--in-ch 2 --audio-src wave --ray-cross-layers 2", 12, IC_WAVE))
 
+# --- 3D-space auxiliary losses on the winning U-Net8 (in-ch5+flip): type-2 Chamfer
+# vs type-3 surface-normal. Edge-aware / anti-blob test; expect RMSE/shape change. ---
+JOBS.append(fm("U_unet8_normal_s0", 0, "unet", "2e-3",
+               "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --w-normal 0.1", 48, IC5))
+JOBS.append(fm("U_unet8_chamfer_s0", 0, "unet", "2e-3",
+               "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --w-chamfer 0.1", 48, IC5))
+# per-scene SCALE guide (pred mean -> gt mean; RMSE-targeted, oracle ceiling -5.4%)
+JOBS.append(fm("U_unet8_scale1_s0", 0, "unet", "2e-3",
+               "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --w-scale 1.0", 48, IC5))
+JOBS.append(fm("U_unet8_scale2_s0", 0, "unet", "2e-3",
+               "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --w-scale 2.0", 48, IC5))
+# distance-binned binaural directional WEAK guide (ITD-preserving, zero-init cross-attn)
+JOBS.append(fm("E_echo_bin_s0", 0, "echo_bin", "2e-3",
+               "--in-ch 2 --audio-src wave --echo-kbins 32 --echo-dmax 8.0", 24, IC_WAVE))
+
+# --- BEST training recipe ported from sibling repo audioresearch_audio (E2 best):
+# AMP-bf16 + bs32 + lr4e-4 + w_rel=0.1. Applied to the current active models. ---
+JOBS.append(fm("R_raydpt_e2_s0", 0, "raydpt", "4e-4",
+               "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --w-rel 0.1", 32, IC5))
+JOBS.append(fm("R_echo_unet_e2_s0", 0, "echo_unet", "4e-4",
+               "--in-ch 2 --audio-src wave --amp True --w-rel 0.1", 32, IC_WAVE))
+JOBS.append(fm("R_echo_ray_e2_s0", 0, "echo_ray", "4e-4",
+               "--in-ch 2 --audio-src wave --ray-cross-layers 2 --amp True --w-rel 0.1", 16, IC_WAVE))
+
 # explicit front-of-queue ordering: just-added RayDPT runs FIRST, then the other
 # richer-input / research-focus jobs, then everything else (stable within a rank).
-FRONT = ["E_echo_unet", "E_echo_ray", "C_raydpt_5chflip", "C_raydptlite", "Bnode2_gcc_",
+FRONT = ["E_echo_bin", "U_unet8_scale1", "U_unet8_scale2",
+         "U_unet8_normal", "U_unet8_chamfer", "R_raydpt_e2", "E_echo_unet", "E_echo_ray",
+         "R_echo_unet_e2", "R_echo_ray_e2",
+         "C_raydpt_5chflip", "C_raydptlite", "Bnode2_gcc_",
          "Bnode2_wave_", "C_cross_align", "C_unet8", "rayconv5d", "cross_unetenc"]
 def _rank(n):
     for i, p in enumerate(FRONT):

@@ -50,6 +50,43 @@ def tv(x):
     return (x[..., :, 1:] - x[..., :, :-1]).abs().mean() + (x[..., 1:, :] - x[..., :-1, :]).abs().mean()
 
 
+def erp_dirs(H, W, device):
+    """ERP unit ray directions (3,H,W): el top->bottom, az 0..2pi (matches geometry)."""
+    i = (torch.arange(H, device=device).float() + 0.5) / H
+    j = (torch.arange(W, device=device).float() + 0.5) / W
+    el = (math.pi / 2 - i * math.pi).view(H, 1)
+    az = (j * 2 * math.pi).view(1, W)
+    x = torch.cos(el) * torch.cos(az)
+    y = torch.cos(el) * torch.sin(az)
+    z = torch.sin(el) * torch.ones_like(az)
+    return torch.stack([x, y, z], 0)                       # (3,H,W)
+
+
+def normal_loss(D, gt, mask, dirs):
+    """type-3: 3D surface-normal cosine loss on the ERP point cloud (edge-aware)."""
+    def normals(P):                                        # P (B,3,H,W)
+        du = P[:, :, 1:, :-1] - P[:, :, :-1, :-1]          # elevation grad
+        dv = P[:, :, :-1, 1:] - P[:, :, :-1, :-1]          # azimuth grad
+        return F.normalize(torch.cross(dv, du, dim=1), dim=1, eps=1e-6)
+    npred = normals(D * dirs[None]); ngt = normals(gt * dirs[None])
+    m = mask[:, :, :-1, :-1]
+    cos = (npred * ngt).sum(1, keepdim=True)
+    return ((1 - cos) * m).sum() / m.sum().clamp(min=1e-6)
+
+
+def chamfer_loss(D, gt, mask, dirs, k=1024):
+    """type-2: symmetric Chamfer distance between subsampled 3D point clouds."""
+    B, _, H, W = D.shape
+    df = dirs.view(3, -1)                                  # (3,HW)
+    Pp = (D.view(B, 1, -1) * df).permute(0, 2, 1)          # (B,HW,3)
+    Pg = (gt.view(B, 1, -1) * df).permute(0, 2, 1)
+    idx = torch.multinomial(mask.view(B, -1).clamp(min=1e-6), k, replacement=True)   # (B,k)
+    bg = torch.arange(B, device=D.device)[:, None]
+    Sp, Sg = Pp[bg, idx], Pg[bg, idx]                      # (B,k,3)
+    d = torch.cdist(Sp, Sg)                                # (B,k,k)
+    return 0.5 * (d.min(2).values.mean() + d.min(1).values.mean())
+
+
 def warm_start(model, run, freeze, device):
     """Load decoder weights (bb/to_z/fc/up/head) from a trained run; optional freeze."""
     ck = torch.load(os.path.join("out", run, "best.pth"), map_location="cpu", weights_only=False)
@@ -74,7 +111,7 @@ def chan_stats(cfg, device):
 @torch.no_grad()
 def quick_val(model, loader, cfg, device, extra, wlat, norm=None):
     model.eval(); tot = 0.0; wn = 0.0; seen = 0
-    wave_arch = getattr(cfg, "arch", "fullmap") in ("wave", "echo_unet", "echo_ray")
+    wave_arch = getattr(cfg, "arch", "fullmap") in ("wave", "echo_unet", "echo_ray", "echo_bin")
     for b in loader:
         spec = prep_audio(b["spec"].to(device), cfg, norm)
         gt = b["depth"].to(device); mask = b["mask"].to(device)
@@ -130,9 +167,9 @@ def main():
     elif getattr(cfg, "arch", "fullmap") == "raydpt":
         from model_raydpt import RayDPT
         model = RayDPT(cfg).to(device)
-    elif getattr(cfg, "arch", "fullmap") in ("echo_unet", "echo_ray"):
-        from model_echo import EchoUNet, EchoRay
-        model = {"echo_unet": EchoUNet, "echo_ray": EchoRay}[cfg.arch](cfg).to(device)
+    elif getattr(cfg, "arch", "fullmap") in ("echo_unet", "echo_ray", "echo_bin"):
+        from model_echo import EchoUNet, EchoRay, EchoBin
+        model = {"echo_unet": EchoUNet, "echo_ray": EchoRay, "echo_bin": EchoBin}[cfg.arch](cfg).to(device)
     elif getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res"):
         from model_unet_coarse import UNetCoarse, UNetSH, UNetRayCoarse, UNetCoarseResidual
         model = {"unet_coarse": UNetCoarse, "unet_sh": UNetSH,
@@ -140,7 +177,7 @@ def main():
     else:
         model = FullMapNet(cfg).to(device)
     COARSE_ARCH = getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res", "raydpt", "echo_ray")
-    WAVE_ARCH = getattr(cfg, "arch", "fullmap") in ("wave", "echo_unet", "echo_ray")
+    WAVE_ARCH = getattr(cfg, "arch", "fullmap") in ("wave", "echo_unet", "echo_ray", "echo_bin")
     if cfg.init_decoder:
         warm_start(model, cfg.init_decoder, cfg.freeze_decoder, device)
     print(f"[model] params={sum(p.numel() for p in model.parameters())/1e6:.2f}M", flush=True)
@@ -153,6 +190,7 @@ def main():
     sched = torch.optim.lr_scheduler.LambdaLR(
         opt, lambda s: (s + 1) / warm if s < warm else 0.5 * (1 + math.cos(math.pi * (s - warm) / max(1, total - warm))))
     wlat = cos_lat(cfg.img_h, device).view(1, 1, cfg.img_h, 1)
+    dirs3d = erp_dirs(cfg.img_h, cfg.img_w, device) if (cfg.w_normal > 0 or cfg.w_chamfer > 0) else None
 
     best = 1e9; hist = []
     for ep in range(cfg.epochs):
@@ -170,7 +208,8 @@ def main():
                     mask[fm] = torch.flip(mask[fm], dims=[-1])
                     if wave is not None:
                         wave = wave.clone(); wave[fm] = wave[fm][:, [1, 0]]   # swap ears
-            out = model(spec, wave) if WAVE_ARCH else model(spec, extra.get("coarse_feat"), extra.get("sh_basis"))
+            with torch.autocast("cuda", dtype=torch.bfloat16, enabled=getattr(cfg, "amp", False)):
+                out = model(spec, wave) if WAVE_ARCH else model(spec, extra.get("coarse_feat"), extra.get("sh_basis"))
             main = masked_mae(out["D"], gt, mask)
             logs = {"mae": float(main.detach())}
             if COARSE_ARCH:
@@ -200,6 +239,21 @@ def main():
                 rsup = masked_mae(dc, rtgt, mask); tvl = tv(dc)
                 loss = loss + cfg.w_res_sup * rsup + cfg.w_tv * tvl
                 logs["rsup"] = float(rsup.detach()); logs["tv"] = float(tvl.detach())
+            if cfg.w_normal > 0:                                            # type-3: 3D surface-normal cosine
+                ln = normal_loss(out["D"], gt, mask, dirs3d)
+                loss = loss + cfg.w_normal * ln; logs["lnorm"] = float(ln.detach())
+            if cfg.w_chamfer > 0:                                           # type-2: 3D Chamfer
+                lch = chamfer_loss(out["D"], gt, mask, dirs3d, cfg.chamfer_k)
+                loss = loss + cfg.w_chamfer * lch; logs["lch"] = float(lch.detach())
+            if cfg.w_rel > 0:                                               # E2 recipe: relative-depth (AbsRel) loss
+                lrel = (((out["D"] - gt).abs() / gt.clamp(min=1e-3)) * mask).sum() / mask.sum().clamp(min=1e-6)
+                loss = loss + cfg.w_rel * lrel; logs["lrel"] = float(lrel.detach())
+            if cfg.w_scale > 0:                                             # per-scene scale guide: pred mean -> gt mean
+                msum = mask.sum(dim=(1, 2, 3)).clamp(min=1e-6)
+                pm = (out["D"] * mask).sum(dim=(1, 2, 3)) / msum
+                gm = (gt * mask).sum(dim=(1, 2, 3)) / msum
+                lscl = (pm - gm).abs().mean()
+                loss = loss + cfg.w_scale * lscl; logs["lscl"] = float(lscl.detach())
             if cfg.w_swap_eq > 0:                                            # tip8: swap-equivariance
                 out_sw = model(swap_audio_lr(spec), extra.get("coarse_feat"), extra.get("sh_basis"))
                 eq = masked_mae(out_sw["D"], torch.flip(out["D"].detach(), dims=[-1]), mask)

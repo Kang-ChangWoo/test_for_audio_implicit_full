@@ -8,3 +8,5 @@ __pycache__/
 .ipynb_checkpoints/
 # A13 RIR feature cache (multi-GB)
 cache_rir/
+# large regenerable point clouds (save_pcd.py)
+out/pcd/

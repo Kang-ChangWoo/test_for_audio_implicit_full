@@ -18,6 +18,7 @@ EchoRay  : RayDPT redone with the scene prior fused into EVERY cross-attn scale,
 Both consume (spec, wave) and return the shared {"D","D0","extras"} interface.
 """
 import copy
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -70,6 +71,53 @@ class EchoSceneEncoder(nn.Module):
         cls = probs @ self.embeddings                          # (B,dim)
         cls = cls + self.gamma * self.adapter(cls)             # CIDE adapter (residual)
         return torch.cat([cls[:, None, :], frames], dim=1)     # (B,1+Tf,dim)
+
+
+# --------------------------------------------------------------------------- #
+# Distance-binned binaural directional encoder (ITD-preserving).
+# RIR -> direct-peak onset -> K distance bins; each bin's [L,R,L-R] window -> a
+# shared 1D-CNN embedding (keeps interaural timing) + distance PE. Yields K
+# distance-tagged tokens = a (weak) per-distance directional signature.
+# --------------------------------------------------------------------------- #
+class BinauralBinEncoder(nn.Module):
+    def __init__(self, dim, k_bins=32, dmax=8.0, sr=48000, c=343.0):
+        super().__init__()
+        self.k, self.dmax, self.sr, self.c = k_bins, dmax, sr, c
+        def blk(i, o, k, s):
+            return nn.Sequential(nn.Conv1d(i, o, k, s, k // 2), nn.BatchNorm1d(o), nn.GELU())
+        self.enc = nn.Sequential(blk(3, 32, 9, 2), blk(32, 64, 7, 2), blk(64, dim, 5, 2),
+                                 nn.AdaptiveAvgPool1d(1), nn.Flatten())   # per-bin window -> dim
+        # distance positional encoding (fixed sinusoidal over bin distance)
+        self.register_buffer("dpe", self._dpe(k_bins, dim))
+
+    def _dpe(self, k, dim):
+        d = (torch.arange(k).float() + 0.5) / k                          # normalised distance
+        freqs = torch.exp(torch.arange(0, dim, 2).float() * -(np.log(10000.0) / dim))
+        pe = torch.zeros(k, dim); ang = d[:, None] * freqs[None]
+        pe[:, 0::2] = torch.sin(ang); pe[:, 1::2] = torch.cos(ang)
+        return pe
+
+    def forward(self, wave):
+        B = wave.size(0)
+        env = (wave[:, 0].abs() + wave[:, 1].abs())
+        # direct-peak onset per sample (first 6ms), then K distance bins of equal width
+        n0 = env[:, :int(self.sr * 0.006)].argmax(dim=1)                 # (B,)
+        span = int(self.dmax * 2 * self.sr / self.c)
+        bw = span // self.k
+        toks = []
+        for kk in range(self.k):
+            seg = []
+            for b in range(B):                                          # gather per-sample window
+                s = int(n0[b]) + kk * bw
+                w = wave[b, :, s:s + bw]
+                if w.size(1) < bw:
+                    w = F.pad(w, (0, bw - w.size(1)))
+                seg.append(w)
+            w = torch.stack(seg, 0)                                     # (B,2,bw)
+            x = torch.cat([w, (w[:, :1] - w[:, 1:2])], dim=1)           # [L,R,L-R] (B,3,bw)
+            toks.append(self.enc(x))                                    # (B,dim)
+        E = torch.stack(toks, 1)                                        # (B,K,dim)
+        return E + self.dpe[None]                                       # + distance PE
 
 
 # --------------------------------------------------------------------------- #
@@ -135,6 +183,39 @@ class EchoUNet(nn.Module):
         d = self.u4(torch.cat([d, e4], 1))
         d = self.u3(torch.cat([d, e3], 1))
         d = self.u2(torch.cat([d, e2], 1))
+        D = self.u1(torch.cat([d, e1], 1))
+        return {"D": D, "D0": D, "extras": {}}
+
+
+# --------------------------------------------------------------------------- #
+# EchoBin: U-Net8 backbone + distance-binned binaural directional tokens injected
+# as a WEAK guide (zero-init cross-attn at e4). Distance (time) is the strong cue
+# -> binning; direction (ITD) is weak -> gentle, ignorable conditioning.
+# --------------------------------------------------------------------------- #
+class EchoBin(nn.Module):
+    def __init__(self, cfg):
+        super().__init__()
+        ngf = getattr(cfg, "ngf", 64); dim = cfg.dim; heads = cfg.n_heads
+        self.enc = UNet8Encoder(getattr(cfg, "in_ch", 2), ngf)
+        self.binenc = BinauralBinEncoder(dim, k_bins=getattr(cfg, "echo_kbins", 32),
+                                         dmax=getattr(cfg, "echo_dmax", 8.0),
+                                         sr=getattr(cfg, "sample_rate", 48000))
+        self.cond4 = SceneCrossAttn(ngf * 8, dim, heads,
+                                    n_layers=getattr(cfg, "ray_cross_layers", 2))
+        self.u8 = _up(ngf * 8, ngf * 8); self.u7 = _up(ngf * 16, ngf * 8)
+        self.u6 = _up(ngf * 16, ngf * 8); self.u5 = _up(ngf * 16, ngf * 8)
+        self.u4 = _up(ngf * 16, ngf * 4); self.u3 = _up(ngf * 8, ngf * 2)
+        self.u2 = _up(ngf * 4, ngf); self.u1 = _up(ngf * 2, 1, outer=True)
+
+    def forward(self, spec, wave=None, coarse_feat=None, sh_basis=None):
+        assert wave is not None, "EchoBin requires raw waveform (audio_src=wave)"
+        e1 = self.enc.e1(spec); e2 = self.enc.e2(e1); e3 = self.enc.e3(e2); e4 = self.enc.e4(e3)
+        e4 = self.cond4(e4, self.binenc(wave))               # weak distance-binned directional guide
+        e5 = self.enc.e5(e4); e6 = self.enc.e6(e5); e7 = self.enc.e7(e6); e8 = self.enc.e8(e7)
+        d = self.u8(e8)
+        d = self.u7(torch.cat([d, e7], 1)); d = self.u6(torch.cat([d, e6], 1))
+        d = self.u5(torch.cat([d, e5], 1)); d = self.u4(torch.cat([d, e4], 1))
+        d = self.u3(torch.cat([d, e3], 1)); d = self.u2(torch.cat([d, e2], 1))
         D = self.u1(torch.cat([d, e1], 1))
         return {"D": D, "D0": D, "extras": {}}
 
