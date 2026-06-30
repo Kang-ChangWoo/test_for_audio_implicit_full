@@ -74,7 +74,7 @@ def chan_stats(cfg, device):
 @torch.no_grad()
 def quick_val(model, loader, cfg, device, extra, wlat, norm=None):
     model.eval(); tot = 0.0; wn = 0.0; seen = 0
-    wave_arch = getattr(cfg, "arch", "fullmap") == "wave"
+    wave_arch = getattr(cfg, "arch", "fullmap") in ("wave", "echo_unet", "echo_ray")
     for b in loader:
         spec = prep_audio(b["spec"].to(device), cfg, norm)
         gt = b["depth"].to(device); mask = b["mask"].to(device)
@@ -130,14 +130,17 @@ def main():
     elif getattr(cfg, "arch", "fullmap") == "raydpt":
         from model_raydpt import RayDPT
         model = RayDPT(cfg).to(device)
+    elif getattr(cfg, "arch", "fullmap") in ("echo_unet", "echo_ray"):
+        from model_echo import EchoUNet, EchoRay
+        model = {"echo_unet": EchoUNet, "echo_ray": EchoRay}[cfg.arch](cfg).to(device)
     elif getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res"):
         from model_unet_coarse import UNetCoarse, UNetSH, UNetRayCoarse, UNetCoarseResidual
         model = {"unet_coarse": UNetCoarse, "unet_sh": UNetSH,
                  "unet_raycoarse": UNetRayCoarse, "unet_coarse_res": UNetCoarseResidual}[cfg.arch](cfg).to(device)
     else:
         model = FullMapNet(cfg).to(device)
-    COARSE_ARCH = getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res", "raydpt")
-    WAVE_ARCH = getattr(cfg, "arch", "fullmap") == "wave"
+    COARSE_ARCH = getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res", "raydpt", "echo_ray")
+    WAVE_ARCH = getattr(cfg, "arch", "fullmap") in ("wave", "echo_unet", "echo_ray")
     if cfg.init_decoder:
         warm_start(model, cfg.init_decoder, cfg.freeze_decoder, device)
     print(f"[model] params={sum(p.numel() for p in model.parameters())/1e6:.2f}M", flush=True)

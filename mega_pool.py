@@ -97,9 +97,18 @@ for s in (0, 1, 2):
                    "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --raydpt-lite True "
                    "--ray-cross-layers 2 --w-coarse-layout 0.5", 16, IC5))
 
+# --- EchoDiffusion "success-type" transfer (model_echo.py): frozen wav2vec2 scene
+# encoder + CIDE class-embedding + cross-attention conditioning. NO 5ch, NO flip
+# (in-ch 2 binaural spec + raw waveform). UNet-backbone vs Ray-backbone variants. ---
+for s in (0, 1, 2):
+    JOBS.append(fm(f"E_echo_unet_s{s}", s, "echo_unet", "2e-3",
+                   "--in-ch 2 --audio-src wave", 24, IC_WAVE))
+    JOBS.append(fm(f"E_echo_ray_s{s}", s, "echo_ray", "3e-4",
+                   "--in-ch 2 --audio-src wave --ray-cross-layers 2", 12, IC_WAVE))
+
 # explicit front-of-queue ordering: just-added RayDPT runs FIRST, then the other
 # richer-input / research-focus jobs, then everything else (stable within a rank).
-FRONT = ["C_raydpt_5chflip", "C_raydptlite", "Bnode2_gcc_",
+FRONT = ["E_echo_unet", "E_echo_ray", "C_raydpt_5chflip", "C_raydptlite", "Bnode2_gcc_",
          "Bnode2_wave_", "C_cross_align", "C_unet8", "rayconv5d", "cross_unetenc"]
 def _rank(n):
     for i, p in enumerate(FRONT):

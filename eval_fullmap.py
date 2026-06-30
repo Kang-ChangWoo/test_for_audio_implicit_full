@@ -52,6 +52,9 @@ def load(run_dir, device):
     elif getattr(cfg, "arch", "fullmap") == "raydpt":
         from model_raydpt import RayDPT
         m = RayDPT(cfg).to(device).eval()
+    elif getattr(cfg, "arch", "fullmap") in ("echo_unet", "echo_ray"):
+        from model_echo import EchoUNet, EchoRay
+        m = {"echo_unet": EchoUNet, "echo_ray": EchoRay}[cfg.arch](cfg).to(device).eval()
     elif getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res"):
         from model_unet_coarse import UNetCoarse, UNetSH, UNetRayCoarse, UNetCoarseResidual
         m = {"unet_coarse": UNetCoarse, "unet_sh": UNetSH,
@@ -68,7 +71,7 @@ def load(run_dir, device):
 @torch.no_grad()
 def evrun(model, loader, cfg, extra, device, mode="stereo", shuffle=False, swap=False, max_n=None):
     mb = MetricBank(cfg.img_h, cfg.img_w, cfg.max_depth, device=device); seen = 0
-    wave_arch = getattr(cfg, "arch", "fullmap") == "wave"
+    wave_arch = getattr(cfg, "arch", "fullmap") in ("wave", "echo_unet", "echo_ray")
     for b in loader:
         spec = b["spec"].to(device)
         if spec.shape[1] > getattr(cfg,"in_ch",2):
