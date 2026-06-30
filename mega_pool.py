@@ -8,7 +8,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 CK = "/root/implicit_full_cache"
 EP = "--epochs 25 --num-workers 6"
 
-def imp(name, model, seed, lr, extra, bs, cache=None, ev="--controls True"):
+def imp(name, model, seed, lr, extra, bs, cache=None, ev="--controls False"):
     cmd = (f"python train.py --model {model} --run-name {name} --seed {seed} {EP} "
            f"--batch-size {bs} --n-rays 2048 --lr {lr} {extra} "
            f"&& python eval.py --run-name {name} {ev}")
@@ -17,7 +17,7 @@ def imp(name, model, seed, lr, extra, bs, cache=None, ev="--controls True"):
 def fm(name, seed, arch, lr, extra, bs, cache=None):
     cmd = (f"python train_fullmap.py --arch {arch} --run-name {name} --seed {seed} {EP} "
            f"--batch-size {bs} --lr {lr} {extra} "
-           f"&& python eval_fullmap.py --run-name {name} --controls True")
+           f"&& python eval_fullmap.py --run-name {name} --controls False")
     return dict(name=name, cmd=cmd, cache=cache, art="metrics_test.json")
 
 def prob(name, seed, extra, bs, cache=None):
@@ -120,6 +120,11 @@ JOBS.append(fm("U_unet8_scale2_s0", 0, "unet", "2e-3",
 # distance-binned binaural directional WEAK guide (ITD-preserving, zero-init cross-attn)
 JOBS.append(fm("E_echo_bin_s0", 0, "echo_bin", "2e-3",
                "--in-ch 2 --audio-src wave --echo-kbins 32 --echo-dmax 8.0", 24, IC_WAVE))
+# RayDPT multi-scale-KV fusion: F64 cross-attends compact e4+pooled-e3+pooled-e2
+# memory (no raw e2 skip-add). bs12+amp for the heavier F64 (8192 Q x 1536 KV).
+JOBS.append(fm("C_raydpt_msf_s0", 0, "raydpt", "3e-4",
+               "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 "
+               "--raydpt-msf True --amp True", 12, IC5))
 
 # --- BEST training recipe ported from sibling repo audioresearch_audio (E2 best):
 # AMP-bf16 + bs32 + lr4e-4 + w_rel=0.1. Applied to the current active models. ---
@@ -132,7 +137,7 @@ JOBS.append(fm("R_echo_ray_e2_s0", 0, "echo_ray", "4e-4",
 
 # explicit front-of-queue ordering: just-added RayDPT runs FIRST, then the other
 # richer-input / research-focus jobs, then everything else (stable within a rank).
-FRONT = ["E_echo_bin", "U_unet8_scale1", "U_unet8_scale2",
+FRONT = ["C_raydpt_msf", "E_echo_bin", "U_unet8_scale1", "U_unet8_scale2",
          "U_unet8_normal", "U_unet8_chamfer", "R_raydpt_e2", "E_echo_unet", "E_echo_ray",
          "R_echo_unet_e2", "R_echo_ray_e2",
          "C_raydpt_5chflip", "C_raydptlite", "Bnode2_gcc_",
@@ -145,7 +150,8 @@ def _rank(n):
 JOBS = sorted(JOBS, key=lambda j: _rank(j["name"]))      # stable sort preserves order within a rank
 
 # explicit drops: pulled from the queue (e.g. underperforming, free the slot for RayDPT)
-DROP = {"C_cross_align_5chflip_s2",
+DROP = {"Bnode2_cross_hitok_s1",   # killed slow 6-pass eval (non-contender); free GPU, no re-train
+        "C_cross_align_5chflip_s2",
         "C_cross_align_5chflip_s0", "C_cross_align_5chflip_s1",   # killed: non-contender, free GPU for RayDPT
         "Bnode2_crossself_flip_s0", "Bnode2_cross_vitenc_s0"}     # killed eval; keep best.pth, skip re-run
 JOBS = [j for j in JOBS if j["name"] not in DROP]
@@ -156,6 +162,14 @@ ALLOW = set(int(x) for x in os.environ.get("MEGA_GPUS", "0,1,2,3,4,5,6,7").split
 SKIP = os.environ.get("MEGA_SKIP", "")
 if SKIP:
     JOBS = [j for j in JOBS if SKIP not in j["name"]]
+
+
+def running_elsewhere(name):
+    """True if a train process for this run already exists (restart-safe: don't dup)."""
+    try:
+        return bool(subprocess.check_output(["pgrep", "-f", f"run-name {name} "]).strip())
+    except subprocess.CalledProcessError:
+        return False
 
 
 def done(j): return os.path.exists(os.path.join("out", j["name"], j["art"]))
@@ -174,7 +188,8 @@ def main():
             p, n = running[g]
             if p.poll() is not None:
                 print(f"[mega] finished {n} gpu{g}", flush=True); running.pop(g)
-        pend = [j for j in JOBS if not done(j) and j["name"] not in {n for _, n in running.values()} and cache_ready(j)]
+        pend = [j for j in JOBS if not done(j) and j["name"] not in {n for _, n in running.values()}
+                and cache_ready(j) and not running_elsewhere(j["name"])]
         nd = [j for j in JOBS if not done(j)]
         if not nd and not running:
             print("[mega] ALL DONE", flush=True); break

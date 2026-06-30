@@ -117,6 +117,15 @@ class RayDPT(nn.Module):
         self.lsa64 = LocalSphericalAttention(dim, heads, 64, 128, getattr(cfg, "raydpt_win64", 3))
         self.coarse_head = nn.Conv2d(dim, 1, 1)
         self.head = nn.Sequential(conv_bn(dim, ngf), conv_bn(ngf, ngf), nn.Conv2d(ngf, 1, 3, 1, 1))
+        # multi-scale-KV fusion: ray queries cross-attend COMPACT acoustic memory from
+        # several encoder scales (e4 + pooled e3 + pooled e2), instead of raw e2/e3
+        # DPT skip-addition (coordinate mismatch: spec-axes != ERP-axes).
+        self.msf = getattr(cfg, "raydpt_msf", False)
+        if self.msf:
+            self.e3_pool = nn.AdaptiveAvgPool2d((16, 32))     # 32x64 -> 16x32 (512 tok)
+            self.e2_pool = nn.AdaptiveAvgPool2d((16, 32))     # 64x128 -> 16x32 (512 tok)
+            self.kv_e3s = nn.Linear(ngf * 4, dim)
+            self.kv_e2 = nn.Linear(ngf * 2, dim)
         self.lite = getattr(cfg, "raydpt_lite", False)        # 2-scale (32,64) lite variant
         # full-decode: LEARNED upsample 64x128 -> 256x512 (+e1 skip), like U-Net's decoder
         # tail, instead of parameter-free bilinear x4. Closes the fairness gap vs pix2pix.
@@ -146,6 +155,20 @@ class RayDPT(nn.Module):
             d_c = torch.sigmoid(self.coarse_head(F.adaptive_avg_pool2d(m, (16, 32))))
             x = self.lsa32(self.refine32(m))                   # 32x64
             x = self.lsa64(self.refine64(self.up(x) + self.se2(e2)))   # 64x128
+        elif self.msf:
+            # multi-scale compact KV: each ray scale queries the right acoustic memory.
+            kv3 = self.kv_e3(e3.flatten(2).transpose(1, 2))                          # 2048 (32x64)
+            kv3s = self.kv_e3s(self.e3_pool(e3).flatten(2).transpose(1, 2))          # 512  (pooled 16x32)
+            kv2 = self.kv_e2(self.e2_pool(e2).flatten(2).transpose(1, 2))            # 512  (pooled 16x32)
+            kv32 = torch.cat([kv4, kv3], 1)                                          # 2560
+            kv64 = torch.cat([kv4, kv3s, kv2], 1)                                    # 1536 (compact)
+            F16 = self._cross(self.ray_proj, self.rf16, self.cr16, kv4, B, 16, 32)
+            F32 = self._cross(self.ray_proj, self.rf32, self.cr32, kv32, B, 32, 64)
+            F64 = self._cross(self.ray_proj, self.rf64, self.cr64, kv64, B, 64, 128)
+            m16 = F16 + self.se4(e4)                            # e4 same coord at coarsest -> keep
+            d_c = torch.sigmoid(self.coarse_head(m16))
+            x = self.lsa32(self.refine32(self.up(m16) + F32))  # e3 enters via kv32 (no raw skip)
+            x = self.lsa64(self.refine64(self.up(x) + F64))    # e2 enters via kv2  (no raw skip)
         else:
             kv3 = self.kv_e3(e3.flatten(2).transpose(1, 2))    # (B,2048,dim)
             F16 = self._cross(self.ray_proj, self.rf16, self.cr16, kv4, B, 16, 32)

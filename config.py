@@ -66,6 +66,9 @@ DEFAULTS = dict(
     raydpt_win32=5, raydpt_win64=3,       # RayDPT local spherical-attention window per scale
     raydpt_lite=False,            # 2-scale (32,64) lite Ray-DPT variant (single ray cross-attn)
     raydpt_full_decode=True,      # learned upsample 64x128->256x512 (+e1 skip); always on (vs bilinear x4)
+    raydpt_msf=False,             # multi-scale-KV fusion: F32<-cat(e4,e3), F64<-cat(e4,pooled e3,pooled e2);
+                                  # drop raw e2/e3 DPT skip-add (coord-mismatch) -> ray cross-attends compact KV
+
     # coarse-arch loss weights (only applied for arch in the coarse family)
     w_dense=1.0, w_coarse_layout=1.0, w_low=0.5, w_tv_res=0.01,
 

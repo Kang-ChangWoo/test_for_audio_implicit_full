@@ -38,3 +38,12 @@
 [mega] launch U_unet8_normal_s0 gpu4 (40 left)
 [mega] 90 jobs total
 [mega] launch E_echo_bin_s0 gpu4 (41 left)
+[mega] 90 jobs total
+[mega] launch E_echo_bin_s0 gpu4 (41 left)
+[mega] launch U_unet8_scale1_s0 gpu1 (40 left)
+[mega] 89 jobs total
+[mega] launch E_echo_bin_s0 gpu3 (39 left)
+[mega] launch U_unet8_scale1_s0 gpu4 (39 left)
+[mega] launch U_unet8_scale2_s0 gpu1 (39 left)
+[mega] launch U_unet8_chamfer_s0 gpu6 (38 left)
+[mega] 90 jobs total

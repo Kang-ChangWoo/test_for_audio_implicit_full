@@ -2,3 +2,5 @@
 [model] params=56.02M
 [train] 28800 samples / 72 scenes (raw 256x512, in_ch=2)
 [val] 3543 samples / 9 scenes (raw 256x512, in_ch=2)
+[ep 00] 682.7s  {'mae': 0.09075018576035897}  val_MAE=1.2679m
+[ep 01] 302.5s  {'mae': 0.07769487589908143}  val_MAE=1.6268m

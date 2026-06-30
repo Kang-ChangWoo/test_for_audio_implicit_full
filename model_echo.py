@@ -98,25 +98,18 @@ class BinauralBinEncoder(nn.Module):
         return pe
 
     def forward(self, wave):
-        B = wave.size(0)
+        B, _, T = wave.shape
         env = (wave[:, 0].abs() + wave[:, 1].abs())
-        # direct-peak onset per sample (first 6ms), then K distance bins of equal width
-        n0 = env[:, :int(self.sr * 0.006)].argmax(dim=1)                 # (B,)
-        span = int(self.dmax * 2 * self.sr / self.c)
-        bw = span // self.k
-        toks = []
-        for kk in range(self.k):
-            seg = []
-            for b in range(B):                                          # gather per-sample window
-                s = int(n0[b]) + kk * bw
-                w = wave[b, :, s:s + bw]
-                if w.size(1) < bw:
-                    w = F.pad(w, (0, bw - w.size(1)))
-                seg.append(w)
-            w = torch.stack(seg, 0)                                     # (B,2,bw)
-            x = torch.cat([w, (w[:, :1] - w[:, 1:2])], dim=1)           # [L,R,L-R] (B,3,bw)
-            toks.append(self.enc(x))                                    # (B,dim)
-        E = torch.stack(toks, 1)                                        # (B,K,dim)
+        # direct-peak onset per sample (first 6ms) -> align, then K equal-width bins
+        n0 = env[:, :int(self.sr * 0.006)].argmax(dim=1)                # (B,)
+        bw = int(self.dmax * 2 * self.sr / self.c) // self.k
+        span = bw * self.k
+        # vectorised onset-aligned gather of the [n0 : n0+span] window (no python loop)
+        idx = (n0[:, None] + torch.arange(span, device=wave.device)[None, :]).clamp(max=T - 1)  # (B,span)
+        Lr = torch.gather(wave[:, 0], 1, idx).view(B, self.k, bw)       # (B,K,bw)
+        Rr = torch.gather(wave[:, 1], 1, idx).view(B, self.k, bw)
+        x = torch.stack([Lr, Rr, Lr - Rr], dim=2).reshape(B * self.k, 3, bw)   # [L,R,L-R]
+        E = self.enc(x).view(B, self.k, -1)                            # single conv over B*K
         return E + self.dpe[None]                                       # + distance PE
 
 
