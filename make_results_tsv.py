@@ -38,6 +38,7 @@ DESC = {
  "A6sec": "cross+self-attn + sector-weighted (front/back) loss",
  "A6_crossself": "cross-attention + ray self-attention",
  "Bnode2_cross_unetenc": "cross-attention + U-Net token encoder, 2ch",
+ "Bnode2_cross_vitenc": "cross-attention + ViT token encoder, 2ch + flip",
  "T_all": "tip: all implicit-field tricks combined",
  "T_progpe": "tip: progressive coarse->fine Fourier PE",
  "C_unet8_raycoarse16_5chflip": "U-Net8 encoder + coarse ray-token field 16x32 head",

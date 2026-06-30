@@ -15,6 +15,7 @@ OUT = "out/pcd"; os.makedirs(OUT, exist_ok=True)
 
 MODELS = [
     ("UNet8",       "Bnode2_unet8_5chflip", "fm"),
+    ("UNet8normal", "U_unet8_normal",       "fm"),
     ("RayDPTfull",  "C_raydpt_5chflip",     "fm"),
     ("RayDPTlite",  "C_raydptlite_5chflip", "fm"),
     ("crossflip",   "Bnode2_cross_flip",    "impl"),
@@ -69,11 +70,14 @@ def main():
         n = save_ply(f"{OUT}/{tag}__GT.ply", s["gt"], dirs, s["vmax"])
         print(f"[GT]  {tag}  N={n}", flush=True)
 
-    # model clouds
+    # model clouds (skip a model if all its scene PLYs already exist)
     for lab, base, typ in MODELS:
         run = best_seed(base)
         if run is None:
             print(f"[skip] {base}"); continue
+        tags = [f"{s['split']}_{s['key'].replace('/','-')}" for s in scenes]
+        if all(os.path.exists(f"{OUT}/{t}__{lab}.ply") for t in tags):
+            print(f"[have] {lab} (all PLYs exist)"); continue
         preds = preds_for(run, typ, scenes)
         for s in scenes:
             tag = f"{s['split']}_{s['key'].replace('/','-')}"

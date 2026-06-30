@@ -63,6 +63,7 @@ A15_bigunet_fv	0.9818	1.5037	0.6574	0.4104	3	much worse; bigger U-Nets / dense r
 A15_bigunet	0.9825	1.5064	0.6526	0.4094	3	much worse; bigger U-Nets / dense ray-conv lose accuracy	bigger U-Net (more capacity)
 Aunet	0.9889	1.5179	0.6574	0.4063	3	much worse; bigger U-Nets / dense ray-conv lose accuracy	plain U-Net depth baseline (A-series)
 A18_unet64reg	0.9896	1.5194	0.6554	0.4054	3	much worse; bigger U-Nets / dense ray-conv lose accuracy	wide U-Net + regularisation
+Bnode2_cross_vitenc	1.0149	1.5133	0.6921	0.3836	1	much worse; bigger U-Nets / dense ray-conv lose accuracy	cross-attention + ViT token encoder, 2ch + flip
 Bnode2_rayconv5d	1.0415	1.5305	0.6965	0.3708	3	much worse; bigger U-Nets / dense ray-conv lose accuracy	dense ray-conv decoder at 64x128, 5ch
 A4_cross_shuf	1.1478	1.6676	0.8115	0.3379	1	control: audio removed/broken -> expected worst; confirms model uses audio	cross-attention + SHUFFLED audio (break scene pairing) [CONTROL]
 A2_shuf	1.1497	1.6663	0.8217	0.3388	2	control: audio removed/broken -> expected worst; confirms model uses audio	ray-MLP + SHUFFLED audio [CONTROL]
