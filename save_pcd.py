@@ -16,6 +16,7 @@ OUT = "out/pcd"; os.makedirs(OUT, exist_ok=True)
 MODELS = [
     ("UNet8",       "Bnode2_unet8_5chflip", "fm"),
     ("UNet8normal", "U_unet8_normal",       "fm"),
+    ("UNet8chamfer","U_unet8_chamfer",      "fm"),
     ("RayDPTfull",  "C_raydpt_5chflip",     "fm"),
     ("RayDPTlite",  "C_raydptlite_5chflip", "fm"),
     ("crossflip",   "Bnode2_cross_flip",    "impl"),

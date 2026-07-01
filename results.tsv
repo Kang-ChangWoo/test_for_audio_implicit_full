@@ -1,40 +1,54 @@
 name	MAE	RMSE	AbsRel	d1	n_seeds	verdict	description
-Bnode2_unet8_5chflip	0.8898	1.4314	0.5237	0.4541	2	best tier (~SOTA); global U-Net/GCC encoder wins	U-Net8 (pix2pix, 8 down) + 5ch RIR + L/R-flip aug [BASELINE]
-Bnode2_unet8_5chflip_w20	0.8917	1.4285	0.5362	0.4536	2	best tier (~SOTA); global U-Net/GCC encoder wins	baseline + 20m audio window (later reflections)
 Bnode2_gcc_unet8	0.8923	1.4247	0.5385	0.4525	3	best tier (~SOTA); global U-Net/GCC encoder wins	U-Net8 + GCC-PHAT lag map input (6ch, waveform ITD)
+Bnode2_unet8_5chflip	0.8933	1.4361	0.5308	0.4549	3	competitive; near baseline (ViT / window / wave variants)	U-Net8 (pix2pix, 8 down) + 5ch RIR + L/R-flip aug [BASELINE]
+Bnode2_unet8_5chflip_w20	0.8935	1.4310	0.5334	0.4500	3	competitive; near baseline (ViT / window / wave variants)	baseline + 20m audio window (later reflections)
 U_unet8_normal	0.8949	1.4179	0.5810	0.4563	1	competitive; near baseline (ViT / window / wave variants)	baseline + 3D surface-normal cosine aux loss (w=0.1)
 B_unet8_5ch	0.8969	1.4356	0.5465	0.4539	3	competitive; near baseline (ViT / window / wave variants)	U-Net8 + 5ch RIR, no flip aug
+U_unet8_chamfer	0.9010	1.4394	0.5503	0.4533	1	competitive; near baseline (ViT / window / wave variants)	U-Net8 5chflip + 3D Chamfer aux loss (w=0.1)
+R_raydpt_e2	0.9037	1.4622	0.4872	0.4515	1	competitive; near baseline (ViT / window / wave variants)	RayDPT 5chflip + best-param recipe (amp-bf16, bs32, lr4e-4, w_rel=0.1)
 A22_vit_aug	0.9046	1.4379	0.5445	0.4490	3	competitive; near baseline (ViT / window / wave variants)	pretrained ViT-B/16 encoder + aug
 B_unet8nolog_aug	0.9050	1.4288	0.5724	0.4480	3	competitive; near baseline (ViT / window / wave variants)	U-Net8 + raw (non-log) magnitude spec + aug
 Bnode2_cross_flip	0.9053	1.4276	0.5489	0.4449	3	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	ray-conditioned cross-attention (rays attend audio tokens), 2ch + flip
 Bnode2_wave_unet8	0.9068	1.4551	0.5358	0.4529	3	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	U-Net8 + raw-waveform 1D-CNN global embedding (EchoDiffusion-lite)
 A23_vit_sh	0.9081	1.4257	0.5687	0.4390	3	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	ViT encoder + spherical-harmonic ray PE
 A23_vit_both	0.9082	1.4396	0.5504	0.4440	3	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	ViT encoder + Fourier+SH ray PE
+E_echo_bin	0.9095	1.4267	0.5896	0.4517	1	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	U-Net8 + distance-binned ITD-preserving binaural weak guide (zero-init cross-attn)
 C_raydptlite_5chflip	0.9097	1.4260	0.5651	0.4496	3	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	RayDPT-lite: 2-scale ray-conditioned DPT decoder, 5ch+flip
+E_echo_unet	0.9103	1.4382	0.5558	0.4431	3	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	U-Net8 + frozen wav2vec2 scene encoder + cross-attn (EchoDiffusion-style)
+Bnode2_cross_5chflip	0.9108	1.4264	0.5577	0.4441	3	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	cross-attention, 5ch + flip
 Bnode2_cross_unetenc5	0.9109	1.4310	0.5563	0.4455	3	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	cross-attention + U-Net token encoder, 5ch
 C_raydpt_5chflip	0.9110	1.4198	0.5719	0.4444	3	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	RayDPT-full: multi-scale ray DPT + learned full-decode, 5ch+flip
 B_cross_nolog	0.9122	1.4386	0.5369	0.4359	1	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	cross-attention + raw (non-log) spec
+C_raydpt_msf	0.9123	1.4251	0.5680	0.4481	1	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	RayDPT + multi-scale-KV fusion (F32<-e4,e3; F64<-e4,pooled e3/e2; no raw skip)
 B_unet8nolog	0.9124	1.4417	0.5788	0.4480	3	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	U-Net8 + raw (non-log) spec, no aug
 Bnode2_unet8nolog	0.9125	1.4540	0.5581	0.4447	3	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	U-Net8 + raw (non-log) spec
-Bnode2_cross_5chflip	0.9126	1.4264	0.5604	0.4423	2	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	cross-attention, 5ch + flip
+R_echo_unet_e2	0.9155	1.4837	0.5120	0.4530	1	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	echo_unet + best-param recipe (amp, w_rel=0.1)
+Bnode2_crossself_flip	0.9169	1.4325	0.5601	0.4407	1	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	cross + ray self-attention + flip, 2ch
 A3_crossSH	0.9170	1.4625	0.5119	0.4343	1	cross/RayDPT ceiling (~0.91); ray-conditioning does not beat U-Net	cross-attention + SH ray PE
 A4_ffmask	0.9184	1.4604	0.5272	0.4421	1	below baseline; tips/PE/coarse-token tweaks do not help	cross-attention + far-field (>=10m) mask in loss
 A5_crossMic	0.9188	1.4469	0.5453	0.4369	1	below baseline; tips/PE/coarse-token tweaks do not help	cross-attention + ear-axis (binaural) mic PE
 Bnode2_cross_nolog	0.9201	1.4407	0.5632	0.4374	3	below baseline; tips/PE/coarse-token tweaks do not help	cross-attention + raw (non-log) spec
+Bnode2_cross_hitokflip	0.9204	1.4303	0.5562	0.4349	2	below baseline; tips/PE/coarse-token tweaks do not help	cross-attention + hi-res tokens + flip, 2ch
 T_film	0.9211	1.4463	0.5615	0.4353	1	below baseline; tips/PE/coarse-token tweaks do not help	tip: FiLM (global audio -> gamma,beta) on ray tokens
 A23_vit_fourier	0.9214	1.4446	0.5734	0.4383	3	below baseline; tips/PE/coarse-token tweaks do not help	ViT encoder + Fourier ray PE
 T_mlpskip	0.9228	1.4454	0.5501	0.4344	1	below baseline; tips/PE/coarse-token tweaks do not help	tip: ray-coordinate re-injection skip-MLP
 T_sector	0.9250	1.4550	0.5525	0.4356	1	below baseline; tips/PE/coarse-token tweaks do not help	tip: sector/near-balanced ray sampling
+U_unet8_scale1	0.9250	1.4193	0.6137	0.4311	1	below baseline; tips/PE/coarse-token tweaks do not help	U-Net8 5chflip + per-scene mean(scale) guide loss (w=1.0)
+R_echo_ray_e2	0.9255	1.4726	0.5021	0.4381	1	below baseline; tips/PE/coarse-token tweaks do not help	echo_ray + best-param recipe (amp, w_rel=0.1)
 A4_cross	0.9258	1.4519	0.5527	0.4346	3	below baseline; tips/PE/coarse-token tweaks do not help	cross-attention base, 2ch
 A6sec	0.9270	1.4515	0.5550	0.4332	3	below baseline; tips/PE/coarse-token tweaks do not help	cross+self-attn + sector-weighted (front/back) loss
 A6_crossself	0.9271	1.4481	0.5717	0.4386	3	below baseline; tips/PE/coarse-token tweaks do not help	cross-attention + ray self-attention
 Bnode2_cross_unetenc	0.9279	1.4443	0.5707	0.4338	3	below baseline; tips/PE/coarse-token tweaks do not help	cross-attention + U-Net token encoder, 2ch
+E_echo_ray	0.9289	1.4388	0.5788	0.4389	3	below baseline; tips/PE/coarse-token tweaks do not help	RayDPT + wav2vec2 scene tokens fused into every ray cross-attn scale
 T_all	0.9293	1.4434	0.5770	0.4321	1	below baseline; tips/PE/coarse-token tweaks do not help	tip: all implicit-field tricks combined
 T_progpe	0.9304	1.4517	0.5685	0.4311	1	below baseline; tips/PE/coarse-token tweaks do not help	tip: progressive coarse->fine Fourier PE
+C_raydpt_rsmp	0.9305	1.4488	0.5798	0.4383	1	below baseline; tips/PE/coarse-token tweaks do not help	RayDPT + acoustic Perceiver resampler (64 learned latents -> ray reads memory)
 C_unet8_raycoarse16_5chflip	0.9335	1.4513	0.5875	0.4321	3	below baseline; tips/PE/coarse-token tweaks do not help	U-Net8 encoder + coarse ray-token field 16x32 head
+Bnode2_cross_hitok	0.9380	1.4478	0.5750	0.4290	1	worse; aux heads (SH/coarse/raymod) and residual correctors hurt	cross-attention + hi-res (/4) audio tokens, 2ch
 A19_raymodStrong	0.9457	1.4798	0.5938	0.4233	3	worse; aux heads (SH/coarse/raymod) and residual correctors hurt	U-Net + strong ray-conditioned FiLM modulation
 A14_rir5	0.9461	1.4453	0.5974	0.4140	1	worse; aux heads (SH/coarse/raymod) and residual correctors hurt	supervised residual corrector on frozen D0, 5ch
 Bnode2_cross5ch	0.9462	1.4683	0.5829	0.4203	3	worse; aux heads (SH/coarse/raymod) and residual correctors hurt	cross-attention, 5ch, no flip
+Bnode2_crossself_hitokflip	0.9464	1.4438	0.5904	0.4220	2	worse; aux heads (SH/coarse/raymod) and residual correctors hurt	cross + self-attn + hi-res tokens + flip, 2ch
 A12_film	0.9476	1.4541	0.6018	0.4156	1	worse; aux heads (SH/coarse/raymod) and residual correctors hurt	full-map decoder + FiLM audio correction
 A8_hybrid	0.9482	1.4751	0.5445	0.4034	1	worse; aux heads (SH/coarse/raymod) and residual correctors hurt	SH-coarse(audio) + implicit residual
 A19_raymodStrong_fv	0.9493	1.4659	0.6147	0.4196	3	worse; aux heads (SH/coarse/raymod) and residual correctors hurt	strong ray-FiLM modulation (full-val eval)
@@ -54,6 +68,7 @@ C_unet8_coarse32_5chflip	0.9605	1.4618	0.6286	0.4128	3	worse; aux heads (SH/coar
 A16_raymod8x16	0.9619	1.4760	0.6366	0.4154	3	worse; aux heads (SH/coarse/raymod) and residual correctors hurt	ray-modulated U-Net at e3 (8x16 grid)
 A16_raymod_fv	0.9627	1.4846	0.6238	0.4171	3	worse; aux heads (SH/coarse/raymod) and residual correctors hurt	ray-modulated U-Net (full-val eval)
 A13_ipd5	0.9630	1.4688	0.6213	0.4107	1	worse; aux heads (SH/coarse/raymod) and residual correctors hurt	5ch incl. IPD phase variant
+U_unet8_scale2	0.9685	1.4593	0.6558	0.4117	1	much worse; bigger U-Nets / dense ray-conv lose accuracy	U-Net8 5chflip + per-scene mean(scale) guide loss (w=2.0)
 A18_raymod64reg	0.9705	1.4911	0.6475	0.4135	2	much worse; bigger U-Nets / dense ray-conv lose accuracy	ray-mod U-Net at 64 grid + regularisation
 A20_unet64_aug	0.9734	1.5066	0.6417	0.4156	3	much worse; bigger U-Nets / dense ray-conv lose accuracy	wide U-Net (ngf64, fewer downs) + aug
 Bnode2_hybrid5ch	0.9736	1.4874	0.5921	0.3959	3	much worse; bigger U-Nets / dense ray-conv lose accuracy	SH-coarse + implicit residual, 5ch

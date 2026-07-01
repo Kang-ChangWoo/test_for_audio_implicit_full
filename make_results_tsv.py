@@ -77,6 +77,22 @@ DESC = {
  "A4_cross_shuf": "cross-attention + SHUFFLED audio (break scene pairing) [CONTROL]",
  "A2_shuf": "ray-MLP + SHUFFLED audio [CONTROL]",
  "A1_rayonly": "ray prior only, NO audio [CONTROL]",
+ # --- new experiments (3D losses, scale guide, echo/wav2vec2, RayDPT variants, recipe) ---
+ "U_unet8_chamfer": "U-Net8 5chflip + 3D Chamfer aux loss (w=0.1)",
+ "U_unet8_scale1": "U-Net8 5chflip + per-scene mean(scale) guide loss (w=1.0)",
+ "U_unet8_scale2": "U-Net8 5chflip + per-scene mean(scale) guide loss (w=2.0)",
+ "R_raydpt_e2": "RayDPT 5chflip + best-param recipe (amp-bf16, bs32, lr4e-4, w_rel=0.1)",
+ "C_raydpt_msf": "RayDPT + multi-scale-KV fusion (F32<-e4,e3; F64<-e4,pooled e3/e2; no raw skip)",
+ "C_raydpt_rsmp": "RayDPT + acoustic Perceiver resampler (64 learned latents -> ray reads memory)",
+ "E_echo_unet": "U-Net8 + frozen wav2vec2 scene encoder + cross-attn (EchoDiffusion-style)",
+ "E_echo_bin": "U-Net8 + distance-binned ITD-preserving binaural weak guide (zero-init cross-attn)",
+ "E_echo_ray": "RayDPT + wav2vec2 scene tokens fused into every ray cross-attn scale",
+ "R_echo_unet_e2": "echo_unet + best-param recipe (amp, w_rel=0.1)",
+ "R_echo_ray_e2": "echo_ray + best-param recipe (amp, w_rel=0.1)",
+ "Bnode2_cross_hitok": "cross-attention + hi-res (/4) audio tokens, 2ch",
+ "Bnode2_cross_hitokflip": "cross-attention + hi-res tokens + flip, 2ch",
+ "Bnode2_crossself_flip": "cross + ray self-attention + flip, 2ch",
+ "Bnode2_crossself_hitokflip": "cross + self-attn + hi-res tokens + flip, 2ch",
 }
 
 
