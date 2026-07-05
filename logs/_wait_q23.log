@@ -1,0 +1,6 @@
+=== 첫 신규 결과 (Q2/Q3/lsa) vs 기준 ===
+[기준] U-Net8 0.886(AbsRel 0.523) / RayDPT+E2 0.904(AbsRel 0.487) / RayDPT orig 0.916(AbsRel 0.581)
+  File "<string>", line 5
+    print(f"{run:26} MAE={d[\x27MAE\x27]:.4f} RMSE={d[\x27RMSE\x27]:.4f} AbsRel={d[\x27AbsRel\x27]:.4f}")
+                                                                                                        ^
+SyntaxError: f-string expression part cannot include a backslash

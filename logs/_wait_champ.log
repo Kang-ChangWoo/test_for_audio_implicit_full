@@ -1,0 +1,6 @@
+=== CHAMPION 스택 (E22/E29/E34) vs RayDPT baseline — honest 지표 ===
+[기준] RayDPT+E2: MAE 0.904 RMSE 1.462 AbsRel 0.487 d1 0.451 | RayDPT orig: 0.916/1.418/0.581/0.444
+  File "<string>", line 6
+    print(f"{run:26} MAE={d[\x27MAE\x27]:.4f} RMSE={d[\x27RMSE\x27]:.4f} AbsRel={d[\x27AbsRel\x27]:.4f} d1={d[\x27delta1\x27]:.3f} comp={comp(d):.3f}")
+                                                                                                                                                      ^
+SyntaxError: f-string expression part cannot include a backslash

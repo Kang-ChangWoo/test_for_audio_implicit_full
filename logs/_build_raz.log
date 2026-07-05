@@ -1,0 +1,21 @@
+[build] raz val
+[val] 3543 samples / 9 scenes (raw 256x512, in_ch=13)
+  cache[val ic13] 3200/3543
+[cache] val ic13: 3543 -> /root/implicit_full_cache/ic13_256x512_raz
+[build] raz test
+[test] 3600 samples / 9 scenes (raw 256x512, in_ch=13)
+  cache[test ic13] 3200/3600
+[cache] test ic13: 3600 -> /root/implicit_full_cache/ic13_256x512_raz
+[build] raz train
+[train] 28800 samples / 72 scenes (raw 256x512, in_ch=13)
+  cache[train ic13] 3200/28800
+  cache[train ic13] 6400/28800
+  cache[train ic13] 9600/28800
+  cache[train ic13] 12800/28800
+  cache[train ic13] 16000/28800
+  cache[train ic13] 19200/28800
+  cache[train ic13] 22400/28800
+  cache[train ic13] 25600/28800
+  cache[train ic13] 28800/28800
+[cache] train ic13: 28800 -> /root/implicit_full_cache/ic13_256x512_raz
+[raz cache] DONE

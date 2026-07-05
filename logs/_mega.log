@@ -47,3 +47,327 @@
 [mega] launch U_unet8_scale2_s0 gpu1 (39 left)
 [mega] launch U_unet8_chamfer_s0 gpu6 (38 left)
 [mega] 90 jobs total
+[mega] launch C_raydpt_msf_s0 gpu7 (38 left)
+[mega] 91 jobs total
+[mega] 91 jobs total
+[mega] launch R_raydpt_e2_s0 gpu1 (39 left)
+[mega] launch E_echo_unet_s0 gpu4 (38 left)
+[mega] launch E_echo_unet_s1 gpu6 (36 left)
+[mega] launch E_echo_unet_s2 gpu3 (36 left)
+[mega] finished E_echo_unet_s0 gpu4
+[mega] launch R_echo_unet_e2_s0 gpu4 (34 left)
+[mega] finished E_echo_unet_s1 gpu6
+[mega] launch C_raydpt_rsmp_s0 gpu6 (33 left)
+[mega] launch E_echo_ray_s0 gpu2 (32 left)
+[mega] launch E_echo_ray_s1 gpu5 (32 left)
+[mega] finished E_echo_unet_s2 gpu3
+[mega] launch E_echo_ray_s2 gpu3 (31 left)
+[mega] finished R_raydpt_e2_s0 gpu1
+[mega] launch R_echo_ray_e2_s0 gpu1 (30 left)
+[mega] finished R_echo_unet_e2_s0 gpu4
+[mega] launch Bnode2_cross_hitok_s2 gpu4 (29 left)
+[mega] launch Bnode2_cross_5chflip_s2 gpu7 (28 left)
+[mega] finished C_raydpt_rsmp_s0 gpu6
+[mega] launch Bnode2_cross_vitenc_s2 gpu6 (27 left)
+[mega] finished R_echo_ray_e2_s0 gpu1
+[mega] launch Bnode2_unet8_5chflip_s2 gpu1 (26 left)
+[mega] finished Bnode2_unet8_5chflip_s2 gpu1
+[mega] launch Bnode2_unet8_5chflip_w20_s2 gpu1 (25 left)
+[mega] launch P_5ch_k5_s2 gpu0 (24 left)
+[mega] finished E_echo_ray_s0 gpu2
+[mega] launch Bnode2_crossself_flip_s2 gpu2 (23 left)
+[mega] finished Bnode2_unet8_5chflip_w20_s2 gpu1
+[mega] launch Bnode2_cross_hitokflip_s2 gpu1 (22 left)
+[mega] finished E_echo_ray_s2 gpu3
+[mega] launch Bnode2_crossself_hitokflip_s2 gpu3 (21 left)
+[mega] finished Bnode2_cross_5chflip_s2 gpu7
+[mega] launch Bnode2_cross_flip_nr1024_s0 gpu7 (20 left)
+[mega] finished P_5ch_k5_s2 gpu0
+[mega] launch Bnode2_cross_flip_nr4096_s0 gpu0 (18 left)
+[mega] finished E_echo_ray_s1 gpu5
+[mega] launch Bnode2_cross_flip_nr8192_s0 gpu5 (17 left)
+[mega] finished Bnode2_cross_flip_nr1024_s0 gpu7
+[mega] launch Bnode2_cross_flip_nr1024_s1 gpu7 (16 left)
+[mega] finished Bnode2_cross_vitenc_s2 gpu6
+[mega] launch Bnode2_cross_flip_nr4096_s1 gpu6 (15 left)
+[mega] finished Bnode2_cross_flip_nr4096_s0 gpu0
+[mega] launch Bnode2_cross_flip_nr8192_s1 gpu0 (14 left)
+[mega] finished Bnode2_cross_hitok_s2 gpu4
+[mega] launch Bnode2_foa_unet8_s0 gpu4 (13 left)
+[mega] 92 jobs total
+[mega] launch C_raydpt_noray_s0 gpu4 (14 left)
+[mega] launch Bnode2_foa_cross_s0 gpu2 (12 left)
+[mega] launch Bnode2_foa_unet8_s1 gpu7 (11 left)
+[mega] finished Bnode2_foa_unet8_s1 gpu7
+[mega] launch Bnode2_foa_cross_s1 gpu7 (10 left)
+[mega] finished Bnode2_foa_cross_s0 gpu2
+[mega] finished Bnode2_foa_cross_s1 gpu7
+[mega] launch Bnode2_foa_cross_s0 gpu2 (10 left)
+[mega] launch Bnode2_foa_cross_s1 gpu7 (10 left)
+[mega] 106 jobs total
+[mega] launch R_raydpt_e2_s1 gpu6 (25 left)
+[mega] launch R_raydpt_e2_s2 gpu2 (25 left)
+[mega] launch Q_rd_rel05_s0 gpu7 (25 left)
+[mega] launch Q_rd_rel13_s0 gpu5 (25 left)
+[mega] launch Q_rd_rel15_s0 gpu1 (23 left)
+[mega] finished R_raydpt_e2_s1 gpu6
+[mega] launch Q_rd_silog5_s0 gpu6 (22 left)
+[mega] finished R_raydpt_e2_s2 gpu2
+[mega] launch Q_rd_silog25_s0 gpu2 (21 left)
+[mega] finished Q_rd_rel05_s0 gpu7
+[mega] launch Q_rd_rel10silog25_s0 gpu7 (20 left)
+[mega] launch Q_rd_rel10silog5_s0 gpu4 (19 left)
+[mega] finished Q_rd_rel13_s0 gpu5
+[mega] launch Q_rd_rel10_lr5e4_s0 gpu5 (18 left)
+[mega] launch Q_rd_rel10_lr3e4_s0 gpu0 (18 left)
+[mega] finished Q_rd_rel15_s0 gpu1
+[mega] launch Q_rd_rel10_xl3_s0 gpu1 (16 left)
+[mega] launch Q_rd_rel10_wcl05_s0 gpu3 (15 left)
+[mega] finished Q_rd_silog5_s0 gpu6
+[mega] launch Q_rd_rel10_wlow1_s0 gpu6 (14 left)
+[mega] finished Q_rd_silog25_s0 gpu2
+[mega] launch Q_rd_rel10_normal_s0 gpu2 (13 left)
+[mega] finished Q_rd_rel10silog25_s0 gpu7
+[mega] launch Q_rd_rel10_chamfer_s0 gpu7 (12 left)
+[mega] finished Q_rd_rel10_lr5e4_s0 gpu5
+[mega] launch Q_rdlite_rel10_s0 gpu5 (11 left)
+[mega] finished Q_rd_rel10_lr3e4_s0 gpu0
+[mega] launch Q_rdmsf_rel10_s0 gpu0 (10 left)
+[mega] finished Q_rd_rel10silog5_s0 gpu4
+[mega] launch Q_rdmsf_rel10silog25_s0 gpu4 (9 left)
+[mega] finished Q_rdlite_rel10_s0 gpu5
+[mega] launch Q_rdmsf_rel10_s1 gpu5 (8 left)
+[mega] finished Q_rd_rel10_xl3_s0 gpu1
+[mega] finished Q_rd_rel10_wcl05_s0 gpu3
+[mega] finished Q_rd_rel10_wlow1_s0 gpu6
+[mega] finished Q_rd_rel10_normal_s0 gpu2
+[mega] finished Q_rd_rel10_chamfer_s0 gpu7
+[mega] finished Q_rdmsf_rel10_s0 gpu0
+[mega] finished Q_rdmsf_rel10silog25_s0 gpu4
+[mega] 129 jobs total
+[mega] launch C_raydpt_lsaoff_s0 gpu0 (24 left)
+[mega] launch C_raydpt_lsaplanar_s0 gpu1 (24 left)
+[mega] launch C_raydpt_lsanobias_s0 gpu2 (24 left)
+[mega] launch Q2_unet_rel10_s0 gpu3 (24 left)
+[mega] launch Q2_unet_rel05_s0 gpu4 (24 left)
+[mega] launch Q2_unet_rel13_s0 gpu6 (24 left)
+[mega] launch Q2_unet_silog25_s0 gpu7 (24 left)
+[mega] 131 jobs total
+[mega] launch Q3_e4_silog5_s0 gpu5 (25 left)
+[mega] 134 jobs total
+[mega] launch Q5_e22_coarsesa_s0 gpu3 (28 left)
+[mega] launch Q5_e29_gated_s0 gpu6 (27 left)
+[mega] launch Q5_e34_champion_s0 gpu7 (27 left)
+[mega] launch Q3_e0c_base_s0 gpu4 (25 left)
+[mega] launch Q2_unet_silog5_s0 gpu5 (23 left)
+[mega] launch Q2_unet_rel10silog25_s0 gpu0 (23 left)
+[mega] finished Q5_e22_coarsesa_s0 gpu3
+[mega] launch Q2_unet_rel05silog25_s0 gpu3 (21 left)
+[mega] finished Q5_e29_gated_s0 gpu6
+[mega] launch Q2_unet_rel10_normal_s0 gpu6 (20 left)
+[mega] finished Q5_e34_champion_s0 gpu7
+[mega] launch Q2_unet_rel10_chamfer_s0 gpu7 (19 left)
+[mega] finished Q2_unet_silog5_s0 gpu5
+[mega] launch Q2_unet_downs7_s0 gpu5 (18 left)
+[mega] finished Q3_e0c_base_s0 gpu4
+[mega] launch Q2_unet_rel10_amp_s0 gpu4 (17 left)
+[mega] finished Q2_unet_rel10silog25_s0 gpu0
+[mega] launch Q2_unet_rel10_s1 gpu0 (16 left)
+[mega] finished Q2_unet_rel05silog25_s0 gpu3
+[mega] launch Q2_gcc_rel10_s0 gpu3 (15 left)
+[mega] finished Q2_unet_rel10_normal_s0 gpu6
+[mega] launch Q2_gcc_silog25_s0 gpu6 (14 left)
+[mega] finished Q2_unet_rel10_chamfer_s0 gpu7
+[mega] launch Q2_gcc_rel10silog25_s0 gpu7 (13 left)
+[mega] finished Q2_unet_downs7_s0 gpu5
+[mega] launch Q2_w20_rel10_s0 gpu5 (12 left)
+[mega] launch Q2_noray_rel10_s0 gpu1 (12 left)
+[mega] finished Q2_unet_rel10_amp_s0 gpu4
+[mega] launch Q2_noray_rel10silog25_s0 gpu4 (9 left)
+[mega] launch Q2_noray_s1 gpu2 (9 left)
+[mega] finished Q2_unet_rel10_s1 gpu0
+[mega] launch Q2_rdlite_silog25_s0 gpu0 (8 left)
+[mega] 140 jobs total
+[mega] launch Q5_e22_coarsesa_s1 gpu3 (13 left)
+[mega] launch Q5_e22_coarsesa_s2 gpu6 (12 left)
+[mega] launch Q6_emaonly_s0 gpu7 (11 left)
+[mega] launch Q6_emaonly_s1 gpu5 (10 left)
+[mega] launch Q6_csaonly_s0 gpu0 (9 left)
+[mega] finished Q5_e22_coarsesa_s1 gpu3
+[mega] launch Q6_csaonly_s1 gpu3 (8 left)
+[mega] finished Q5_e22_coarsesa_s2 gpu6
+[mega] finished Q6_emaonly_s0 gpu7
+[mega] finished Q6_emaonly_s1 gpu5
+[mega] finished Q6_csaonly_s0 gpu0
+[mega] finished Q6_csaonly_s1 gpu3
+[mega] ALL DONE
+[readme] updated BEST block: 135 groups, best=Q2_unet_rel10_normal (0.7469)
+[mega] aggregated
+[mega] 150 jobs total
+[mega] launch Q7_csa_norel_s0 gpu0 (10 left)
+[mega] launch Q7_csa_wrel03_s0 gpu1 (10 left)
+[mega] launch Q7_csa_wrel05_s0 gpu2 (10 left)
+[mega] launch Q7_csa_gated_norel_s0 gpu3 (10 left)
+[mega] launch Q7_csa_gated_wrel05_s0 gpu4 (10 left)
+[mega] launch Q7_csa_norel_wscale10_s0 gpu5 (10 left)
+[mega] launch Q7_csa_wrel05_wscale10_s0 gpu6 (10 left)
+[mega] launch Q7_csa_wrel05_wlow10_s0 gpu7 (10 left)
+[mega] 170 jobs total
+[mega] launch Q8_csa_normal10_s0 gpu6 (29 left)
+[mega] launch Q8_csa_wrel05_normal10_s0 gpu7 (29 left)
+[mega] launch Q8_csa_chamfer10_s0 gpu1 (29 left)
+[mega] launch Q8_csa_wrel05_normal05_wscale10_s0 gpu5 (29 left)
+[mega] 179 jobs total
+[mega] launch Q10_vit_frozen_s0 gpu2 (37 left)
+[mega] launch Q10_vit_scratch_s0 gpu0 (35 left)
+[mega] 184 jobs total
+[mega] launch Q11_zc0_logL_s0 gpu3 (37 left)
+[mega] 191 jobs total
+[mega] 201 jobs total
+[mega] 210 jobs total
+[mega] launch Q12_unet_wrel03_s0 gpu4 (62 left)
+[mega] launch Q12_unet_wrel03_s1 gpu3 (61 left)
+[mega] finished Q12_unet_wrel03_s0 gpu4
+[mega] launch Q12_unet_wrel03_s2 gpu4 (60 left)
+[mega] finished Q12_unet_wrel03_s1 gpu3
+[mega] launch Q12_unet_wrel03_amp_s0 gpu3 (59 left)
+[mega] finished Q12_unet_wrel03_amp_s0 gpu3
+[mega] launch Q12_unet_wrel03_wscale10_s0 gpu3 (58 left)
+[mega] finished Q12_unet_wrel03_s2 gpu4
+[mega] launch Q7_csa_wrel03_s1 gpu4 (57 left)
+[mega] finished Q12_unet_wrel03_wscale10_s0 gpu3
+[mega] launch Q7_csa_wrel03_s2 gpu3 (56 left)
+[mega] launch Q7_csa_wrel03_wscale10_s0 gpu6 (55 left)
+[mega] launch Q11_zc1_logR_s0 gpu7 (55 left)
+[mega] launch Q11_zc2_ILD_s0 gpu1 (54 left)
+[mega] launch Q11_zc3_cosIPD_s0 gpu5 (52 left)
+[mega] launch Q11_zc4_sinIPD_s0 gpu0 (51 left)
+[mega] launch Q9_ground_noquery_s0 gpu2 (50 left)
+[mega] finished Q11_zc1_logR_s0 gpu7
+[mega] finished Q11_zc2_ILD_s0 gpu1
+[mega] launch Q9_ground_planarlsa_s0 gpu1 (48 left)
+[mega] launch Q9_ground_nocsageo_s0 gpu7 (48 left)
+[mega] finished Q11_zc3_cosIPD_s0 gpu5
+[mega] launch Q9_ground_none_s0 gpu5 (47 left)
+[mega] finished Q11_zc4_sinIPD_s0 gpu0
+[mega] launch Q9_ground_none_s1 gpu0 (46 left)
+[mega] finished Q7_csa_wrel03_s1 gpu4
+[mega] launch Q9_ground_full_s2 gpu4 (45 left)
+[mega] finished Q7_csa_wrel03_s2 gpu3
+[mega] launch Q10_vit_5ch_s0 gpu3 (44 left)
+[mega] finished Q7_csa_wrel03_wscale10_s0 gpu6
+[mega] launch Q14_gamma_p05_s0 gpu6 (43 left)
+[mega] finished Q9_ground_noquery_s0 gpu2
+[mega] launch Q14_gamma_p10_s0 gpu2 (42 left)
+[mega] finished Q9_ground_planarlsa_s0 gpu1
+[mega] launch Q14_gamma_p15_s0 gpu1 (41 left)
+[mega] finished Q9_ground_none_s0 gpu5
+[mega] launch Q14_gamma_n05_s0 gpu5 (40 left)
+[mega] finished Q9_ground_nocsageo_s0 gpu7
+[mega] launch Q14_gamma_n10_s0 gpu7 (39 left)
+[mega] finished Q9_ground_none_s1 gpu0
+[mega] launch Q14_gamma_p05_rel03_s0 gpu0 (38 left)
+[mega] finished Q9_ground_full_s2 gpu4
+[mega] launch Q14_gamma_p10_scale10_s0 gpu4 (37 left)
+[mega] finished Q10_vit_5ch_s0 gpu3
+[mega] launch Q14_berhu_s0 gpu3 (36 left)
+[mega] finished Q14_gamma_p05_s0 gpu6
+[mega] launch Q14_berhu_rel03_s0 gpu6 (35 left)
+[mega] finished Q14_gamma_p10_s0 gpu2
+[mega] launch Q13_loss_silog25_s0 gpu2 (34 left)
+[mega] finished Q14_gamma_p15_s0 gpu1
+[mega] launch Q13_loss_silog5_s0 gpu1 (33 left)
+[mega] finished Q14_gamma_n05_s0 gpu5
+[mega] launch Q13_loss_grad05_s0 gpu5 (32 left)
+[mega] finished Q14_gamma_n10_s0 gpu7
+[mega] launch Q13_loss_grad10_s0 gpu7 (31 left)
+[mega] finished Q14_gamma_p05_rel03_s0 gpu0
+[mega] launch Q13_loss_wlow0_s0 gpu0 (30 left)
+[mega] finished Q14_berhu_s0 gpu3
+[mega] launch Q13_loss_wcoarse0_s0 gpu3 (29 left)
+[mega] finished Q14_gamma_p10_scale10_s0 gpu4
+[mega] launch Q13_loss_rel03_grad05_s0 gpu4 (28 left)
+[mega] finished Q14_berhu_rel03_s0 gpu6
+[mega] launch Q13_loss_rel03_normal10_s0 gpu6 (27 left)
+[mega] 216 jobs total
+[mega] 222 jobs total
+[mega] 228 jobs total
+[mega] launch Q17_csa_micpe_s0 gpu2 (44 left)
+[mega] launch Q17_csa_shpe_s0 gpu1 (44 left)
+[mega] launch Q17_csa_micsh_s0 gpu7 (43 left)
+[mega] launch Q17_csa_raz_s0 gpu5 (41 left)
+[mega] launch Q17_csa_raz_normal_s0 gpu0 (40 left)
+[mega] launch Q17_unet_raz_s0 gpu3 (39 left)
+[mega] finished Q17_unet_raz_s0 gpu3
+[mega] launch Q17_unet_raz_s0 gpu3 (39 left)
+[mega] launch Q16_unet_ic2_s0 gpu4 (38 left)
+[mega] finished Q17_unet_raz_s0 gpu3
+[mega] launch Q16_unet_ic3_s0 gpu3 (37 left)
+[mega] launch Q16_unet_ic2_s1 gpu6 (36 left)
+[mega] finished Q16_unet_ic2_s0 gpu4
+[mega] launch Q16_unet_ic3_s1 gpu4 (35 left)
+[mega] finished Q16_unet_ic3_s0 gpu3
+[mega] launch Q16_unet_ic2_s2 gpu3 (34 left)
+[mega] finished Q17_csa_micpe_s0 gpu2
+[mega] launch Q16_unet_ic3_s2 gpu2 (33 left)
+[mega] finished Q16_unet_ic2_s1 gpu6
+[mega] launch Q15_csa_norm_w20_s0 gpu6 (32 left)
+[mega] finished Q16_unet_ic3_s1 gpu4
+[mega] launch Q15_csa_base_w20_s0 gpu4 (31 left)
+[mega] finished Q16_unet_ic2_s2 gpu3
+[mega] launch Q15_csa_norm_w30_s0 gpu3 (30 left)
+[mega] finished Q17_csa_shpe_s0 gpu1
+[mega] finished Q17_csa_micsh_s0 gpu7
+[mega] launch Q15_csa_norm_w40_s0 gpu1 (28 left)
+[mega] launch Q15_csa_base_w30_s0 gpu7 (28 left)
+[mega] finished Q17_csa_raz_s0 gpu5
+[mega] launch Q15_unet_norm_w30_s0 gpu5 (27 left)
+[mega] finished Q16_unet_ic3_s2 gpu2
+[mega] launch Q13_loss_rel03_silog25_s0 gpu2 (26 left)
+[mega] finished Q17_csa_raz_normal_s0 gpu0
+[mega] launch Q13_loss_rel03_scale10_s0 gpu0 (25 left)
+[mega] finished Q15_unet_norm_w30_s0 gpu5
+[mega] launch Q8_gcc_csa_wrel05_s0 gpu5 (24 left)
+[mega] finished Q15_csa_norm_w20_s0 gpu6
+[mega] launch Q8_gcc_csa_norel_s0 gpu6 (23 left)
+[mega] finished Q15_csa_base_w30_s0 gpu7
+[mega] launch Q8_gcc_csa_wscale10_s0 gpu7 (22 left)
+[mega] finished Q15_csa_norm_w30_s0 gpu3
+[mega] launch Q8_w20_csa_wrel05_s0 gpu3 (21 left)
+[mega] finished Q15_csa_norm_w40_s0 gpu1
+[mega] launch Q8_csa_win7_s0 gpu1 (20 left)
+[mega] finished Q13_loss_rel03_silog25_s0 gpu2
+[mega] launch Q8_csa_win9_s0 gpu2 (19 left)
+[mega] finished Q15_csa_base_w20_s0 gpu4
+[mega] launch Q8_csa_wrel05_win7_s0 gpu4 (18 left)
+[mega] finished Q13_loss_rel03_scale10_s0 gpu0
+[mega] launch Q8_csa_wlow075_s0 gpu0 (17 left)
+[mega] finished Q8_gcc_csa_wrel05_s0 gpu5
+[mega] launch Q8_csa_wlow15_s0 gpu5 (16 left)
+[mega] finished Q8_gcc_csa_norel_s0 gpu6
+[mega] launch Q8_csa_wrel03_wlow075_s0 gpu6 (15 left)
+[mega] finished Q8_gcc_csa_wscale10_s0 gpu7
+[mega] launch Q8_csa_lr3e4_s0 gpu7 (14 left)
+[mega] finished Q8_w20_csa_wrel05_s0 gpu3
+[mega] launch Q8_csa_wrel05_lr3e4_s0 gpu3 (13 left)
+[mega] finished Q8_csa_wlow075_s0 gpu0
+[mega] launch Q8_csa_wscale20_s0 gpu0 (12 left)
+[mega] finished Q8_csa_wlow15_s0 gpu5
+[mega] launch Q8_csa_wscale30_s0 gpu5 (11 left)
+[mega] finished Q8_csa_win7_s0 gpu1
+[mega] launch Q8_csa_gated_wlow075_wrel05_s0 gpu1 (10 left)
+[mega] finished Q8_csa_wrel05_win7_s0 gpu4
+[mega] launch Q8_csa_gated_normal10_wrel05_s0 gpu4 (9 left)
+[mega] finished Q8_csa_win9_s0 gpu2
+[mega] launch Q7_csa_gated_wrel05_grad05_s0 gpu2 (8 left)
+[mega] finished Q8_csa_wrel03_wlow075_s0 gpu6
+[mega] finished Q8_csa_lr3e4_s0 gpu7
+[mega] finished Q8_csa_wrel05_lr3e4_s0 gpu3
+[mega] finished Q8_csa_wscale20_s0 gpu0
+[mega] finished Q8_csa_wscale30_s0 gpu5
+[mega] finished Q8_csa_gated_wlow075_wrel05_s0 gpu1
+[mega] finished Q7_csa_gated_wrel05_grad05_s0 gpu2
+[mega] finished Q8_csa_gated_normal10_wrel05_s0 gpu4
+[mega] ALL DONE
+[readme] updated BEST block: 214 groups, best=Q8_csa_wrel05_normal10 (0.7397)
+[mega] aggregated

@@ -1,0 +1,5 @@
+=== no-ray ablation vs 원본 RayDPT ===
+  File "<string>", line 4
+    try:d=json.load(open(f"out/{run}/metrics_test.json"))["test"];print(f"{l:20} MAE={d[\x27MAE\x27]:.4f} RMSE={d[\x27RMSE\x27]:.4f} AbsRel={d[\x27AbsRel\x27]:.4f} SILog={d[\x27SILog\x27]:.4f}")
+                                                                                                                                                                                                 ^
+SyntaxError: f-string expression part cannot include a backslash

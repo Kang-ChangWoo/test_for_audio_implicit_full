@@ -27,6 +27,9 @@ def prob(name, seed, extra, bs, cache=None):
 
 IC5 = f"{CK}/ic5_256x512"; IC5W = f"{CK}/ic5_256x512_w20"; FOA = f"{CK}/ic4_256x512_foa"
 IC_GCC = f"{CK}/ic6_256x512_gcc"; IC_WAVE = f"{CK}/ic5_256x512_wave"
+IC5W30 = f"{CK}/ic5_256x512_w30"; IC5W40 = f"{CK}/ic5_256x512_w40"
+IC2 = f"{CK}/ic2_256x512"; IC3 = f"{CK}/ic3_256x512"
+IC_RAZ = f"{CK}/ic13_256x512_raz"
 JOBS = []
 for s in (0, 1, 2):
     # --- front-strengthening (anti-discreteness) ---  (front-weighted-loss removed: no effect)
@@ -125,6 +128,13 @@ JOBS.append(fm("E_echo_bin_s0", 0, "echo_bin", "2e-3",
 JOBS.append(fm("C_raydpt_msf_s0", 0, "raydpt", "3e-4",
                "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 "
                "--raydpt-msf True --amp True", 12, IC5))
+JOBS.append(fm("C_raydpt_noray_s0", 0, "raydpt", "3e-4",
+               "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --raydpt-noray True", 16, IC5))
+# RayDPT + acoustic Perceiver resampler: learned latents compress multi-scale acoustic
+# tokens -> compact scene memory; physical ERP ray queries read it (Q x 64 latents).
+JOBS.append(fm("C_raydpt_rsmp_s0", 0, "raydpt", "3e-4",
+               "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 "
+               "--raydpt-resampler True --resampler-latents 64 --resampler-layers 3 --amp True", 16, IC5))
 
 # --- BEST training recipe ported from sibling repo audioresearch_audio (E2 best):
 # AMP-bf16 + bs32 + lr4e-4 + w_rel=0.1. Applied to the current active models. ---
@@ -135,11 +145,299 @@ JOBS.append(fm("R_echo_unet_e2_s0", 0, "echo_unet", "4e-4",
 JOBS.append(fm("R_echo_ray_e2_s0", 0, "echo_ray", "4e-4",
                "--in-ch 2 --audio-src wave --ray-cross-layers 2 --amp True --w-rel 0.1", 16, IC_WAVE))
 
+# --- 20 RayDPT improvement jobs (audioresearch_audio-inspired: loss reweighting +
+# recipe). base = amp-bf16 + lr4e-4 + w_rel/w_silog sweeps + arch(msf/lite) x recipe. ---
+_RB = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True"
+_Q = [  # (name, lr, extra, bs)
+    ("Q_rd_rel05_s0",        "4e-4", _RB + " --w-rel 0.05", 16),
+    ("Q_rd_rel13_s0",        "4e-4", _RB + " --w-rel 0.13", 16),
+    ("Q_rd_rel15_s0",        "4e-4", _RB + " --w-rel 0.15", 16),
+    ("Q_rd_silog5_s0",       "4e-4", _RB + " --w-silog 0.5", 16),
+    ("Q_rd_silog25_s0",      "4e-4", _RB + " --w-silog 0.25", 16),
+    ("Q_rd_rel10silog25_s0", "4e-4", _RB + " --w-rel 0.1 --w-silog 0.25", 16),
+    ("Q_rd_rel10silog5_s0",  "4e-4", _RB + " --w-rel 0.1 --w-silog 0.5", 16),
+    ("Q_rd_rel10_lr5e4_s0",  "5e-4", _RB + " --w-rel 0.1", 16),
+    ("Q_rd_rel10_lr3e4_s0",  "3e-4", _RB + " --w-rel 0.1", 16),
+    ("Q_rd_rel10_xl3_s0",    "4e-4", _RB + " --ray-cross-layers 3 --w-rel 0.1", 16),
+    ("Q_rd_rel10_wcl05_s0",  "4e-4", _RB + " --w-rel 0.1 --w-coarse-layout 0.5", 16),
+    ("Q_rd_rel10_wlow1_s0",  "4e-4", _RB + " --w-rel 0.1 --w-low 1.0", 16),
+    ("Q_rd_rel10_normal_s0", "4e-4", _RB + " --w-rel 0.1 --w-normal 0.1", 16),
+    ("Q_rd_rel10_chamfer_s0","4e-4", _RB + " --w-rel 0.1 --w-chamfer 0.1", 16),
+    ("Q_rdlite_rel10_s0",    "4e-4", _RB + " --raydpt-lite True --w-coarse-layout 0.5 --w-rel 0.1", 16),
+    ("Q_rdmsf_rel10_s0",     "4e-4", _RB + " --raydpt-msf True --w-rel 0.1", 12),
+    ("Q_rdmsf_rel10silog25_s0","4e-4", _RB + " --raydpt-msf True --w-rel 0.1 --w-silog 0.25", 12),
+    ("Q_rdmsf_rel10_s1",     "4e-4", _RB + " --raydpt-msf True --w-rel 0.1", 12),
+    ("R_raydpt_e2_s1",       "4e-4", _RB + " --w-rel 0.1", 32),   # complete E2 3-seed
+    ("R_raydpt_e2_s2",       "4e-4", _RB + " --w-rel 0.1", 32),
+]
+for _nm, _lr, _ex, _bs in _Q:
+    _seed = int(_nm.rsplit("_s", 1)[1])
+    JOBS.append(fm(_nm, _seed, "raydpt", _lr, _ex, _bs, IC5))
+
+# --- drop FOA (ambisonic 4ch input confirmed worse than binaural: foa_unet8 ~0.992) ---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# --- Q17: ray/spherical GROUNDING that could actually help (grounds the AUDIO physics,
+# not the redundant output grid). (a) RayBank ear-geometry mic-PE + SH-PE on the ray
+# query (immediate). (b) NEW range-azimuth steered acoustic image input (ToF+azimuth
+# physics, in_ch=13) on U-Net8 + coarse-sa champion (needs raz cache). ---
+_C = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True --w-rel 0.03"
+JOBS.append(fm("Q17_csa_micpe_s0", 0, "raydpt", "4e-4", _C + " --use-mic-pe True", 24, IC5))
+JOBS.append(fm("Q17_csa_shpe_s0",  0, "raydpt", "4e-4", _C + " --use-sh-pe True", 24, IC5))
+JOBS.append(fm("Q17_csa_micsh_s0", 0, "raydpt", "4e-4", _C + " --use-mic-pe True --use-sh-pe True", 24, IC5))
+_RZ = "--ngf 64 --unet-downs 8 --in-ch 13 --audio-src raz --flip-aug True"
+JOBS.append(fm("Q17_unet_raz_s0", 0, "unet", "2e-3", _RZ, 40, IC_RAZ))                                  # range-azimuth on U-Net
+_RZC = "--ngf 64 --unet-downs 8 --in-ch 13 --audio-src raz --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True"
+JOBS.append(fm("Q17_csa_raz_s0", 0, "raydpt", "4e-4", _RZC + " --w-rel 0.03", 20, IC_RAZ))              # + coarse-sa
+JOBS.append(fm("Q17_csa_raz_normal_s0", 0, "raydpt", "4e-4", _RZC + " --w-rel 0.05 --w-normal 0.1", 20, IC_RAZ))  # + champion loss
+
+# --- Q16: ADDITIVE input-channel sweep (2->3->5), 3-seed. Complements Q11 leave-one-out.
+# in_ch2 = [logL,logR] (magnitude only); in_ch3 = +ILD (level cue); in_ch5 = +cos/sin-IPD
+# (phase). in_ch5 = Bnode2_unet8_5chflip (done, n=3). Tests "how much does each added
+# channel group actually buy" -> justify channel count OR show insensitivity (obs. ceiling). ---
+for s in (0, 1, 2):
+    JOBS.append(fm(f"Q16_unet_ic2_s{s}", s, "unet", "2e-3", "--ngf 64 --unet-downs 8 --in-ch 2 --flip-aug True", 48, IC2))
+    JOBS.append(fm(f"Q16_unet_ic3_s{s}", s, "unet", "2e-3", "--ngf 64 --unet-downs 8 --in-ch 3 --flip-aug True", 48, IC3))
+
+# --- Q15: LONG-WINDOW input for RMSE. default window=10m covers depth<=5m only; longer
+# windows keep LATER reflections (far surfaces + higher-order bounces = room geometry) =
+# the far-depth info RMSE needs. base = coarse-sa RayDPT (+normal, the RMSE combo). ---
+_CN = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True --w-rel 0.05 --w-normal 0.1"
+_CB = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True"
+JOBS.append(fm("Q15_csa_norm_w20_s0", 0, "raydpt", "4e-4", _CN + " --audio-window-m 20", 24, IC5W))    # cache ready now
+JOBS.append(fm("Q15_csa_base_w20_s0", 0, "raydpt", "4e-4", _CB + " --audio-window-m 20", 24, IC5W))
+JOBS.append(fm("Q15_csa_norm_w30_s0", 0, "raydpt", "4e-4", _CN + " --audio-window-m 30", 24, IC5W30))   # after cache build
+JOBS.append(fm("Q15_csa_norm_w40_s0", 0, "raydpt", "4e-4", _CN + " --audio-window-m 40", 24, IC5W40))
+JOBS.append(fm("Q15_csa_base_w30_s0", 0, "raydpt", "4e-4", _CB + " --audio-window-m 30", 24, IC5W30))   # pure window effect
+JOBS.append(fm("Q15_unet_norm_w30_s0", 0, "unet", "2e-3", "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --w-normal 0.1 --audio-window-m 30", 48, IC5W30))
+
+# --- Q14: alternative WEIGHTING schemes (not scalar aux, but per-pixel/error weighting).
+# depth-gamma: dense L1 * gt**gamma (gamma>0 upweights FAR -> targets RMSE; <0 NEAR ->
+# AbsRel, a smoother alternative to w_rel). berhu: reverse-Huber. base = coarse-sa RayDPT. ---
+_C = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True"
+_Q14 = [
+    ("Q14_gamma_p05_s0",       _C + " --w-depth-gamma 0.5"),    # far-weighted -> RMSE
+    ("Q14_gamma_p10_s0",       _C + " --w-depth-gamma 1.0"),
+    ("Q14_gamma_p15_s0",       _C + " --w-depth-gamma 1.5"),
+    ("Q14_gamma_n05_s0",       _C + " --w-depth-gamma -0.5"),   # near-weighted -> AbsRel (vs w_rel)
+    ("Q14_gamma_n10_s0",       _C + " --w-depth-gamma -1.0"),
+    ("Q14_berhu_s0",           _C + " --berhu True"),           # robust (paper loss)
+    ("Q14_berhu_rel03_s0",     _C + " --berhu True --w-rel 0.03"),
+    ("Q14_gamma_p05_rel03_s0", _C + " --w-depth-gamma 0.5 --w-rel 0.03"),   # far-weight + AbsRel = both?
+    ("Q14_gamma_p10_scale10_s0", _C + " --w-depth-gamma 1.0 --w-scale 0.1"),
+]
+for _nm,_ex in _Q14:
+    JOBS.append(fm(_nm, 0, "raydpt", "4e-4", _ex, 24, IC5))
+
+# --- Q13: LOSS ablation on a FIXED base (coarse-sa RayDPT, amp, lr4e-4). Isolate each
+# loss term's marginal contribution. Already-done on this base: none(Q7_csa_norel),
+# w_rel 0.03/0.05/0.1, w_scale0.1, w_normal/chamfer, w_low sweep. Fill gaps: w_silog,
+# w_grad (alone), structural terms (w_low=0, w_coarse_layout=0), + key combos. ---
+_C = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True"
+_Q13 = [
+    ("Q13_loss_silog25_s0",       _C + " --w-silog 0.25"),
+    ("Q13_loss_silog5_s0",        _C + " --w-silog 0.5"),
+    ("Q13_loss_grad05_s0",        _C + " --w-grad 0.05"),
+    ("Q13_loss_grad10_s0",        _C + " --w-grad 0.1"),
+    ("Q13_loss_wlow0_s0",         _C + " --w-low 0.0"),          # remove low-pass (E11: helps RMSE?)
+    ("Q13_loss_wcoarse0_s0",      _C + " --w-coarse-layout 0.0"),# remove coarse-layout supervision
+    ("Q13_loss_rel03_grad05_s0",  _C + " --w-rel 0.03 --w-grad 0.05"),
+    ("Q13_loss_rel03_normal10_s0",_C + " --w-rel 0.03 --w-normal 0.1"),
+    ("Q13_loss_rel03_silog25_s0", _C + " --w-rel 0.03 --w-silog 0.25"),
+    ("Q13_loss_rel03_scale10_s0", _C + " --w-rel 0.03 --w-scale 0.1"),
+]
+for _nm,_ex in _Q13:
+    JOBS.append(fm(_nm, 0, "raydpt", "4e-4", _ex, 24, IC5))
+
+# --- Q12: FAIR CONTROL. Isolate the coarse-sa architecture vs U-Net by giving U-Net8
+# the SAME loss recipe as the Q7 champion. (a) U-Net + w_rel0.03 at U-Net own lr (2e-3),
+# (b) U-Net + w_rel0.03 + amp + lr4e-4 (Q7 EXACT recipe minus arch), (c) + w_scale.
+# 3-seed both the control (a) and the Q7 champion for a publishable mean+/-std. ---
+_UB = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True"
+for s in (0, 1, 2):
+    JOBS.append(fm(f"Q12_unet_wrel03_s{s}", s, "unet", "2e-3", _UB + " --w-rel 0.03", 48, IC5))   # fair: U-Net own recipe + w_rel
+JOBS.append(fm("Q12_unet_wrel03_amp_s0", 0, "unet", "4e-4", _UB + " --w-rel 0.03 --amp True", 48, IC5))   # exact Q7 recipe, arch=unet
+JOBS.append(fm("Q12_unet_wrel03_wscale10_s0", 0, "unet", "2e-3", _UB + " --w-rel 0.03 --w-scale 0.1", 48, IC5))
+# Q7 champion 3-seed confirm (s0 done)
+_C = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True"
+JOBS.append(fm("Q7_csa_wrel03_s1", 1, "raydpt", "4e-4", _C + " --w-rel 0.03", 24, IC5))
+JOBS.append(fm("Q7_csa_wrel03_s2", 2, "raydpt", "4e-4", _C + " --w-rel 0.03", 24, IC5))
+
+# --- Q11: 5ch input per-channel ablation (zero out one channel). channels =
+# [0 logL, 1 logR, 2 ILD, 3 cosIPD, 4 sinIPD]. base = champion U-Net8 5ch+flip.
+# reference (none-zeroed) = Bnode2_unet8_5chflip (n=3, MAE 0.893). ---
+_UB = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True"
+for _i,_nm in [(0,"logL"),(1,"logR"),(2,"ILD"),(3,"cosIPD"),(4,"sinIPD")]:
+    JOBS.append(fm(f"Q11_zc{_i}_{_nm}_s0", 0, "unet", "2e-3", _UB + f" --zero-chan {_i}", 48, IC5))
+
+# --- Q10: "simple ViT" check. Pretrained ViT-B/16 (A22/A23) already lost to U-Net8
+# (~0.905 vs 0.886). Test simpler forms on the fair 5ch input: frozen backbone (only
+# 3.8M trainable adapter+decoder = simplest), from-scratch (no ImageNet prior). ---
+_V = "--arch vit --in-ch 5 --flip-aug True"
+JOBS.append(fm("Q10_vit_frozen_s0",  0, "vit", "3e-4", _V + " --vit-freeze True", 32, IC5))     # simplest: frozen backbone
+JOBS.append(fm("Q10_vit_scratch_s0", 0, "vit", "3e-4", _V + " --vit-pretrained False", 32, IC5)) # no ImageNet prior
+JOBS.append(fm("Q10_vit_5ch_s0",     0, "vit", "3e-4", _V, 32, IC5))                              # pretrained on fair 5ch input
+
+# --- Q9: ray-GROUNDING ablation. Is grounding decode in physical ray/spherical geometry
+# meaningful? 3 grounding sources: (1) ray-dir queries (RayBank), (2) spherical local attn,
+# (3) coarse-sa cos-ang bias. full-grounding = Q6_csaonly (done, n=2). Turn OFF one-at-a-time
+# + ALL-off (geometry-agnostic). base = coarse-sa + amp + lr4e-4 + w_rel0.1. ---
+_G = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --w-rel 0.1 --raydpt-coarse-sa True"
+JOBS.append(fm("Q9_ground_noquery_s0",   0, "raydpt", "4e-4", _G + " --raydpt-noray True", 24, IC5))          # off (1)
+JOBS.append(fm("Q9_ground_planarlsa_s0", 0, "raydpt", "4e-4", _G + " --lsa-mode planar", 24, IC5))            # off (2)
+JOBS.append(fm("Q9_ground_nocsageo_s0",  0, "raydpt", "4e-4", _G + " --coarse-sa-geo False", 24, IC5))        # off (3)
+JOBS.append(fm("Q9_ground_none_s0", 0, "raydpt", "4e-4", _G + " --raydpt-noray True --lsa-mode planar --coarse-sa-geo False", 24, IC5))  # ALL off
+JOBS.append(fm("Q9_ground_none_s1", 1, "raydpt", "4e-4", _G + " --raydpt-noray True --lsa-mode planar --coarse-sa-geo False", 24, IC5))
+JOBS.append(fm("Q9_ground_full_s2", 2, "raydpt", "4e-4", _G, 24, IC5))   # 3rd seed of full (Q6_csaonly has s0,s1)
+
+# --- Q8: 20 RMSE-balanced follow-ups. coarse-sa base (proven), NO EMA (hurts RMSE),
+# new axes: 3D normal/chamfer loss (best-RMSE U-Net used normal), other inputs (GCC
+# RMSE 1.425 / w20), local-spherical window sweep (free lever per EXPERIMENTS.md),
+# w_low low-pass + w_scale mean-match + low-lr anneal (E20 best-RMSE) + gated combos. ---
+_C  = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True"
+_CG = "--ngf 64 --unet-downs 8 --in-ch 6 --audio-src gcc --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True"
+_CW = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --audio-window-m 20 --ray-cross-layers 2 --amp True --raydpt-coarse-sa True"
+_Q8 = [
+    # 3D/structural losses (RMSE + shape)
+    ("Q8_csa_normal10_s0",           "4e-4", _C + " --w-normal 0.1", 24, "IC5"),
+    ("Q8_csa_wrel05_normal10_s0",    "4e-4", _C + " --w-rel 0.05 --w-normal 0.1", 24, "IC5"),
+    ("Q8_csa_chamfer10_s0",          "4e-4", _C + " --w-chamfer 0.1", 24, "IC5"),
+    ("Q8_csa_wrel05_normal05_wscale10_s0","4e-4", _C + " --w-rel 0.05 --w-normal 0.05 --w-scale 0.1", 24, "IC5"),
+    # other inputs (GCC has good RMSE / w20 richer window)
+    ("Q8_gcc_csa_wrel05_s0",         "4e-4", _CG + " --w-rel 0.05", 16, "IC_GCC"),
+    ("Q8_gcc_csa_norel_s0",          "4e-4", _CG, 16, "IC_GCC"),
+    ("Q8_gcc_csa_wscale10_s0",       "4e-4", _CG + " --w-scale 0.1", 16, "IC_GCC"),
+    ("Q8_w20_csa_wrel05_s0",         "4e-4", _CW + " --w-rel 0.05", 24, "IC5W"),
+    # local spherical-attention window sweep (free lever)
+    ("Q8_csa_win7_s0",               "4e-4", _C + " --raydpt-win32 7 --raydpt-win64 5", 24, "IC5"),
+    ("Q8_csa_win9_s0",               "4e-4", _C + " --raydpt-win32 9 --raydpt-win64 5", 24, "IC5"),
+    ("Q8_csa_wrel05_win7_s0",        "4e-4", _C + " --w-rel 0.05 --raydpt-win32 7 --raydpt-win64 5", 24, "IC5"),
+    # w_low low-pass sweep (RMSE lever)
+    ("Q8_csa_wlow075_s0",            "4e-4", _C + " --w-low 0.75", 24, "IC5"),
+    ("Q8_csa_wlow15_s0",             "4e-4", _C + " --w-low 1.5", 24, "IC5"),
+    ("Q8_csa_wrel03_wlow075_s0",     "4e-4", _C + " --w-rel 0.03 --w-low 0.75", 24, "IC5"),
+    # low-lr anneal (E20 best-RMSE)
+    ("Q8_csa_lr3e4_s0",              "3e-4", _C, 24, "IC5"),
+    ("Q8_csa_wrel05_lr3e4_s0",       "3e-4", _C + " --w-rel 0.05", 24, "IC5"),
+    # w_scale mean-match sweep (RMSE)
+    ("Q8_csa_wscale20_s0",           "4e-4", _C + " --w-scale 0.2", 24, "IC5"),
+    ("Q8_csa_wscale30_s0",           "4e-4", _C + " --w-scale 0.3", 24, "IC5"),
+    # combined best-RMSE levers (E29 gated + low-pass/normal)
+    ("Q8_csa_gated_wlow075_wrel05_s0","4e-4", _C + " --raydpt-gated-skip True --w-low 0.75 --w-rel 0.05", 24, "IC5"),
+    ("Q8_csa_gated_normal10_wrel05_s0","4e-4", _C + " --raydpt-gated-skip True --w-normal 0.1 --w-rel 0.05", 24, "IC5"),
+]
+_CA = {"IC5": IC5, "IC_GCC": IC_GCC, "IC5W": IC5W}
+for _nm,_lr,_ex,_bs,_ca in _Q8:
+    JOBS.append(fm(_nm, 0, "raydpt", _lr, _ex, _bs, _CA[_ca]))
+
+# --- Q7: RayDPT RMSE-balanced sweep. Insight: RayDPT-orig already beats U-Net8 RMSE
+# (1.420<1.436); coarse-sa fixes d1/AbsRel; w_rel HURTS RMSE (near-pixel) + EMA hurts
+# RMSE in our factorial. So: coarse-sa base, NO EMA, minimal w_rel, + RMSE levers
+# (w_low low-pass, w_scale mean-match, gated skips E29). Goal: beat U-Net8 balanced. ---
+_C = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True"
+_Q7 = [
+    ("Q7_csa_norel_s0",            _C),                                        # pure arch (best-RMSE bet, no gaming)
+    ("Q7_csa_wrel03_s0",           _C + " --w-rel 0.03"),
+    ("Q7_csa_wrel05_s0",           _C + " --w-rel 0.05"),
+    ("Q7_csa_gated_norel_s0",      _C + " --raydpt-gated-skip True"),          # E22+E29 arch, no w_rel
+    ("Q7_csa_gated_wrel05_s0",     _C + " --raydpt-gated-skip True --w-rel 0.05"),
+    ("Q7_csa_norel_wscale10_s0",   _C + " --w-scale 0.1"),                     # mean-match -> RMSE
+    ("Q7_csa_wrel05_wscale10_s0",  _C + " --w-rel 0.05 --w-scale 0.1"),
+    ("Q7_csa_wrel05_wlow10_s0",    _C + " --w-rel 0.05 --w-low 1.0"),          # stronger low-pass -> RMSE
+    ("Q7_csa_gated_wrel05_grad05_s0", _C + " --raydpt-gated-skip True --w-rel 0.05 --w-grad 0.05"),
+    ("Q7_csa_wrel03_wscale10_s0",  _C + " --w-rel 0.03 --w-scale 0.1"),
+]
+for _nm,_ex in _Q7:
+    JOBS.append(fm(_nm, 0, "raydpt", "4e-4", _ex, 24, IC5))
+
+# --- E22 3-seed confirm + 2x2 factorial ablation isolating EMA vs coarse-geo-self-attn.
+# corners already have: R_raydpt_e2 (neither), Q5_e22 (both). add the two middles. ---
+_E22 = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --w-rel 0.1 --w-ema 0.995 --raydpt-coarse-sa True"
+_EMAONLY = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --w-rel 0.1 --w-ema 0.995"
+_CSAONLY = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --w-rel 0.1 --raydpt-coarse-sa True"
+JOBS.append(fm("Q5_e22_coarsesa_s1", 1, "raydpt", "4e-4", _E22, 24, IC5))     # E22 3-seed
+JOBS.append(fm("Q5_e22_coarsesa_s2", 2, "raydpt", "4e-4", _E22, 24, IC5))
+JOBS.append(fm("Q6_emaonly_s0", 0, "raydpt", "4e-4", _EMAONLY, 24, IC5))       # EMA only (no coarse-sa)
+JOBS.append(fm("Q6_emaonly_s1", 1, "raydpt", "4e-4", _EMAONLY, 24, IC5))
+JOBS.append(fm("Q6_csaonly_s0", 0, "raydpt", "4e-4", _CSAONLY, 24, IC5))       # coarse-sa only (no EMA)
+JOBS.append(fm("Q6_csaonly_s1", 1, "raydpt", "4e-4", _CSAONLY, 24, IC5))
+
+# --- EXPERIMENTS.md CHAMPION stack (E22->E29->E34). recipe: amp-bf16 + bs + lr4e-4 +
+# w_rel0.1 + weight-EMA(0.995). E22 coarse geo self-attn; E29 +gated skips; E34 +grad. ---
+_QE = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --w-rel 0.1 --w-ema 0.995 --raydpt-coarse-sa True"
+JOBS.append(fm("Q5_e22_coarsesa_s0", 0, "raydpt", "4e-4", _QE, 24, IC5))
+JOBS.append(fm("Q5_e29_gated_s0",    0, "raydpt", "4e-4", _QE + " --raydpt-gated-skip True", 24, IC5))
+JOBS.append(fm("Q5_e34_champion_s0", 0, "raydpt", "4e-4", _QE + " --raydpt-gated-skip True --w-grad 0.05", 24, IC5))
+
+# --- audioresearch_audio BEST-SET trio (faithful recipe: amp-bf16 + bs32 + lr4e-4).
+# E2(w_rel=0.1) already = R_raydpt_e2. Add E4(w_silog=0.5) + E0c(base, no aux). ---
+_E = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True"
+JOBS.append(fm("Q3_e4_silog5_s0",  0, "raydpt", "4e-4", _E + " --w-silog 0.5", 32, IC5))
+JOBS.append(fm("Q3_e0c_base_s0",   0, "raydpt", "4e-4", _E, 32, IC5))
+
+# --- spherical-attention ablation (vs C_raydpt_5chflip = spherical baseline) ---
+_LSAB = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2"
+for _m in ("off", "planar", "nobias"):
+    JOBS.append(fm(f"C_raydpt_lsa{_m}_s0", 0, "raydpt", "3e-4", _LSAB + f" --lsa-mode {_m}", 16, IC5))
+
+# --- 20 improvement variants (Q2): champion U-Net8/GCC get the loss recipe (w_rel/
+# w_silog) they never had; + no-ray(learned query)+recipe; + w20/downs/lite combos. ---
+_UB = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True"
+_GB = "--ngf 64 --unet-downs 8 --in-ch 6 --audio-src gcc --flip-aug True"
+_WB = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --audio-window-m 20"
+_NR = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --raydpt-noray True"
+_LT = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --raydpt-lite True --ray-cross-layers 2 --w-coarse-layout 0.5"
+_Q2 = [
+    ("Q2_unet_rel10_s0","unet","2e-3",_UB+" --w-rel 0.1",48,IC5),
+    ("Q2_unet_rel05_s0","unet","2e-3",_UB+" --w-rel 0.05",48,IC5),
+    ("Q2_unet_rel13_s0","unet","2e-3",_UB+" --w-rel 0.13",48,IC5),
+    ("Q2_unet_silog25_s0","unet","2e-3",_UB+" --w-silog 0.25",48,IC5),
+    ("Q2_unet_silog5_s0","unet","2e-3",_UB+" --w-silog 0.5",48,IC5),
+    ("Q2_unet_rel10silog25_s0","unet","2e-3",_UB+" --w-rel 0.1 --w-silog 0.25",48,IC5),
+    ("Q2_unet_rel05silog25_s0","unet","2e-3",_UB+" --w-rel 0.05 --w-silog 0.25",48,IC5),
+    ("Q2_unet_rel10_normal_s0","unet","2e-3",_UB+" --w-rel 0.1 --w-normal 0.1",48,IC5),
+    ("Q2_unet_rel10_chamfer_s0","unet","2e-3",_UB+" --w-rel 0.1 --w-chamfer 0.1",48,IC5),
+    ("Q2_unet_downs7_s0","unet","2e-3","--ngf 64 --unet-downs 7 --in-ch 5 --flip-aug True",48,IC5),
+    ("Q2_unet_rel10_amp_s0","unet","2e-3",_UB+" --w-rel 0.1 --amp True",48,IC5),
+    ("Q2_unet_rel10_s1","unet","2e-3",_UB+" --w-rel 0.1",48,IC5),
+    ("Q2_gcc_rel10_s0","unet","2e-3",_GB+" --w-rel 0.1",48,IC_GCC),
+    ("Q2_gcc_silog25_s0","unet","2e-3",_GB+" --w-silog 0.25",48,IC_GCC),
+    ("Q2_gcc_rel10silog25_s0","unet","2e-3",_GB+" --w-rel 0.1 --w-silog 0.25",48,IC_GCC),
+    ("Q2_w20_rel10_s0","unet","2e-3",_WB+" --w-rel 0.1",48,IC5W),
+    ("Q2_noray_rel10_s0","raydpt","3e-4",_NR+" --w-rel 0.1",16,IC5),
+    ("Q2_noray_rel10silog25_s0","raydpt","3e-4",_NR+" --w-rel 0.1 --w-silog 0.25",16,IC5),
+    ("Q2_noray_s1","raydpt","3e-4",_NR,16,IC5),
+    ("Q2_rdlite_silog25_s0","raydpt","3e-4",_LT+" --w-silog 0.25",16,IC5),
+]
+for _nm,_ar,_lr,_ex,_bs,_ca in _Q2:
+    _sd=int(_nm.rsplit("_s",1)[1]); JOBS.append(fm(_nm,_sd,_ar,_lr,_ex,_bs,_ca))
+
 # explicit front-of-queue ordering: just-added RayDPT runs FIRST, then the other
 # richer-input / research-focus jobs, then everything else (stable within a rank).
-FRONT = ["C_raydpt_msf", "E_echo_bin", "U_unet8_scale1", "U_unet8_scale2",
-         "U_unet8_normal", "U_unet8_chamfer", "R_raydpt_e2", "E_echo_unet", "E_echo_ray",
-         "R_echo_unet_e2", "R_echo_ray_e2",
+FRONT = [  # -1) fair control + Q7 3-seed confirm + pending ablations (HIGHEST)
+         "Q12_unet", "Q7_csa_wrel03", "Q11_zc", "Q9_ground", "Q17_csa", "Q17_unet", "Q16_unet", "Q15_csa", "Q15_unet", "Q10_vit", "Q14_gamma", "Q14_berhu", "Q13_loss", "Q8_",
+         # 0) no-ray ablation
+         "C_raydpt_noray",
+         # 1) best-param reproduction from local audioresearch_audio (E2 recipe)
+         "R_raydpt_e2",
+         # 2) U-Net-based experiments next (pure U-Net8 + U-Net8-backbone echo)
+         "U_unet8_scale1", "U_unet8_scale2", "U_unet8_chamfer", "U_unet8_normal",
+         "E_echo_unet", "E_echo_bin", "R_echo_unet_e2",
+         # 3) ray-decoder variants after
+         "C_raydpt_msf", "C_raydpt_rsmp", "E_echo_ray", "R_echo_ray_e2",
          "C_raydpt_5chflip", "C_raydptlite", "Bnode2_gcc_",
          "Bnode2_wave_", "C_cross_align", "C_unet8", "rayconv5d", "cross_unetenc"]
 def _rank(n):
@@ -150,7 +448,8 @@ def _rank(n):
 JOBS = sorted(JOBS, key=lambda j: _rank(j["name"]))      # stable sort preserves order within a rank
 
 # explicit drops: pulled from the queue (e.g. underperforming, free the slot for RayDPT)
-DROP = {"Bnode2_cross_hitok_s1",   # killed slow 6-pass eval (non-contender); free GPU, no re-train
+DROP = {"Bnode2_foa_unet8_s0","Bnode2_foa_unet8_s1","Bnode2_foa_unet8_s2","Bnode2_foa_cross_s0","Bnode2_foa_cross_s1","Bnode2_foa_cross_s2",
+        "Bnode2_cross_hitok_s1",   # killed slow 6-pass eval (non-contender); free GPU, no re-train
         "C_cross_align_5chflip_s2",
         "C_cross_align_5chflip_s0", "C_cross_align_5chflip_s1",   # killed: non-contender, free GPU for RayDPT
         "Bnode2_crossself_flip_s0", "Bnode2_cross_vitenc_s0"}     # killed eval; keep best.pth, skip re-run

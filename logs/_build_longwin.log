@@ -1,0 +1,41 @@
+[build] w30 val
+[val] 3543 samples / 9 scenes (raw 256x512, in_ch=5)
+  cache[val ic5] 3200/3543
+[cache] val ic5: 3543 -> /root/implicit_full_cache/ic5_256x512_w30
+[build] w30 test
+[test] 3600 samples / 9 scenes (raw 256x512, in_ch=5)
+  cache[test ic5] 3200/3600
+[cache] test ic5: 3600 -> /root/implicit_full_cache/ic5_256x512_w30
+[build] w30 train
+[train] 28800 samples / 72 scenes (raw 256x512, in_ch=5)
+  cache[train ic5] 3200/28800
+  cache[train ic5] 6400/28800
+  cache[train ic5] 9600/28800
+  cache[train ic5] 12800/28800
+  cache[train ic5] 16000/28800
+  cache[train ic5] 19200/28800
+  cache[train ic5] 22400/28800
+  cache[train ic5] 25600/28800
+  cache[train ic5] 28800/28800
+[cache] train ic5: 28800 -> /root/implicit_full_cache/ic5_256x512_w30
+[build] w40 val
+[val] 3543 samples / 9 scenes (raw 256x512, in_ch=5)
+  cache[val ic5] 3200/3543
+[cache] val ic5: 3543 -> /root/implicit_full_cache/ic5_256x512_w40
+[build] w40 test
+[test] 3600 samples / 9 scenes (raw 256x512, in_ch=5)
+  cache[test ic5] 3200/3600
+[cache] test ic5: 3600 -> /root/implicit_full_cache/ic5_256x512_w40
+[build] w40 train
+[train] 28800 samples / 72 scenes (raw 256x512, in_ch=5)
+  cache[train ic5] 3200/28800
+  cache[train ic5] 6400/28800
+  cache[train ic5] 9600/28800
+  cache[train ic5] 12800/28800
+  cache[train ic5] 16000/28800
+  cache[train ic5] 19200/28800
+  cache[train ic5] 22400/28800
+  cache[train ic5] 25600/28800
+  cache[train ic5] 28800/28800
+[cache] train ic5: 28800 -> /root/implicit_full_cache/ic5_256x512_w40
+[longwin cache] DONE

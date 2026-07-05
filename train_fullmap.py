@@ -34,6 +34,9 @@ N_VAL = None   # None => evaluate the FULL val split each epoch (was 1500-subset
 def prep_audio(spec, cfg, norm=None):
     if spec.shape[1] > cfg.in_ch:            # channel ablation: keep first in_ch
         spec = spec[:, :cfg.in_ch]
+    zc = getattr(cfg, "zero_chan", -1)       # per-channel ablation: zero out one input channel
+    if 0 <= zc < spec.shape[1]:
+        spec = spec.clone(); spec[:, zc] = 0.0
     spec = apply_audio_mode(spec, cfg.audio_mode)
     if cfg.shuffle_audio:
         spec = shuffle_audio_batch(spec)
@@ -44,6 +47,21 @@ def prep_audio(spec, cfg, norm=None):
 
 def masked_mae(D, gt, mask):
     return ((D - gt).abs() * mask).sum() / mask.sum().clamp(min=1e-6)
+
+
+def dense_loss(D, gt, mask, cfg):
+    """Main term with alternative WEIGHTING schemes:
+      w_depth_gamma: per-pixel weight gt**gamma (gamma>0 upweights FAR->RMSE; <0 NEAR->AbsRel).
+      berhu: reverse-Huber (L1 small err, L2 large err) - error-magnitude weighting."""
+    e = (D - gt).abs()
+    if getattr(cfg, "berhu", False):
+        c = 0.2 * (e * mask).max().clamp(min=1e-6)
+        e = torch.where(e <= c, e, (e * e + c * c) / (2 * c))
+    g = getattr(cfg, "w_depth_gamma", 0.0)
+    if abs(g) > 1e-9:
+        w = (gt.clamp(min=1e-3) ** g) * mask
+        return (e * w).sum() / w.sum().clamp(min=1e-6)
+    return (e * mask).sum() / mask.sum().clamp(min=1e-6)
 
 
 def tv(x):
@@ -165,8 +183,12 @@ def main():
         from model_wave import WaveUNet
         model = WaveUNet(cfg).to(device)
     elif getattr(cfg, "arch", "fullmap") == "raydpt":
-        from model_raydpt import RayDPT
-        model = RayDPT(cfg).to(device)
+        if getattr(cfg, "raydpt_resampler", False):
+            from model_raydpt import RayDPTResampler
+            model = RayDPTResampler(cfg).to(device)
+        else:
+            from model_raydpt import RayDPT
+            model = RayDPT(cfg).to(device)
     elif getattr(cfg, "arch", "fullmap") in ("echo_unet", "echo_ray", "echo_bin"):
         from model_echo import EchoUNet, EchoRay, EchoBin
         model = {"echo_unet": EchoUNet, "echo_ray": EchoRay, "echo_bin": EchoBin}[cfg.arch](cfg).to(device)
@@ -193,6 +215,8 @@ def main():
     dirs3d = erp_dirs(cfg.img_h, cfg.img_w, device) if (cfg.w_normal > 0 or cfg.w_chamfer > 0) else None
 
     best = 1e9; hist = []
+    ema = ({k: v.detach().clone() for k, v in model.state_dict().items()}   # E14: weight EMA
+           if cfg.w_ema > 0 else None)
     for ep in range(cfg.epochs):
         model.train(); t0 = time.time(); run = {}
         for b in tr:
@@ -210,7 +234,7 @@ def main():
                         wave = wave.clone(); wave[fm] = wave[fm][:, [1, 0]]   # swap ears
             with torch.autocast("cuda", dtype=torch.bfloat16, enabled=getattr(cfg, "amp", False)):
                 out = model(spec, wave) if WAVE_ARCH else model(spec, extra.get("coarse_feat"), extra.get("sh_basis"))
-            main = masked_mae(out["D"], gt, mask)
+            main = dense_loss(out["D"], gt, mask, cfg)
             logs = {"mae": float(main.detach())}
             if COARSE_ARCH:
                 # band-limited objective: dense + coarse-layout + low-pass (+ residual TV)
@@ -254,6 +278,21 @@ def main():
                 gm = (gt * mask).sum(dim=(1, 2, 3)) / msum
                 lscl = (pm - gm).abs().mean()
                 loss = loss + cfg.w_scale * lscl; logs["lscl"] = float(lscl.detach())
+            if cfg.w_silog > 0:                                             # E4: scale-invariant log loss
+                dlog = (torch.log(out["D"].clamp(min=1e-3)) - torch.log(gt.clamp(min=1e-3))) * mask
+                ms = mask.sum().clamp(min=1e-6)
+                m1 = dlog.sum() / ms; m2 = (dlog * dlog).sum() / ms
+                lsi = m2 - 0.85 * m1 * m1
+                loss = loss + cfg.w_silog * lsi; logs["lsi"] = float(lsi.detach())
+            if cfg.w_grad > 0:                                              # E34: edge-aware gradient matching
+                D = out["D"]
+                dxp = D[..., :, 1:] - D[..., :, :-1]; dxg = gt[..., :, 1:] - gt[..., :, :-1]
+                mx = mask[..., :, 1:] * mask[..., :, :-1]
+                dyp = D[..., 1:, :] - D[..., :-1, :]; dyg = gt[..., 1:, :] - gt[..., :-1, :]
+                my = mask[..., 1:, :] * mask[..., :-1, :]
+                lgr = (((dxp - dxg).abs() * mx).sum() / mx.sum().clamp(min=1e-6)
+                       + ((dyp - dyg).abs() * my).sum() / my.sum().clamp(min=1e-6))
+                loss = loss + cfg.w_grad * lgr; logs["lgr"] = float(lgr.detach())
             if cfg.w_swap_eq > 0:                                            # tip8: swap-equivariance
                 out_sw = model(swap_audio_lr(spec), extra.get("coarse_feat"), extra.get("sh_basis"))
                 eq = masked_mae(out_sw["D"], torch.flip(out["D"].detach(), dims=[-1]), mask)
@@ -261,9 +300,20 @@ def main():
             opt.zero_grad(); loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step(); sched.step()
+            if ema is not None:                                            # E14: track weight EMA
+                d = cfg.w_ema; msd = model.state_dict()
+                for k in ema:
+                    if ema[k].dtype.is_floating_point:
+                        ema[k].mul_(d).add_(msd[k].detach(), alpha=1 - d)
+                    else:
+                        ema[k].copy_(msd[k])
             for k, v in logs.items():
                 run[k] = run.get(k, 0.0) + v
         run = {k: v / len(tr) for k, v in run.items()}
+        raw = None
+        if ema is not None:                                                # eval/checkpoint the EMA weights
+            raw = {k: v.detach().clone() for k, v in model.state_dict().items()}
+            model.load_state_dict(ema, strict=True)
         vmae = quick_val(model, va, cfg, device, extra, wlat, norm)
         a = out["extras"].get("alpha")
         hist.append({"epoch": ep, "val_mae_m": vmae, "alpha": a, **run})
@@ -274,6 +324,8 @@ def main():
             torch.save({"state_dict": model.state_dict(), "cfg": vars(cfg),
                         "norm": (norm[0].cpu(), norm[1].cpu()) if norm is not None else None},
                        os.path.join(run_dir, "best.pth"))
+        if raw is not None:                                                # restore true iterate for next epoch
+            model.load_state_dict(raw, strict=True)
     json.dump({"best_val_mae_m": best, "hist": hist, "cfg": vars(cfg)},
               open(os.path.join(run_dir, "train_done.json"), "w"), indent=2)
     print(f"[done] best val MAE = {best:.4f} m -> {run_dir}", flush=True)

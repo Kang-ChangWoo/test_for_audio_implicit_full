@@ -50,8 +50,12 @@ def load(run_dir, device):
         from model_wave import WaveUNet
         m = WaveUNet(cfg).to(device).eval()
     elif getattr(cfg, "arch", "fullmap") == "raydpt":
-        from model_raydpt import RayDPT
-        m = RayDPT(cfg).to(device).eval()
+        if getattr(cfg, "raydpt_resampler", False):
+            from model_raydpt import RayDPTResampler
+            m = RayDPTResampler(cfg).to(device).eval()
+        else:
+            from model_raydpt import RayDPT
+            m = RayDPT(cfg).to(device).eval()
     elif getattr(cfg, "arch", "fullmap") in ("echo_unet", "echo_ray", "echo_bin"):
         from model_echo import EchoUNet, EchoRay, EchoBin
         m = {"echo_unet": EchoUNet, "echo_ray": EchoRay, "echo_bin": EchoBin}[cfg.arch](cfg).to(device).eval()
@@ -76,6 +80,9 @@ def evrun(model, loader, cfg, extra, device, mode="stereo", shuffle=False, swap=
         spec = b["spec"].to(device)
         if spec.shape[1] > getattr(cfg,"in_ch",2):
             spec = spec[:, :getattr(cfg,"in_ch",2)]
+        zc = getattr(cfg, "zero_chan", -1)                # per-channel ablation
+        if 0 <= zc < spec.shape[1]:
+            spec = spec.clone(); spec[:, zc] = 0.0
         spec = apply_audio_mode(spec, mode)
         if shuffle:
             spec = shuffle_audio_batch(spec)

@@ -1,0 +1,270 @@
+{
+  "best_val_mae_m": 1.0906610164766477,
+  "hist": [
+    {
+      "epoch": 0,
+      "val_mae_m": 1.2395518602635265,
+      "l1": 0.10744914787821472,
+      "total": 0.10744914787821472
+    },
+    {
+      "epoch": 1,
+      "val_mae_m": 1.2080105662821525,
+      "l1": 0.0992647313978523,
+      "total": 0.0992647313978523
+    },
+    {
+      "epoch": 2,
+      "val_mae_m": 1.2123476395770307,
+      "l1": 0.09679435922764242,
+      "total": 0.09679435922764242
+    },
+    {
+      "epoch": 3,
+      "val_mae_m": 1.1932328676506898,
+      "l1": 0.09532657898652057,
+      "total": 0.09532657898652057
+    },
+    {
+      "epoch": 4,
+      "val_mae_m": 1.1705840141626367,
+      "l1": 0.09435941577733804,
+      "total": 0.09435941577733804
+    },
+    {
+      "epoch": 5,
+      "val_mae_m": 1.1472403202558084,
+      "l1": 0.0933571532399704,
+      "total": 0.0933571532399704
+    },
+    {
+      "epoch": 6,
+      "val_mae_m": 1.1462919494960835,
+      "l1": 0.09245209365772704,
+      "total": 0.09245209365772704
+    },
+    {
+      "epoch": 7,
+      "val_mae_m": 1.1482897113459958,
+      "l1": 0.09176848971750587,
+      "total": 0.09176848971750587
+    },
+    {
+      "epoch": 8,
+      "val_mae_m": 1.1333743064363133,
+      "l1": 0.09096665022273859,
+      "total": 0.09096665022273859
+    },
+    {
+      "epoch": 9,
+      "val_mae_m": 1.135640325512627,
+      "l1": 0.09024791830529769,
+      "total": 0.09024791830529769
+    },
+    {
+      "epoch": 10,
+      "val_mae_m": 1.1263418588862226,
+      "l1": 0.089505952441444,
+      "total": 0.089505952441444
+    },
+    {
+      "epoch": 11,
+      "val_mae_m": 1.1295371237389338,
+      "l1": 0.08838087080201755,
+      "total": 0.08838087080201755
+    },
+    {
+      "epoch": 12,
+      "val_mae_m": 1.1176325729331975,
+      "l1": 0.08724342577780286,
+      "total": 0.08724342577780286
+    },
+    {
+      "epoch": 13,
+      "val_mae_m": 1.1063885352653633,
+      "l1": 0.08608938108819227,
+      "total": 0.08608938108819227
+    },
+    {
+      "epoch": 14,
+      "val_mae_m": 1.1040133584465524,
+      "l1": 0.08488732023940732,
+      "total": 0.08488732023940732
+    },
+    {
+      "epoch": 15,
+      "val_mae_m": 1.1020903489983738,
+      "l1": 0.08369347020362815,
+      "total": 0.08369347020362815
+    },
+    {
+      "epoch": 16,
+      "val_mae_m": 1.0977296708949693,
+      "l1": 0.08257771991348516,
+      "total": 0.08257771991348516
+    },
+    {
+      "epoch": 17,
+      "val_mae_m": 1.09976715992513,
+      "l1": 0.0813606416201219,
+      "total": 0.0813606416201219
+    },
+    {
+      "epoch": 18,
+      "val_mae_m": 1.0906610164766477,
+      "l1": 0.08024652634902547,
+      "total": 0.08024652634902547
+    },
+    {
+      "epoch": 19,
+      "val_mae_m": 1.0966275438747775,
+      "l1": 0.07914779967007537,
+      "total": 0.07914779967007537
+    },
+    {
+      "epoch": 20,
+      "val_mae_m": 1.0962824049071322,
+      "l1": 0.0782674090610817,
+      "total": 0.0782674090610817
+    },
+    {
+      "epoch": 21,
+      "val_mae_m": 1.1005831048041335,
+      "l1": 0.07744988838055482,
+      "total": 0.07744988838055482
+    },
+    {
+      "epoch": 22,
+      "val_mae_m": 1.1000897752715557,
+      "l1": 0.07697739362406233,
+      "total": 0.07697739362406233
+    },
+    {
+      "epoch": 23,
+      "val_mae_m": 1.1014892150905178,
+      "l1": 0.07655100887641311,
+      "total": 0.07655100887641311
+    },
+    {
+      "epoch": 24,
+      "val_mae_m": 1.1028962819841792,
+      "l1": 0.0764743598519514,
+      "total": 0.0764743598519514
+    }
+  ],
+  "cfg": {
+    "dataset_dir": "/root/storage/matterport3d_0303renew",
+    "cache_dir": "/root/implicit_full_cache",
+    "img_h": 256,
+    "img_w": 512,
+    "max_depth": 10.0,
+    "sample_rate": 48000,
+    "log_spec": true,
+    "audio_window_m": 10.0,
+    "audio_src": "binaural",
+    "wave_ch": 8,
+    "wave_ngf": 32,
+    "in_ch": 2,
+    "model": "cross",
+    "width": 48,
+    "embed_dim": 128,
+    "dim": 192,
+    "audio_dim": 256,
+    "use_xyz": true,
+    "use_fourier_pe": true,
+    "fourier_bands": 6,
+    "use_sh_pe": false,
+    "sh_order": 4,
+    "use_mic_pe": false,
+    "head_r": 0.0875,
+    "front_back_w": 1.0,
+    "hi_tokens": true,
+    "ray_tv_w": 0.0,
+    "ray_tv_grid_h": 64,
+    "ray_tv_grid_w": 128,
+    "cross_enc": "conv",
+    "coarse_head_h": 16,
+    "coarse_head_w": 32,
+    "coarse_sh_order": 4,
+    "residual_scale": 0.1,
+    "residual_h": 32,
+    "residual_w": 64,
+    "ray_coarse_h": 16,
+    "ray_coarse_w": 32,
+    "ray_cross_layers": 2,
+    "ray_self_layers": 1,
+    "raydpt_win32": 5,
+    "raydpt_win64": 3,
+    "raydpt_lite": false,
+    "raydpt_full_decode": true,
+    "raydpt_msf": false,
+    "raydpt_resampler": false,
+    "resampler_latents": 64,
+    "resampler_layers": 3,
+    "w_dense": 1.0,
+    "w_coarse_layout": 1.0,
+    "w_low": 0.5,
+    "w_tv_res": 0.01,
+    "n_heads": 4,
+    "n_cross": 2,
+    "n_self": 2,
+    "ray_mlp_skip": false,
+    "ray_film": false,
+    "prog_pe": false,
+    "sector_sample": false,
+    "use_depth_bins": false,
+    "n_bins": 64,
+    "hybrid_sh_order": 3,
+    "w_coarse": 0.5,
+    "w_res": 0.02,
+    "arch": "fullmap",
+    "ngf": 64,
+    "unet_downs": 6,
+    "ray_mod_scale": 0.1,
+    "ray_mod_stage": "e3",
+    "vit_pretrained": true,
+    "vit_freeze": false,
+    "vit_pe": "planar",
+    "correction": "none",
+    "coarse_h": 16,
+    "coarse_w": 32,
+    "corr_sh_order": 3,
+    "w_sh_aux": 1.0,
+    "init_decoder": "",
+    "freeze_decoder": false,
+    "res_scale": 0.3,
+    "w_res_sup": 1.0,
+    "w_tv": 0.01,
+    "chan_norm": false,
+    "w_swap_eq": 0.0,
+    "w_normal": 0.0,
+    "w_chamfer": 0.0,
+    "chamfer_k": 1024,
+    "w_rel": 0.0,
+    "amp": false,
+    "w_scale": 0.0,
+    "echo_kbins": 32,
+    "echo_dmax": 8.0,
+    "prob_k": 5,
+    "prob_eps": 0.05,
+    "prob_w_nll": 0.2,
+    "prob_coarse": true,
+    "prob_head_h": 16,
+    "prob_head_w": 32,
+    "n_rays": 2048,
+    "eval_chunk": 4096,
+    "flip_aug": false,
+    "epochs": 25,
+    "batch_size": 12,
+    "lr": 0.0003,
+    "weight_decay": 0.0001,
+    "num_workers": 6,
+    "seed": 2,
+    "device": "cuda",
+    "out_dir": "out",
+    "run_name": "Bnode2_cross_hitok_s2",
+    "audio_mode": "stereo",
+    "shuffle_audio": false,
+    "mask_farfield": false
+  }
+}

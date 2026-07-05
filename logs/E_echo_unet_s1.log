@@ -1,0 +1,56 @@
+[cfg] correction=none {'dataset_dir': '/root/storage/matterport3d_0303renew', 'cache_dir': '/root/implicit_full_cache', 'img_h': 256, 'img_w': 512, 'max_depth': 10.0, 'sample_rate': 48000, 'log_spec': True, 'audio_window_m': 10.0, 'audio_src': 'wave', 'wave_ch': 8, 'wave_ngf': 32, 'in_ch': 2, 'model': 'raymlp', 'width': 48, 'embed_dim': 128, 'dim': 192, 'audio_dim': 256, 'use_xyz': True, 'use_fourier_pe': True, 'fourier_bands': 6, 'use_sh_pe': False, 'sh_order': 4, 'use_mic_pe': False, 'head_r': 0.0875, 'front_back_w': 1.0, 'hi_tokens': False, 'ray_tv_w': 0.0, 'ray_tv_grid_h': 64, 'ray_tv_grid_w': 128, 'cross_enc': 'conv', 'coarse_head_h': 16, 'coarse_head_w': 32, 'coarse_sh_order': 4, 'residual_scale': 0.1, 'residual_h': 32, 'residual_w': 64, 'ray_coarse_h': 16, 'ray_coarse_w': 32, 'ray_cross_layers': 2, 'ray_self_layers': 1, 'raydpt_win32': 5, 'raydpt_win64': 3, 'raydpt_lite': False, 'raydpt_full_decode': True, 'raydpt_msf': False, 'raydpt_resampler': False, 'resampler_latents': 64, 'resampler_layers': 3, 'w_dense': 1.0, 'w_coarse_layout': 1.0, 'w_low': 0.5, 'w_tv_res': 0.01, 'n_heads': 4, 'n_cross': 2, 'n_self': 2, 'ray_mlp_skip': False, 'ray_film': False, 'prog_pe': False, 'sector_sample': False, 'use_depth_bins': False, 'n_bins': 64, 'hybrid_sh_order': 3, 'w_coarse': 0.5, 'w_res': 0.02, 'arch': 'echo_unet', 'ngf': 64, 'unet_downs': 6, 'ray_mod_scale': 0.1, 'ray_mod_stage': 'e3', 'vit_pretrained': True, 'vit_freeze': False, 'vit_pe': 'planar', 'correction': 'none', 'coarse_h': 16, 'coarse_w': 32, 'corr_sh_order': 3, 'w_sh_aux': 1.0, 'init_decoder': '', 'freeze_decoder': False, 'res_scale': 0.3, 'w_res_sup': 1.0, 'w_tv': 0.01, 'chan_norm': False, 'w_swap_eq': 0.0, 'w_normal': 0.0, 'w_chamfer': 0.0, 'chamfer_k': 1024, 'w_rel': 0.0, 'amp': False, 'w_scale': 0.0, 'echo_kbins': 32, 'echo_dmax': 8.0, 'prob_k': 5, 'prob_eps': 0.05, 'prob_w_nll': 0.2, 'prob_coarse': True, 'prob_head_h': 16, 'prob_head_w': 32, 'n_rays': 2048, 'eval_chunk': 4096, 'flip_aug': False, 'epochs': 25, 'batch_size': 24, 'lr': 0.002, 'weight_decay': 0.0001, 'num_workers': 6, 'seed': 1, 'device': 'cuda', 'out_dir': 'out', 'run_name': 'E_echo_unet_s1', 'audio_mode': 'stereo', 'shuffle_audio': False, 'mask_farfield': False}
+Loading weights:   0%|          | 0/210 [00:00<?, ?it/s]Loading weights: 100%|██████████| 210/210 [00:00<00:00, 5290.27it/s]
+[transformers] [1mWav2Vec2Model LOAD REPORT[0m from: facebook/wav2vec2-base-960h
+Key               | Status     | 
+------------------+------------+-
+lm_head.weight    | UNEXPECTED | 
+lm_head.bias      | UNEXPECTED | 
+masked_spec_embed | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+[model] params=150.90M
+[train] 28800 samples / 72 scenes (raw 256x512, in_ch=2)
+[val] 3543 samples / 9 scenes (raw 256x512, in_ch=2)
+[ep 00] 664.7s  {'mae': 0.09047767447307706}  val_MAE=1.4150m
+[ep 01] 702.0s  {'mae': 0.0796379516646266}  val_MAE=1.2408m
+[ep 02] 418.8s  {'mae': 0.07724760887523492}  val_MAE=1.2660m
+[ep 03] 754.6s  {'mae': 0.07646732121085127}  val_MAE=1.2154m
+[ep 04] 400.9s  {'mae': 0.07513682069877783}  val_MAE=1.2685m
+[ep 05] 513.4s  {'mae': 0.07870542323837677}  val_MAE=1.2483m
+[ep 06] 441.8s  {'mae': 0.07695463854509095}  val_MAE=1.1716m
+[ep 07] 163.5s  {'mae': 0.07393402383041879}  val_MAE=1.1539m
+[ep 08] 245.3s  {'mae': 0.0728017901473989}  val_MAE=1.1758m
+[ep 09] 516.0s  {'mae': 0.07213740857938926}  val_MAE=1.1607m
+[ep 10] 480.6s  {'mae': 0.07018523833403985}  val_MAE=1.1129m
+[ep 11] 250.2s  {'mae': 0.06901854341539244}  val_MAE=1.0959m
+[ep 12] 322.3s  {'mae': 0.06785183532784382}  val_MAE=1.0913m
+[ep 13] 234.8s  {'mae': 0.06875258134367565}  val_MAE=1.1187m
+[ep 14] 431.5s  {'mae': 0.06740649998188018}  val_MAE=1.1003m
+[ep 15] 250.9s  {'mae': 0.06590811839637657}  val_MAE=1.0908m
+[ep 16] 193.6s  {'mae': 0.06472974824098249}  val_MAE=1.0897m
+[ep 17] 301.1s  {'mae': 0.06387570306969186}  val_MAE=1.0916m
+[ep 18] 259.8s  {'mae': 0.06290107912383974}  val_MAE=1.0899m
+[ep 19] 168.2s  {'mae': 0.06207479565714796}  val_MAE=1.0921m
+[ep 20] 335.8s  {'mae': 0.06140264620694021}  val_MAE=1.0976m
+[ep 21] 411.4s  {'mae': 0.06081740837233762}  val_MAE=1.0958m
+[ep 22] 395.7s  {'mae': 0.06035947828864058}  val_MAE=1.0973m
+[ep 23] 332.3s  {'mae': 0.06005959001680215}  val_MAE=1.0983m
+[ep 24] 371.3s  {'mae': 0.05996172134764492}  val_MAE=1.0996m
+[done] best val MAE = 1.0897 m -> out/E_echo_unet_s1
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/210 [00:00<?, ?it/s]Loading weights: 100%|██████████| 210/210 [00:00<00:00, 6597.14it/s]
+[transformers] [1mWav2Vec2Model LOAD REPORT[0m from: facebook/wav2vec2-base-960h
+Key               | Status     | 
+------------------+------------+-
+lm_head.weight    | UNEXPECTED | 
+lm_head.bias      | UNEXPECTED | 
+masked_spec_embed | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+[test] 3600 samples / 9 scenes (raw 256x512, in_ch=2)
+[test] corr=none MAE=0.9155 MAE_low=0.8781 SHcoefL1=0.3585 delta1=0.440
+[done] -> out/E_echo_unet_s1/metrics_test.json

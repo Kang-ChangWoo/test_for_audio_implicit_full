@@ -24,17 +24,21 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from model import CrossBlock, conv_bn, Refine
+from model import CrossBlock, SelfBlock, conv_bn, Refine
 from model_unet_coarse import UNet8Encoder
 from ray_features import RayBank
 
 
 # ---- local spherical window attention (ray <-> ray) -------------------------
-def _window_kv(t, win):
-    """(B,C,H,W) -> (B,C,win*win,H,W): neighbours via circular-W / replicate-H pad."""
+def _window_kv(t, win, wrap=True):
+    """(B,C,H,W) -> (B,C,win*win,H,W): neighbours. wrap=True: circular-W + replicate-H
+    (spherical). wrap=False: zero-pad both (planar image local attention)."""
     pad = win // 2
-    t = torch.cat([t[..., -pad:], t, t[..., :pad]], dim=-1)        # circular azimuth wrap
-    t = F.pad(t, (0, 0, pad, pad), mode="replicate")               # replicate elevation (poles)
+    if wrap:
+        t = torch.cat([t[..., -pad:], t, t[..., :pad]], dim=-1)    # circular azimuth wrap
+        t = F.pad(t, (0, 0, pad, pad), mode="replicate")           # replicate elevation (poles)
+    else:
+        t = F.pad(t, (pad, pad, pad, pad), mode="constant", value=0)   # planar zero-pad
     B, C, Hp, Wp = t.shape
     H, W = Hp - 2 * pad, Wp - 2 * pad
     cols = F.unfold(t, kernel_size=win)                            # (B, C*win*win, H*W)
@@ -60,27 +64,80 @@ def _geom_bias_feats(H, W, win):
 
 
 class LocalSphericalAttention(nn.Module):
-    def __init__(self, dim, heads, H, W, win=5):
+    """mode: spherical (wrap+replicate + great-circle bias) | nobias (wrap, no bias)
+    | planar (zero-pad, no bias) | off (identity). Ablation of the spherical design."""
+    def __init__(self, dim, heads, H, W, win=5, mode="spherical"):
         super().__init__()
+        self.mode = mode
+        if mode == "off":
+            return
         self.h, self.dh, self.win = heads, dim // heads, win
         self.scale = self.dh ** -0.5
+        self.wrap = (mode != "planar")
+        self.use_bias = (mode == "spherical")
         self.to_qkv = nn.Conv2d(dim, dim * 3, 1)
         self.proj = nn.Conv2d(dim, dim, 1)
-        self.register_buffer("geom", _geom_bias_feats(H, W, win))          # (H,K,3)
-        self.bias_mlp = nn.Sequential(nn.Linear(3, 64), nn.GELU(), nn.Linear(64, heads))
+        if self.use_bias:
+            self.register_buffer("geom", _geom_bias_feats(H, W, win))      # (H,K,3)
+            self.bias_mlp = nn.Sequential(nn.Linear(3, 64), nn.GELU(), nn.Linear(64, heads))
 
     def forward(self, x):
+        if self.mode == "off":
+            return x
         B, C, H, W = x.shape
         q, k, v = self.to_qkv(x).chunk(3, 1)
-        kw = _window_kv(k, self.win).view(B, self.h, self.dh, self.win * self.win, H, W)
-        vw = _window_kv(v, self.win).view(B, self.h, self.dh, self.win * self.win, H, W)
+        kw = _window_kv(k, self.win, self.wrap).view(B, self.h, self.dh, self.win * self.win, H, W)
+        vw = _window_kv(v, self.win, self.wrap).view(B, self.h, self.dh, self.win * self.win, H, W)
         q = q.view(B, self.h, self.dh, H, W)
         attn = torch.einsum("bndhw,bndkhw->bnkhw", q, kw) * self.scale     # (B,nh,K,H,W)
-        bias = self.bias_mlp(self.geom).permute(2, 1, 0)                   # (nh,K,H)
-        attn = attn + bias[None, :, :, :, None]
+        if self.use_bias:
+            bias = self.bias_mlp(self.geom).permute(2, 1, 0)              # (nh,K,H)
+            attn = attn + bias[None, :, :, :, None]
         attn = attn.softmax(dim=2)
         out = torch.einsum("bnkhw,bndkhw->bndhw", attn, vw).reshape(B, C, H, W)
         return x + self.proj(out)
+
+
+# ---- E22/E27: global coarse ray<->ray self-attn + cos-angular-distance bias --
+def _coarse_cosang(H, W):
+    """(N,N) cos angular distance between all ERP cell-centre directions (N=H*W)."""
+    el = (math.pi / 2 - (torch.arange(H).float() + 0.5) / H * math.pi)     # (H,)
+    az = (-math.pi + (torch.arange(W).float() + 0.5) / W * 2 * math.pi)    # (W,)
+    E = el[:, None].expand(H, W).reshape(-1); A = az[None, :].expand(H, W).reshape(-1)
+    dirs = torch.stack([torch.cos(E) * torch.cos(A), torch.cos(E) * torch.sin(A), torch.sin(E)], 1)
+    return (dirs @ dirs.t()).clamp(-1, 1)                                  # (N,N)
+
+
+class CoarseGeoSelfAttn(nn.Module):
+    """Global ray<->ray self-attention at the coarse layout scale (16x32=512 tok),
+    with a learned per-head bias driven by the true cos-angular-distance (E22 self-attn
+    + E27 geometry-aware bias). Residual, pre-norm."""
+    def __init__(self, dim, heads, H, W, geo=True):
+        super().__init__()
+        self.h, self.dh = heads, dim // heads
+        self.scale = self.dh ** -0.5
+        self.geo = geo
+        self.norm = nn.LayerNorm(dim)
+        self.to_qkv = nn.Linear(dim, dim * 3)
+        self.proj = nn.Linear(dim, dim)
+        if geo:                                                          # ray-grounding: cos-ang bias
+            self.register_buffer("cosang", _coarse_cosang(H, W))          # (N,N)
+            self.bias_mlp = nn.Sequential(nn.Linear(1, 32), nn.GELU(), nn.Linear(32, heads))
+
+    def forward(self, x):                                                # (B,C,H,W)
+        B, C, H, W = x.shape; N = H * W
+        t = x.flatten(2).transpose(1, 2)                                 # (B,N,C)
+        q, k, v = self.to_qkv(self.norm(t)).chunk(3, -1)
+        q = q.view(B, N, self.h, self.dh).transpose(1, 2)
+        k = k.view(B, N, self.h, self.dh).transpose(1, 2)
+        v = v.view(B, N, self.h, self.dh).transpose(1, 2)
+        attn = (q @ k.transpose(-2, -1)) * self.scale                    # (B,h,N,N)
+        if self.geo:
+            bias = self.bias_mlp(self.cosang[..., None]).permute(2, 0, 1)    # (h,N,N)
+            attn = attn + bias[None]
+        attn = attn.softmax(-1)
+        o = self.proj((attn @ v).transpose(1, 2).reshape(B, N, C))
+        return (t + o).transpose(1, 2).reshape(B, C, H, W)
 
 
 # ---- RayDPT ------------------------------------------------------------------
@@ -113,8 +170,8 @@ class RayDPT(nn.Module):
         self.se2 = nn.Conv2d(ngf * 2, dim, 1)
         self.up = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False)
         self.refine32 = Refine(dim); self.refine64 = Refine(dim)
-        self.lsa32 = LocalSphericalAttention(dim, heads, 32, 64, getattr(cfg, "raydpt_win32", 5))
-        self.lsa64 = LocalSphericalAttention(dim, heads, 64, 128, getattr(cfg, "raydpt_win64", 3))
+        self.lsa32 = LocalSphericalAttention(dim, heads, 32, 64, getattr(cfg, "raydpt_win32", 5), mode=getattr(cfg, "lsa_mode", "spherical"))
+        self.lsa64 = LocalSphericalAttention(dim, heads, 64, 128, getattr(cfg, "raydpt_win64", 3), mode=getattr(cfg, "lsa_mode", "spherical"))
         self.coarse_head = nn.Conv2d(dim, 1, 1)
         self.head = nn.Sequential(conv_bn(dim, ngf), conv_bn(ngf, ngf), nn.Conv2d(ngf, 1, 3, 1, 1))
         # multi-scale-KV fusion: ray queries cross-attend COMPACT acoustic memory from
@@ -126,6 +183,22 @@ class RayDPT(nn.Module):
             self.e2_pool = nn.AdaptiveAvgPool2d((16, 32))     # 64x128 -> 16x32 (512 tok)
             self.kv_e3s = nn.Linear(ngf * 4, dim)
             self.kv_e2 = nn.Linear(ngf * 2, dim)
+        # ablation: no ray conditioning -> LEARNED direction-agnostic queries (same
+        # decoder capacity, but queries carry NO spherical direction info).
+        self.noray = getattr(cfg, "raydpt_noray", False)
+        if self.noray:
+            self.q16 = nn.Parameter(torch.randn(16 * 32, dim) * 0.02)
+            self.q32 = nn.Parameter(torch.randn(32 * 64, dim) * 0.02)
+            self.q64 = nn.Parameter(torch.randn(64 * 128, dim) * 0.02)
+        # E22/E27: coarse global geo self-attn; E29: gated DPT skips
+        self.coarse_sa = getattr(cfg, "raydpt_coarse_sa", False)
+        if self.coarse_sa:
+            self.csa = CoarseGeoSelfAttn(dim, heads, 16, 32, geo=getattr(cfg, "coarse_sa_geo", True))
+        self.gated_skip = getattr(cfg, "raydpt_gated_skip", False)
+        if self.gated_skip:
+            self.g4 = nn.Conv2d(dim * 2, dim, 1)
+            self.g3 = nn.Conv2d(dim * 2, dim, 1)
+            self.g2 = nn.Conv2d(dim * 2, dim, 1)
         self.lite = getattr(cfg, "raydpt_lite", False)        # 2-scale (32,64) lite variant
         # full-decode: LEARNED upsample 64x128 -> 256x512 (+e1 skip), like U-Net's decoder
         # tail, instead of parameter-free bilinear x4. Closes the fairness gap vs pix2pix.
@@ -143,6 +216,17 @@ class RayDPT(nn.Module):
             q = blk(q, kv)
         return q.transpose(1, 2).reshape(B, -1, h, w)
 
+    def _cross_q(self, q0, blocks, kv, B, h, w):          # learned query (no ray conditioning)
+        q = q0[None].expand(B, -1, -1)
+        for blk in blocks:
+            q = blk(q, kv)
+        return q.transpose(1, 2).reshape(B, -1, h, w)
+
+    def _skip(self, base, s, gate):                       # E29: gated (vs raw-add) DPT skip
+        if gate is None:
+            return base + s
+        return base + torch.sigmoid(gate(torch.cat([base, s], 1))) * s
+
     def forward(self, spec, coarse_feat=None, sh_basis=None):
         B = spec.size(0)
         e1 = self.enc.e1(spec); e2 = self.enc.e2(e1); e3 = self.enc.e3(e2); e4 = self.enc.e4(e3)
@@ -155,6 +239,16 @@ class RayDPT(nn.Module):
             d_c = torch.sigmoid(self.coarse_head(F.adaptive_avg_pool2d(m, (16, 32))))
             x = self.lsa32(self.refine32(m))                   # 32x64
             x = self.lsa64(self.refine64(self.up(x) + self.se2(e2)))   # 64x128
+        elif self.noray:
+            # ablation: same decoder but LEARNED (direction-agnostic) queries.
+            kv3 = self.kv_e3(e3.flatten(2).transpose(1, 2))
+            F16 = self._cross_q(self.q16, self.cr16, kv4, B, 16, 32)
+            F32 = self._cross_q(self.q32, self.cr32, kv3, B, 32, 64)
+            F64 = self._cross_q(self.q64, self.cr64, kv4, B, 64, 128)
+            m16 = F16 + self.se4(e4)
+            d_c = torch.sigmoid(self.coarse_head(m16))
+            x = self.lsa32(self.refine32(self.up(m16) + F32 + self.se3(e3)))
+            x = self.lsa64(self.refine64(self.up(x) + F64 + self.se2(e2)))
         elif self.msf:
             # multi-scale compact KV: each ray scale queries the right acoustic memory.
             kv3 = self.kv_e3(e3.flatten(2).transpose(1, 2))                          # 2048 (32x64)
@@ -174,10 +268,15 @@ class RayDPT(nn.Module):
             F16 = self._cross(self.ray_proj, self.rf16, self.cr16, kv4, B, 16, 32)
             F32 = self._cross(self.ray_proj, self.rf32, self.cr32, kv3, B, 32, 64)
             F64 = self._cross(self.ray_proj, self.rf64, self.cr64, kv4, B, 64, 128)
-            m16 = F16 + self.se4(e4)                            # 16x32
+            g4 = self.g4 if self.gated_skip else None
+            g3 = self.g3 if self.gated_skip else None
+            g2 = self.g2 if self.gated_skip else None
+            m16 = self._skip(F16, self.se4(e4), g4)            # 16x32
+            if self.coarse_sa:
+                m16 = self.csa(m16)                            # E22/E27 global geo self-attn
             d_c = torch.sigmoid(self.coarse_head(m16))         # (B,1,16,32) coarse layout
-            x = self.lsa32(self.refine32(self.up(m16) + F32 + self.se3(e3)))   # 32x64
-            x = self.lsa64(self.refine64(self.up(x) + F64 + self.se2(e2)))     # 64x128
+            x = self.lsa32(self.refine32(self._skip(self.up(m16) + F32, self.se3(e3), g3)))   # 32x64
+            x = self.lsa64(self.refine64(self._skip(self.up(x) + F64, self.se2(e2), g2)))     # 64x128
         if self.full_decode:                                   # LEARNED upsample 64x128 -> 256x512
             xf = self.up(self.proj_fd(x))                       # 128x256, ngf
             xf = self.dec1(xf + self.se1(e1))                  # + e1 skip
@@ -186,4 +285,84 @@ class RayDPT(nn.Module):
         else:
             D = torch.sigmoid(self.head(x))                    # 64x128 head
             D = F.interpolate(D, (self.H, self.W), mode="bilinear", align_corners=False)  # parameter-free x4
+        return {"D": D, "D0": D, "extras": {"D_coarse": d_c}}
+
+
+# ---- RayDPT + Acoustic Perceiver Resampler --------------------------------- #
+class RayDPTResampler(nn.Module):
+    """U-Net8 audio encoder -> multi-scale acoustic tokens -> Perceiver/Q-Former-style
+    resampler (learned latents compress them into a compact scene memory) -> physical
+    ERP ray queries cross-attend the compact memory -> DPT fusion + spherical attn.
+
+    Rationale: spectrogram grid != ERP ray grid, so don't raw-skip e2/e3 (coordinate
+    mismatch). learned latents = "scene acoustic summary"; ray queries f(theta,phi) =
+    "depth in this direction?". Ray cross-attn cost drops to Q x N_latents.
+    """
+    def __init__(self, cfg):
+        super().__init__()
+        self.H, self.W = cfg.img_h, cfg.img_w
+        ngf = getattr(cfg, "ngf", 64); dim = cfg.dim; heads = cfg.n_heads
+        nL = getattr(cfg, "ray_cross_layers", 2)
+        nR = getattr(cfg, "resampler_layers", 3)
+        N = getattr(cfg, "resampler_latents", 64)
+        self.enc = UNet8Encoder(getattr(cfg, "in_ch", 2), ngf)
+
+        def bank(h, w):
+            pc = copy.copy(cfg); pc.img_h, pc.img_w = h, w
+            b = RayBank(pc, device="cpu"); return b.feat, b.feat_dim
+        f16, fd = bank(16, 32); f32, _ = bank(32, 64); f64, _ = bank(64, 128)
+        self.register_buffer("rf16", f16); self.register_buffer("rf32", f32); self.register_buffer("rf64", f64)
+        self.ray_proj = nn.Sequential(nn.Linear(fd, dim), nn.GELU(), nn.Linear(dim, dim))
+
+        # multi-scale acoustic tokenizers (+ per-scale marker embedding)
+        self.kv_e4 = nn.Linear(ngf * 8, dim)
+        self.kv_e3 = nn.Linear(ngf * 4, dim)
+        self.kv_e2 = nn.Linear(ngf * 2, dim)
+        self.e2_pool = nn.AdaptiveAvgPool2d((32, 64))         # 64x128 -> 32x64 (keep cost sane)
+        self.scale_emb = nn.Parameter(torch.zeros(3, dim))    # e4,e3,e2 markers
+
+        # acoustic Perceiver resampler: learned latents <- acoustic tokens
+        self.latents = nn.Parameter(torch.randn(N, dim) * 0.02)
+        self.rs_cross = nn.ModuleList([CrossBlock(dim, heads) for _ in range(nR)])
+        self.rs_self = nn.ModuleList([SelfBlock(dim, heads) for _ in range(nR)])
+
+        # ray-query decoder reads the compact memory L
+        mk = lambda: nn.ModuleList([CrossBlock(dim, heads) for _ in range(nL)])
+        self.cr16, self.cr32, self.cr64 = mk(), mk(), mk()
+        self.se4 = nn.Conv2d(ngf * 8, dim, 1)                 # coarse aligned skip (16x32) only
+        self.up = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False)
+        self.refine32 = Refine(dim); self.refine64 = Refine(dim)
+        self.lsa32 = LocalSphericalAttention(dim, heads, 32, 64, getattr(cfg, "raydpt_win32", 5), mode=getattr(cfg, "lsa_mode", "spherical"))
+        self.lsa64 = LocalSphericalAttention(dim, heads, 64, 128, getattr(cfg, "raydpt_win64", 3), mode=getattr(cfg, "lsa_mode", "spherical"))
+        self.coarse_head = nn.Conv2d(dim, 1, 1)
+        # learned full-decode 64x128 -> 256x512 (+e1 skip)
+        self.proj_fd = conv_bn(dim, ngf); self.se1 = nn.Conv2d(ngf, ngf, 1)
+        self.dec1 = Refine(ngf); self.dec2 = nn.Sequential(conv_bn(ngf, ngf), Refine(ngf))
+        self.head_fd = nn.Conv2d(ngf, 1, 3, 1, 1)
+
+    def _cross(self, rf, blocks, kv, B, h, w):
+        q = self.ray_proj(rf)[None].expand(B, -1, -1)
+        for blk in blocks:
+            q = blk(q, kv)
+        return q.transpose(1, 2).reshape(B, -1, h, w)
+
+    def forward(self, spec, coarse_feat=None, sh_basis=None):
+        B = spec.size(0)
+        e1 = self.enc.e1(spec); e2 = self.enc.e2(e1); e3 = self.enc.e3(e2); e4 = self.enc.e4(e3)
+        A4 = self.kv_e4(e4.flatten(2).transpose(1, 2)) + self.scale_emb[0]      # 512
+        A3 = self.kv_e3(e3.flatten(2).transpose(1, 2)) + self.scale_emb[1]      # 2048
+        A2 = self.kv_e2(self.e2_pool(e2).flatten(2).transpose(1, 2)) + self.scale_emb[2]  # 2048
+        A = torch.cat([A4, A3, A2], dim=1)                                       # (B, ~4608, dim)
+        L = self.latents[None].expand(B, -1, -1)                                 # (B, N, dim)
+        for cb, sb in zip(self.rs_cross, self.rs_self):
+            L = cb(L, A); L = sb(L)                                              # compact scene memory
+        F16 = self._cross(self.rf16, self.cr16, L, B, 16, 32)
+        F32 = self._cross(self.rf32, self.cr32, L, B, 32, 64)
+        F64 = self._cross(self.rf64, self.cr64, L, B, 64, 128)
+        m16 = F16 + self.se4(e4)
+        d_c = torch.sigmoid(self.coarse_head(m16))
+        x = self.lsa32(self.refine32(self.up(m16) + F32))
+        x = self.lsa64(self.refine64(self.up(x) + F64))
+        xf = self.up(self.proj_fd(x)); xf = self.dec1(xf + self.se1(e1)); xf = self.dec2(self.up(xf))
+        D = torch.sigmoid(self.head_fd(xf))
         return {"D": D, "D0": D, "extras": {"D_coarse": d_c}}

@@ -15,6 +15,7 @@ identical to the old cache loader so every ablation behaves the same.
 """
 
 import json
+import math
 import os
 import warnings
 
@@ -102,6 +103,31 @@ class RawDataset(Dataset):
         feat = torch.stack([lmag, rmag, ild, torch.cos(ipd), torch.sin(ipd)], 0)[:n]  # (n,F,T')
         return F.interpolate(feat.unsqueeze(0), (self.H, self.W), mode="nearest").squeeze(0).float()
 
+    def _spec_raz(self, wav, R=8):
+        """Range-Azimuth steered-response acoustic image (ToF + binaural direction physics).
+        Delay-and-sum steer the 2 ears to each ERP azimuth (ITD from head geometry), then
+        the energy at delay tau = range r via r = c*tau/2. -> per-azimuth range profile,
+        broadcast over elevation as R ERP-aligned channels. Grounds audio in direction+range."""
+        x = wav
+        if x.shape[1] < self.cut:
+            x = F.pad(x, (0, self.cut - x.shape[1]))
+        L, Rr = x[0], x[1]                                         # (cut,)
+        T = L.shape[0]; W = self.W
+        hr = float(getattr(self.cfg, "head_r", 0.0875))
+        az = -math.pi + (torch.arange(W).float() + 0.5) / W * 2 * math.pi   # (W,)
+        # ITD(az) in samples: interaural path diff = 2*hr*sin(az); delay-and-sum aligns R to L
+        n = torch.round(2.0 * hr * torch.sin(az) / _C * self.sr).long()      # (W,) integer shift
+        t = torch.arange(T)
+        idx = (t[None, :] + n[:, None]).clamp(0, T - 1)                       # (W,T) shifted R index
+        y = L[None, :] + Rr[idx]                                             # (W,T) steered signals
+        e = y * y                                                            # energy envelope
+        # pool time (=range, tau=2r/c) into R range bins
+        seg = (T // R) * R
+        raz = e[:, :seg].reshape(W, R, seg // R).mean(-1)                    # (W,R)
+        raz = raz / (raz.amax(dim=1, keepdim=True) + 1e-6)                   # per-azimuth normalise
+        feat = raz.transpose(0, 1)[:, None, :].expand(R, self.H, W)          # (R,H,W) broadcast over el
+        return feat.contiguous().float()
+
     def _gcc(self, wav):
         """GCC-PHAT cross-correlation map (1,H,W): lag axis = ITD/time-of-flight, the
         fine binaural timing that log-mag throws away. Derived from the raw waveform."""
@@ -158,6 +184,9 @@ class RawDataset(Dataset):
             elif self.src == "gcc":
                 wav = self._wave(s, idx)
                 spec = torch.cat([self._specN(wav, 5), self._gcc(wav)], 0)   # (6,H,W)
+            elif self.src == "raz":
+                wav = self._wave(s, idx)
+                spec = torch.cat([self._specN(wav, 5), self._spec_raz(wav)], 0)   # (5+R,H,W)
             elif self.src == "wave":
                 wav = self._wave(s, idx)
                 spec = self._specN(wav, 5)                                   # 5ch main path
@@ -198,6 +227,8 @@ def _cache_dir(cfg):
         tag += "_foa"
     elif src == "gcc":
         tag += "_gcc"          # 5ch RIR + GCC-PHAT lag map (6ch, waveform-derived)
+    elif src == "raz":
+        tag += "_raz"          # 5ch RIR + range-azimuth steered map (5+R ch)
     elif src == "wave":
         tag += "_wave"         # 5ch RIR spec + raw binaural waveform (extra array)
     return os.path.join(base, f"ic{getattr(cfg,'in_ch',2)}_{cfg.img_h}x{cfg.img_w}{tag}")

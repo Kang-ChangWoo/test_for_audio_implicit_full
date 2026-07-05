@@ -68,6 +68,12 @@ DEFAULTS = dict(
     raydpt_full_decode=True,      # learned upsample 64x128->256x512 (+e1 skip); always on (vs bilinear x4)
     raydpt_msf=False,             # multi-scale-KV fusion: F32<-cat(e4,e3), F64<-cat(e4,pooled e3,pooled e2);
                                   # drop raw e2/e3 DPT skip-add (coord-mismatch) -> ray cross-attends compact KV
+    # Perceiver/Q-Former-style acoustic resampler: learned latents compress multi-scale
+    # acoustic tokens into a compact scene memory; physical ERP ray queries read it.
+    raydpt_resampler=False, resampler_latents=64, resampler_layers=3,
+    raydpt_noray=False,
+    lsa_mode="spherical",         # local spherical attn ablation: spherical|nobias|planar|off           # ablation: replace physical spherical ray-direction queries
+                                  # with LEARNED direction-agnostic queries (no ray conditioning)
 
     # coarse-arch loss weights (only applied for arch in the coarse family)
     w_dense=1.0, w_coarse_layout=1.0, w_low=0.5, w_tv_res=0.01,
@@ -124,6 +130,16 @@ DEFAULTS = dict(
     # --- per-scene SCALE guide: match predicted mean to GT mean (RMSE-optimal central
     # tendency). oracle mean-match = -5.4% RMSE. does NOT touch spatial distribution. ---
     w_scale=0.0,
+    w_silog=0.0,              # scale-invariant log loss (audioresearch_audio E4); combine w/ w_rel
+    # --- EXPERIMENTS.md champion stack (E14/E22/E27/E29/E34) ---
+    w_grad=0.0,               # E34: edge-aware gradient-matching loss (champion += 0.05)
+    w_depth_gamma=0.0,        # per-pixel weighting: dense L1 * gt**gamma (>0 far/RMSE, <0 near/AbsRel)
+    berhu=False,              # reverse-Huber main loss (error-magnitude weighting)
+    w_ema=0.0,                # E14: weight-EMA decay for eval/checkpoint (0=off, best=0.995)
+    raydpt_coarse_sa=False,   # E22/E27: global ray<->ray self-attn at 16x32 + cos-ang-dist bias
+    coarse_sa_geo=True,
+    zero_chan=-1,             # 5ch input ablation: zero out channel idx (0=logL,1=logR,2=ILD,3=cosIPD,4=sinIPD; -1=none)       # ray-grounding ablation: cos-ang-dist bias in coarse-sa (False=plain global SA)
+    raydpt_gated_skip=False,  # E29: gated (vs raw-add) DPT encoder skips
     # --- EchoBin: distance-binned binaural directional weak guide (model_echo.EchoBin) ---
     echo_kbins=32, echo_dmax=8.0,
 

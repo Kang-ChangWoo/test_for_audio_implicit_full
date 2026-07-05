@@ -1,0 +1,7 @@
+=== E22 3-seed 확정 + EMA/coarse-sa 2x2 factorial ===
+# comp=RMSE/1.6+(1-d1)/0.46+0.3*AbsRel/0.4 (낮을수록 우수)
+[neither] RayDPT+E2    MAE=0.9063 RMSE=1.4645 AbsRel=0.4890 d1=0.450 comp=2.478 (n=3)
+[EMA only]             MAE=0.9078 RMSE=1.4760 AbsRel=0.4626 d1=0.448 comp=2.470 (n=2)
+[coarse-sa only]       (미완)
+[both] E22             MAE=0.8960 RMSE=1.4649 AbsRel=0.4598 d1=0.457 comp=2.440 (n=3)
+(ref) U-Net8           MAE=0.8933 RMSE=1.4361 AbsRel=0.5308 d1=0.455 comp=2.481 (n=3)

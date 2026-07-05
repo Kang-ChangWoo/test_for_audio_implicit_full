@@ -1,0 +1,11 @@
+=== Q7 RMSE-balanced RayDPT vs U-Net8 (RMSE 1.436 / comp 2.480) ===
+# balanced 승리 = RMSE<1.436 AND d1>=0.455 AND comp<2.481
+Q7_csa_wrel03_s0               MAE=0.8824 RMSE=1.4216 AbsRel=0.4956 d1=0.462 comp=2.429 WIN
+Q7_csa_wrel05_wscale10_s0      MAE=0.8868 RMSE=1.4239 AbsRel=0.4966 d1=0.459 comp=2.437 WIN
+Q7_csa_norel_wscale10_s0       MAE=0.8848 RMSE=1.4227 AbsRel=0.5134 d1=0.464 comp=2.439 WIN
+Q7_csa_wrel05_s0               MAE=0.8920 RMSE=1.4468 AbsRel=0.4777 d1=0.457 comp=2.442 
+Q7_csa_gated_wrel05_s0         MAE=0.8907 RMSE=1.4389 AbsRel=0.4904 d1=0.459 comp=2.444 
+Q7_csa_wrel05_wlow10_s0        MAE=0.8941 RMSE=1.4417 AbsRel=0.4924 d1=0.455 comp=2.455 
+Q7_csa_norel_s0                MAE=0.8872 RMSE=1.4164 AbsRel=0.5454 d1=0.461 comp=2.467 WIN
+Q7_csa_gated_norel_s0          MAE=0.8953 RMSE=1.4116 AbsRel=0.5610 d1=0.455 comp=2.488 
+완주 8/10
