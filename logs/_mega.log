@@ -371,3 +371,55 @@
 [mega] ALL DONE
 [readme] updated BEST block: 214 groups, best=Q8_csa_wrel05_normal10 (0.7397)
 [mega] aggregated
+[mega] 239 jobs total
+[mega] launch F_champion_s1 gpu0 (11 left)
+[mega] launch F_champion_s2 gpu1 (11 left)
+[mega] launch F_raymlpcsa_s0 gpu2 (11 left)
+[mega] launch F_raymlpcsa_s1 gpu3 (11 left)
+[mega] launch F_raymlpcsa_s2 gpu4 (11 left)
+[mega] launch B_pvit_s0 gpu5 (11 left)
+[mega] launch B_pvit_s1 gpu6 (11 left)
+[mega] launch B_pvit_s2 gpu7 (11 left)
+[mega] 245 jobs total
+[mega] launch B_presnet_s0 gpu2 (17 left)
+[mega] launch B_presnet_s1 gpu3 (15 left)
+[mega] launch B_presnet_s2 gpu4 (15 left)
+[mega] finished B_presnet_s0 gpu2
+[mega] launch B_batvis_s0 gpu2 (13 left)
+[mega] finished B_presnet_s1 gpu3
+[mega] launch B_batvis_s1 gpu3 (12 left)
+[mega] finished B_presnet_s2 gpu4
+[mega] launch B_batvis_s2 gpu4 (11 left)
+[mega] launch B_echodiff_s0 gpu1 (10 left)
+[mega] launch B_echodiff_s1 gpu0 (9 left)
+[mega] finished B_batvis_s0 gpu2
+[mega] launch B_echodiff_s2 gpu2 (8 left)
+[mega] finished B_batvis_s1 gpu3
+[mega] finished B_batvis_s2 gpu4
+[mega] finished B_echodiff_s0 gpu1
+[mega] finished B_echodiff_s1 gpu0
+[mega] finished B_echodiff_s2 gpu2
+[mega] ALL DONE
+[readme] updated BEST block: 220 groups, best=Q8_csa_wrel05_normal10 (0.7397)
+[mega] aggregated
+[mega] 254 jobs total
+[mega] launch B2_presnet_s0 gpu0 (9 left)
+[mega] launch B2_presnet_s1 gpu1 (9 left)
+[mega] launch B2_presnet_s2 gpu2 (9 left)
+[mega] launch B2_pvit_s0 gpu3 (9 left)
+[mega] launch B2_pvit_s1 gpu4 (9 left)
+[mega] launch B2_pvit_s2 gpu5 (9 left)
+[mega] launch B2_batvis_s0 gpu6 (9 left)
+[mega] launch B2_batvis_s1 gpu7 (9 left)
+[mega] 257 jobs total
+[mega] launch F2_raydpt_s0 gpu7 (11 left)
+[mega] launch F2_raydpt_s1 gpu6 (10 left)
+[mega] launch F2_raydpt_s2 gpu1 (10 left)
+[mega] launch B2_batvis_s2 gpu2 (10 left)
+[mega] finished B2_batvis_s2 gpu2
+[mega] finished F2_raydpt_s1 gpu6
+[mega] finished F2_raydpt_s0 gpu7
+[mega] finished F2_raydpt_s2 gpu1
+[mega] ALL DONE
+[readme] updated BEST block: 224 groups, best=Q8_csa_wrel05_normal10 (0.7397)
+[mega] aggregated

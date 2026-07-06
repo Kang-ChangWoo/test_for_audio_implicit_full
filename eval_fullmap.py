@@ -40,6 +40,12 @@ def load(run_dir, device):
     elif getattr(cfg, "arch", "fullmap") == "vit":
         from model_vit import ViTDepth
         m = ViTDepth(cfg).to(device).eval()
+    elif getattr(cfg, "arch", "fullmap") in ("pvit", "presnet"):
+        from model_baseline import PViT, PResNet
+        m = (PViT if cfg.arch == "pvit" else PResNet)(cfg).to(device).eval()
+    elif getattr(cfg, "arch", "fullmap") in ("batvis", "echodiff"):
+        from model_baseline import BatVis, EchoDiff
+        m = (BatVis if cfg.arch == "batvis" else EchoDiff)(cfg).to(device).eval()
     elif getattr(cfg, "arch", "fullmap") == "rayconv":
         from model_rayconv import RayConvNet
         m = RayConvNet(cfg).to(device).eval()
@@ -75,7 +81,7 @@ def load(run_dir, device):
 @torch.no_grad()
 def evrun(model, loader, cfg, extra, device, mode="stereo", shuffle=False, swap=False, max_n=None):
     mb = MetricBank(cfg.img_h, cfg.img_w, cfg.max_depth, device=device); seen = 0
-    wave_arch = getattr(cfg, "arch", "fullmap") in ("wave", "echo_unet", "echo_ray", "echo_bin")
+    wave_arch = getattr(cfg, "arch", "fullmap") in ("wave", "echo_unet", "echo_ray", "echo_bin", "echodiff")
     for b in loader:
         spec = b["spec"].to(device)
         if spec.shape[1] > getattr(cfg,"in_ch",2):

@@ -137,6 +137,7 @@ DEFAULTS = dict(
     berhu=False,              # reverse-Huber main loss (error-magnitude weighting)
     w_ema=0.0,                # E14: weight-EMA decay for eval/checkpoint (0=off, best=0.995)
     raydpt_coarse_sa=False,   # E22/E27: global ray<->ray self-attn at 16x32 + cos-ang-dist bias
+    cross_mode="cross",       # ray<->audio: cross (per-ray retrieval) | global (single mean-pooled audio code, no cross-attn)
     coarse_sa_geo=True,
     zero_chan=-1,             # 5ch input ablation: zero out channel idx (0=logL,1=logR,2=ILD,3=cosIPD,4=sinIPD; -1=none)       # ray-grounding ablation: cos-ang-dist bias in coarse-sa (False=plain global SA)
     raydpt_gated_skip=False,  # E29: gated (vs raw-add) DPT encoder skips

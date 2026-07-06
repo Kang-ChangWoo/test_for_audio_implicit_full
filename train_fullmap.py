@@ -129,7 +129,7 @@ def chan_stats(cfg, device):
 @torch.no_grad()
 def quick_val(model, loader, cfg, device, extra, wlat, norm=None):
     model.eval(); tot = 0.0; wn = 0.0; seen = 0
-    wave_arch = getattr(cfg, "arch", "fullmap") in ("wave", "echo_unet", "echo_ray", "echo_bin")
+    wave_arch = getattr(cfg, "arch", "fullmap") in ("wave", "echo_unet", "echo_ray", "echo_bin", "echodiff")
     for b in loader:
         spec = prep_audio(b["spec"].to(device), cfg, norm)
         gt = b["depth"].to(device); mask = b["mask"].to(device)
@@ -173,6 +173,12 @@ def main():
     elif getattr(cfg, "arch", "fullmap") == "vit":
         from model_vit import ViTDepth
         model = ViTDepth(cfg).to(device)
+    elif getattr(cfg, "arch", "fullmap") in ("pvit", "presnet"):
+        from model_baseline import PViT, PResNet
+        model = (PViT if cfg.arch == "pvit" else PResNet)(cfg).to(device)
+    elif getattr(cfg, "arch", "fullmap") in ("batvis", "echodiff"):
+        from model_baseline import BatVis, EchoDiff
+        model = (BatVis if cfg.arch == "batvis" else EchoDiff)(cfg).to(device)
     elif getattr(cfg, "arch", "fullmap") == "rayconv":
         from model_rayconv import RayConvNet
         model = RayConvNet(cfg).to(device)
@@ -199,7 +205,7 @@ def main():
     else:
         model = FullMapNet(cfg).to(device)
     COARSE_ARCH = getattr(cfg, "arch", "fullmap") in ("unet_coarse", "unet_sh", "unet_raycoarse", "unet_coarse_res", "raydpt", "echo_ray")
-    WAVE_ARCH = getattr(cfg, "arch", "fullmap") in ("wave", "echo_unet", "echo_ray", "echo_bin")
+    WAVE_ARCH = getattr(cfg, "arch", "fullmap") in ("wave", "echo_unet", "echo_ray", "echo_bin", "echodiff")
     if cfg.init_decoder:
         warm_start(model, cfg.init_decoder, cfg.freeze_decoder, device)
     print(f"[model] params={sum(p.numel() for p in model.parameters())/1e6:.2f}M", flush=True)

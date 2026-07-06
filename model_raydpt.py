@@ -190,6 +190,11 @@ class RayDPT(nn.Module):
             self.q16 = nn.Parameter(torch.randn(16 * 32, dim) * 0.02)
             self.q32 = nn.Parameter(torch.randn(32 * 64, dim) * 0.02)
             self.q64 = nn.Parameter(torch.randn(64 * 128, dim) * 0.02)
+        # Task2 ablation: ray<->audio via a single GLOBAL mean-pooled audio code (no per-ray
+        # cross-attn). ray bank features condition on that code (concat + MLP), then CSA.
+        self.cross_mode = getattr(cfg, "cross_mode", "cross")
+        if self.cross_mode == "global":
+            self.gcond = nn.Sequential(nn.Linear(dim * 2, dim), nn.GELU(), nn.Linear(dim, dim))
         # E22/E27: coarse global geo self-attn; E29: gated DPT skips
         self.coarse_sa = getattr(cfg, "raydpt_coarse_sa", False)
         if self.coarse_sa:
@@ -221,6 +226,12 @@ class RayDPT(nn.Module):
         for blk in blocks:
             q = blk(q, kv)
         return q.transpose(1, 2).reshape(B, -1, h, w)
+
+    def _global(self, rp, rf, g, B, h, w):                # Task2: condition ray bank on ONE global audio code
+        q = rp(rf)[None].expand(B, -1, -1)                # (B,N,dim) ray features (no audio retrieval)
+        gg = g[:, None, :].expand(-1, q.size(1), -1)      # broadcast global code
+        x = self.gcond(torch.cat([q, gg], -1))            # concat + MLP conditioning
+        return x.transpose(1, 2).reshape(B, -1, h, w)
 
     def _skip(self, base, s, gate):                       # E29: gated (vs raw-add) DPT skip
         if gate is None:
@@ -263,6 +274,21 @@ class RayDPT(nn.Module):
             d_c = torch.sigmoid(self.coarse_head(m16))
             x = self.lsa32(self.refine32(self.up(m16) + F32))  # e3 enters via kv32 (no raw skip)
             x = self.lsa64(self.refine64(self.up(x) + F64))    # e2 enters via kv2  (no raw skip)
+        elif self.cross_mode == "global":
+            # single global audio code (mean-pool of coarse tokens) — NO per-ray retrieval.
+            g = kv4.mean(dim=1)                                # (B,dim) global acoustic code
+            F16 = self._global(self.ray_proj, self.rf16, g, B, 16, 32)
+            F32 = self._global(self.ray_proj, self.rf32, g, B, 32, 64)
+            F64 = self._global(self.ray_proj, self.rf64, g, B, 64, 128)
+            g4 = self.g4 if self.gated_skip else None
+            g3 = self.g3 if self.gated_skip else None
+            g2 = self.g2 if self.gated_skip else None
+            m16 = self._skip(F16, self.se4(e4), g4)
+            if self.coarse_sa:
+                m16 = self.csa(m16)
+            d_c = torch.sigmoid(self.coarse_head(m16))
+            x = self.lsa32(self.refine32(self._skip(self.up(m16) + F32, self.se3(e3), g3)))
+            x = self.lsa64(self.refine64(self._skip(self.up(x) + F64, self.se2(e2), g2)))
         else:
             kv3 = self.kv_e3(e3.flatten(2).transpose(1, 2))    # (B,2048,dim)
             F16 = self._cross(self.ray_proj, self.rf16, self.cr16, kv4, B, 16, 32)

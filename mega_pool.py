@@ -190,6 +190,45 @@ for _nm, _lr, _ex, _bs in _Q:
 
 
 
+
+
+
+
+
+# --- Our RayDPT champion at NATIVE-BASELINE 2ch spectrogram input (isolates ARCHITECTURE
+# vs input richness: all-2ch fair comparison against B2_* baselines). Champion loss recipe. ---
+_CH2 = "--ngf 64 --unet-downs 8 --in-ch 2 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True --w-rel 0.05 --w-normal 0.1"
+for s in (0, 1, 2):
+    JOBS.append(fm(f"F2_raydpt_s{s}", s, "raydpt", "4e-4", _CH2, 24, IC2))
+
+# --- Comparison-method baselines with their NATIVE 2ch spectrogram input (fair): pretrained
+# UNet/ViT/BatVision take a 2ch log-mag binaural spectrogram (EchoDiffusion already uses
+# 2ch spec + raw wave). Supersedes the 5ch runs for the paper comparison table. ---
+for s in (0, 1, 2):
+    JOBS.append(fm(f"B2_presnet_s{s}", s, "presnet", "3e-4", "--in-ch 2 --flip-aug True", 24, IC2))
+    JOBS.append(fm(f"B2_pvit_s{s}",    s, "pvit",    "3e-4", "--in-ch 2 --flip-aug True", 16, IC2))
+    JOBS.append(fm(f"B2_batvis_s{s}",  s, "batvis",  "2e-3", "--in-ch 2 --flip-aug True", 32, IC2))
+
+# --- Comparison methods (faithful ports): BatVision (Christensen, pix2pix UNet) + EchoDiffusion
+# (wjzhang-ai: CIDE/wav2vec2 + ASPP-ASFF + diffusion UNet, 2ch spec + raw wave). 3-seed each. ---
+for s in (0, 1, 2):
+    JOBS.append(fm(f"B_batvis_s{s}",   s, "batvis",   "2e-3", "--in-ch 5 --flip-aug True", 32, IC5))
+    JOBS.append(fm(f"B_echodiff_s{s}", s, "echodiff", "2e-3", "--in-ch 2 --audio-src wave", 16, IC_WAVE))
+
+# --- Published-baseline pretrained backbones (channel-adapt: 1x1 conv in_ch->3ch pseudo-RGB
+# + pretrained ViT-B/16 / ResNet-50 + decoder). "change only the channels" deploy baselines. ---
+for s in (0, 1, 2):
+    JOBS.append(fm(f"B_pvit_s{s}",    s, "pvit",    "3e-4", "--in-ch 5 --flip-aug True", 16, IC5))
+    JOBS.append(fm(f"B_presnet_s{s}", s, "presnet", "3e-4", "--in-ch 5 --flip-aug True", 24, IC5))
+
+# --- AAAI final (F_): Task1 champion multi-seed + Task2 raymlp+CSA (global audio code,
+# no per-ray cross-attn) decisive ablation. Champion = Q8_csa_wrel05_normal10 config. ---
+_CH = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True --w-rel 0.05 --w-normal 0.1"
+JOBS.append(fm("F_champion_s1", 1, "raydpt", "4e-4", _CH, 24, IC5))                       # Task1
+JOBS.append(fm("F_champion_s2", 2, "raydpt", "4e-4", _CH, 24, IC5))
+for s in (0, 1, 2):
+    JOBS.append(fm(f"F_raymlpcsa_s{s}", s, "raydpt", "4e-4", _CH + " --cross-mode global", 24, IC5))  # Task2
+
 # --- Q17: ray/spherical GROUNDING that could actually help (grounds the AUDIO physics,
 # not the redundant output grid). (a) RayBank ear-geometry mic-PE + SH-PE on the ray
 # query (immediate). (b) NEW range-azimuth steered acoustic image input (ToF+azimuth
@@ -427,7 +466,9 @@ for _nm,_ar,_lr,_ex,_bs,_ca in _Q2:
 
 # explicit front-of-queue ordering: just-added RayDPT runs FIRST, then the other
 # richer-input / research-focus jobs, then everything else (stable within a rank).
-FRONT = [  # -1) fair control + Q7 3-seed confirm + pending ablations (HIGHEST)
+FRONT = [  # -2) AAAI final runs + published baselines (highest)
+         "F_champion", "F_raymlpcsa", "F2_raydpt", "B2_presnet", "B2_pvit", "B2_batvis", "B_pvit", "B_presnet", "B_batvis", "B_echodiff",
+         # -1) fair control + Q7 3-seed confirm + pending ablations (HIGHEST)
          "Q12_unet", "Q7_csa_wrel03", "Q11_zc", "Q9_ground", "Q17_csa", "Q17_unet", "Q16_unet", "Q15_csa", "Q15_unet", "Q10_vit", "Q14_gamma", "Q14_berhu", "Q13_loss", "Q8_",
          # 0) no-ray ablation
          "C_raydpt_noray",
