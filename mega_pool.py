@@ -650,9 +650,23 @@ def _rank(n):
             return i
     return len(FRONT)
 JOBS = sorted(JOBS, key=lambda j: _rank(j["name"]))
+# --- Planar conversion: all exploratory (non-finalv2) jobs run in PLANAR depth (radial reservation
+# changed to planar). Planar caches already built (ic5/ic2/ic2_wave _planar). finalv2 unchanged.
+# Disable with PLANAR_EXPLORATORY=0. ---
+_PLANAR_CACHE = {f"{CK}/ic5_256x512": f"{CK}/ic5_256x512_planar",
+                 f"{CK}/ic2_256x512": f"{CK}/ic2_256x512_planar",
+                 f"{CK}/ic5_256x512_wave": f"{CK}/ic2_256x512_planar_wave"}
+if os.environ.get("PLANAR_EXPLORATORY", "1") == "1":
+    for j in JOBS:
+        if j["name"].startswith("finalv2") or "--depth-type" in j["cmd"]:
+            continue
+        j["cmd"] = j["cmd"].replace("python train_fullmap.py ",
+                                    "python train_fullmap.py --depth-type planar ", 1)
+        if j.get("cache") in _PLANAR_CACHE:
+            j["cache"] = _PLANAR_CACHE[j["cache"]]
 _only = os.environ.get("MEGA_ONLY")
 if _only:
-    JOBS = [j for j in JOBS if j["name"].startswith(_only)]   # temp priority isolation      # stable sort preserves order within a rank
+    JOBS = [j for j in JOBS if j["name"].startswith(_only)]   # temp priority isolation
 
 # explicit drops: pulled from the queue (e.g. underperforming, free the slot for RayDPT)
 DROP = {"Bnode2_foa_unet8_s0","Bnode2_foa_unet8_s1","Bnode2_foa_unet8_s2","Bnode2_foa_cross_s0","Bnode2_foa_cross_s1","Bnode2_foa_cross_s2",

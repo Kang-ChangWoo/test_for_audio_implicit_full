@@ -9,3 +9,7 @@
   cache[train ic5] 22400/28800
   cache[train ic5] 25600/28800
   cache[train ic5] 28800/28800
+[cache] train ic5: 28800 -> /root/implicit_full_cache/ic5_256x512_planar
+[ic5/val] exists, skip
+[ic5/test] exists, skip
+[ic5] ALL DONE

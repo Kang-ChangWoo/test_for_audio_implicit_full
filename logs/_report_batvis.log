@@ -1,0 +1,10 @@
+[batvis] 3/3 완주 12:43
+=== BatVision: planar(finalv2, n=3) vs radial(n=3) ===
+metric                planar          radial   판정
+MAE_plain     0.6584±0.001   0.7597±0.006   스케일영향(0.86x)-직접비교X
+MAE           0.7765±0.003   0.9049±0.006   스케일영향(0.86x)-직접비교X
+RMSE          1.2228±0.003   1.4433±0.012   스케일영향(0.86x)-직접비교X
+AbsRel        0.5424±0.005   0.5374±0.005   radial 우위  (scale-invariant=진짜비교)
+delta1        0.4485±0.005   0.4463±0.006   planar 우위 ✅  (scale-invariant=진짜비교)
+
+planar MAE_plain 0.6584 / 0.86 = 0.7655 (radial-스케일 환산) vs radial 0.7597

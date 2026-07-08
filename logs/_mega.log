@@ -677,3 +677,17 @@
 [mega] launch CF_capmatch_s0 gpu6 (52 left)
 [mega] launch CF_shared_sf_s0 gpu7 (52 left)
 [mega] 24 jobs total
+[mega] launch finalv2_batvision_2ch_s0 gpu0 (24 left)
+[mega] launch finalv2_batvision_2ch_s1 gpu1 (24 left)
+[mega] launch finalv2_batvision_2ch_s2 gpu2 (24 left)
+[mega] launch finalv2_preunet_2ch_s0 gpu3 (24 left)
+[mega] launch finalv2_preunet_2ch_s1 gpu4 (24 left)
+[mega] launch finalv2_preunet_2ch_s2 gpu5 (24 left)
+[mega] launch finalv2_previt_2ch_s0 gpu6 (24 left)
+[mega] launch finalv2_previt_2ch_s1 gpu7 (24 left)
+[mega] finished finalv2_batvision_2ch_s2 gpu2
+[mega] launch finalv2_previt_2ch_s2 gpu2 (23 left)
+[mega] finished finalv2_batvision_2ch_s0 gpu0
+[mega] finished finalv2_batvision_2ch_s1 gpu1
+[mega] launch finalv2_echodiff_2ch_s0 gpu0 (21 left)
+[mega] launch finalv2_echodiff_2ch_s1 gpu1 (21 left)
