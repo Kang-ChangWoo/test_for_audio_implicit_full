@@ -1,0 +1,11 @@
+[wave/train] building (16w)...
+[train] 28800 samples / 72 scenes (raw 256x512, in_ch=2)
+  cache[train ic5] 3200/28800
+  cache[train ic5] 6400/28800
+  cache[train ic5] 9600/28800
+  cache[train ic5] 12800/28800
+  cache[train ic5] 16000/28800
+  cache[train ic5] 19200/28800
+  cache[train ic5] 22400/28800
+  cache[train ic5] 25600/28800
+  cache[train ic5] 28800/28800

@@ -29,6 +29,7 @@ IC5 = f"{CK}/ic5_256x512"; IC5W = f"{CK}/ic5_256x512_w20"; FOA = f"{CK}/ic4_256x
 IC_GCC = f"{CK}/ic6_256x512_gcc"; IC_WAVE = f"{CK}/ic5_256x512_wave"
 IC5W30 = f"{CK}/ic5_256x512_w30"; IC5W40 = f"{CK}/ic5_256x512_w40"
 IC2 = f"{CK}/ic2_256x512"; IC3 = f"{CK}/ic3_256x512"
+IC2P = f"{CK}/ic2_256x512_planar"; IC5P = f"{CK}/ic5_256x512_planar"; IC_WAVEP = f"{CK}/ic2_256x512_planar_wave"
 IC_RAZ = f"{CK}/ic13_256x512_raz"
 JOBS = []
 for s in (0, 1, 2):
@@ -226,14 +227,14 @@ for _nm,_ex in _MC:
 # documented no-ray = learned-positional). 8 model families x 3 seeds, requested order. HIGHEST. ---
 _RB = "--flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True --w-rel 0.05"
 for _s in (0, 1, 2):
-    JOBS.append(fm(f"finalv2_batvision_2ch_s{_s}", _s, "batvis",   "2e-3", "--in-ch 2 --flip-aug True", 32, IC2))
-    JOBS.append(fm(f"finalv2_preunet_2ch_s{_s}",   _s, "presnet",  "3e-4", "--in-ch 2 --flip-aug True", 24, IC2))
-    JOBS.append(fm(f"finalv2_previt_2ch_s{_s}",    _s, "pvit",     "3e-4", "--in-ch 2 --flip-aug True", 16, IC2))
-    JOBS.append(fm(f"finalv2_echodiff_2ch_s{_s}",  _s, "echodiff", "2e-3", "--in-ch 2 --audio-src wave", 16, IC_WAVE))
-    JOBS.append(fm(f"finalv2_raydpt_2ch_ray_s{_s}",   _s, "raydpt", "4e-4", "--in-ch 2 " + _RB, 24, IC2))
-    JOBS.append(fm(f"finalv2_raydpt_5ch_ray_s{_s}",   _s, "raydpt", "4e-4", "--in-ch 5 " + _RB, 24, IC5))
-    JOBS.append(fm(f"finalv2_raydpt_2ch_noray_s{_s}", _s, "raydpt", "4e-4", "--in-ch 2 " + _RB + " --raydpt-noray True", 24, IC2))
-    JOBS.append(fm(f"finalv2_raydpt_5ch_noray_s{_s}", _s, "raydpt", "4e-4", "--in-ch 5 " + _RB + " --raydpt-noray True", 24, IC5))
+    JOBS.append(fm(f"finalv2_batvision_2ch_s{_s}", _s, "batvis",   "2e-3", "--in-ch 2 --flip-aug True --depth-type planar", 32, IC2P))
+    JOBS.append(fm(f"finalv2_preunet_2ch_s{_s}",   _s, "presnet",  "3e-4", "--in-ch 2 --flip-aug True --depth-type planar", 24, IC2P))
+    JOBS.append(fm(f"finalv2_previt_2ch_s{_s}",    _s, "pvit",     "3e-4", "--in-ch 2 --flip-aug True --depth-type planar", 16, IC2P))
+    JOBS.append(fm(f"finalv2_echodiff_2ch_s{_s}",  _s, "echodiff", "2e-3", "--in-ch 2 --audio-src wave --depth-type planar", 16, IC_WAVEP))
+    JOBS.append(fm(f"finalv2_raydpt_2ch_ray_s{_s}",   _s, "raydpt", "4e-4", "--in-ch 2 --depth-type planar " + _RB, 24, IC2P))
+    JOBS.append(fm(f"finalv2_raydpt_5ch_ray_s{_s}",   _s, "raydpt", "4e-4", "--in-ch 5 --depth-type planar " + _RB, 24, IC5P))
+    JOBS.append(fm(f"finalv2_raydpt_2ch_noray_s{_s}", _s, "raydpt", "4e-4", "--in-ch 2 --depth-type planar " + _RB + " --raydpt-noray True", 24, IC2P))
+    JOBS.append(fm(f"finalv2_raydpt_5ch_noray_s{_s}", _s, "raydpt", "4e-4", "--in-ch 5 --depth-type planar " + _RB + " --raydpt-noray True", 24, IC5P))
 # --- CF (Cue-Factorization, PRIORITY 1): cue-specific input stems (Group A) + configurable
 # ray K/V routing at coarse F16 (Group B). Parent baseline = Q8_csa_wrel05_normal10 (SAME recipe,
 # no cue). Minimally invasive: RayDPT intact; only audio-repr + F16 K/V source change. n=1 first. ---
@@ -648,7 +649,10 @@ def _rank(n):
         if p in n:
             return i
     return len(FRONT)
-JOBS = sorted(JOBS, key=lambda j: _rank(j["name"]))      # stable sort preserves order within a rank
+JOBS = sorted(JOBS, key=lambda j: _rank(j["name"]))
+_only = os.environ.get("MEGA_ONLY")
+if _only:
+    JOBS = [j for j in JOBS if j["name"].startswith(_only)]   # temp priority isolation      # stable sort preserves order within a rank
 
 # explicit drops: pulled from the queue (e.g. underperforming, free the slot for RayDPT)
 DROP = {"Bnode2_foa_unet8_s0","Bnode2_foa_unet8_s1","Bnode2_foa_unet8_s2","Bnode2_foa_cross_s0","Bnode2_foa_cross_s1","Bnode2_foa_cross_s2",

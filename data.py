@@ -168,7 +168,8 @@ class RawDataset(Dataset):
         return F.interpolate(feat.unsqueeze(0), (self.H, self.W), mode="nearest").squeeze(0).float()
 
     def _depth(self, s, idx):
-        d = np.nan_to_num(np.load(os.path.join(self.root, s, "erp_depth_radial",
+        sub = "erp_depth" if getattr(self.cfg, "depth_type", "radial") == "planar" else "erp_depth_radial"
+        d = np.nan_to_num(np.load(os.path.join(self.root, s, sub,
                                                f"erp_depth_{idx}.npy")).astype(np.float32))
         d[d < 0] = 0.0; d[d > self.md] = self.md
         t = F.interpolate(torch.from_numpy(d)[None, None], (self.H, self.W),
@@ -234,6 +235,8 @@ def collate(b):
 def _cache_dir(cfg):
     base = getattr(cfg, "cache_dir", "") or "/root/implicit_full_cache"
     tag = "" if getattr(cfg, "log_spec", True) else "_nolog"
+    if getattr(cfg, "depth_type", "radial") == "planar":
+        tag += "_planar"
     w = getattr(cfg, "audio_window_m", 10.0) or 10.0
     if abs(w - cfg.max_depth) > 1e-6:
         tag += f"_w{int(w)}"
@@ -268,7 +271,8 @@ def cache_exists(cfg, split):
 def build_cache(cfg, split):
     cdir = _cache_dir(cfg); os.makedirs(cdir, exist_ok=True)
     paths, kp = _cache_paths(cdir, split, cfg)
-    ds = RawDataset(cfg, split); N = len(ds); H, W, C = cfg.img_h, cfg.img_w, getattr(cfg, "in_ch", 2)
+    ds = RawDataset(cfg, split); N = len(ds); H, W = cfg.img_h, cfg.img_w
+    C = int(ds[0]["spec"].shape[0])   # actual spec channels (wave path yields 5ch even if in_ch=2)
     dt = {"spec": np.float16, "depth": np.float16, "mask": np.uint8}
     sh = {"spec": (N, C, H, W), "depth": (N, 1, H, W), "mask": (N, 1, H, W)}
     if getattr(cfg, "audio_src", "binaural") == "wave":               # raw waveform branch input

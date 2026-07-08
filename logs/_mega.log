@@ -642,3 +642,38 @@
 [mega] launch finalv2_preunet_2ch_s2 gpu5 (52 left)
 [mega] launch finalv2_previt_2ch_s0 gpu6 (52 left)
 [mega] launch finalv2_previt_2ch_s1 gpu7 (52 left)
+[mega] finished finalv2_batvision_2ch_s0 gpu0
+[mega] finished finalv2_batvision_2ch_s1 gpu1
+[mega] finished finalv2_batvision_2ch_s2 gpu2
+[mega] finished finalv2_preunet_2ch_s0 gpu3
+[mega] finished finalv2_preunet_2ch_s1 gpu4
+[mega] finished finalv2_preunet_2ch_s2 gpu5
+[mega] finished finalv2_previt_2ch_s0 gpu6
+[mega] finished finalv2_previt_2ch_s1 gpu7
+[mega] launch finalv2_batvision_2ch_s0 gpu0 (52 left)
+[mega] launch finalv2_batvision_2ch_s1 gpu1 (52 left)
+[mega] launch finalv2_batvision_2ch_s2 gpu2 (52 left)
+[mega] launch finalv2_preunet_2ch_s0 gpu3 (52 left)
+[mega] launch finalv2_preunet_2ch_s1 gpu4 (52 left)
+[mega] launch finalv2_preunet_2ch_s2 gpu5 (52 left)
+[mega] launch finalv2_previt_2ch_s0 gpu6 (52 left)
+[mega] launch finalv2_previt_2ch_s1 gpu7 (52 left)
+[mega] 361 jobs total
+[mega] launch finalv2_batvision_2ch_s0 gpu0 (52 left)
+[mega] launch finalv2_batvision_2ch_s1 gpu1 (52 left)
+[mega] launch finalv2_batvision_2ch_s2 gpu2 (52 left)
+[mega] launch finalv2_preunet_2ch_s0 gpu3 (52 left)
+[mega] launch finalv2_preunet_2ch_s1 gpu4 (52 left)
+[mega] launch finalv2_preunet_2ch_s2 gpu5 (52 left)
+[mega] launch finalv2_previt_2ch_s0 gpu6 (52 left)
+[mega] launch finalv2_previt_2ch_s1 gpu7 (52 left)
+[mega] 361 jobs total
+[mega] launch CF_stems_s0 gpu0 (52 left)
+[mega] launch CF_route_ff_s0 gpu1 (52 left)
+[mega] launch CF_route_sf_s0 gpu2 (52 left)
+[mega] launch CF_route_mf_s0 gpu3 (52 left)
+[mega] launch CF_route_sm_s0 gpu4 (52 left)
+[mega] launch CF_route_ms_s0 gpu5 (52 left)
+[mega] launch CF_capmatch_s0 gpu6 (52 left)
+[mega] launch CF_shared_sf_s0 gpu7 (52 left)
+[mega] 24 jobs total
