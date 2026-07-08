@@ -40,6 +40,9 @@ def load(run_dir, device):
     elif getattr(cfg, "arch", "fullmap") == "vit":
         from model_vit import ViTDepth
         m = ViTDepth(cfg).to(device).eval()
+    elif getattr(cfg, "arch", "fullmap") == "rayvit":
+        from model_rayvit import RayViT
+        m = RayViT(cfg).to(device).eval()
     elif getattr(cfg, "arch", "fullmap") in ("pvit", "presnet"):
         from model_baseline import PViT, PResNet
         m = (PViT if cfg.arch == "pvit" else PResNet)(cfg).to(device).eval()

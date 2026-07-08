@@ -139,6 +139,21 @@ DEFAULTS = dict(
     raydpt_coarse_sa=False,   # E22/E27: global ray<->ray self-attn at 16x32 + cos-ang-dist bias
     cross_mode="cross",       # ray<->audio: cross (per-ray retrieval) | global (single mean-pooled audio code, no cross-attn)
     coarse_sa_geo=True,
+    coarse_sa_blocks=1,       # E51: # of post-fusion geo self-attn blocks on m16 (2=champion)
+    berhu_low=False,          # E117: berHu on low-pass loss term only (RMSE lever, no main-term slide)
+    # --- Cue-factorized acoustic representation + cue-specific ray K/V routing (minimally
+    #     invasive: RayDPT intact when off). ch0,1=mag(logL,logR); ch2,3,4=spatial(ILD,cos/sinIPD). ---
+    cue_route=False,          # enable lightweight cue-specific coarse branches + configurable K/V at F16
+    kv_key_source="fused",    # ray-attn KEY source: fused | spatial | magnitude
+    kv_value_source="fused",  # ray-attn VALUE source: fused | spatial | magnitude
+    cue_stems=False,          # Group A: two-stem input adapter (mag/spatial) before the MAIN encoder
+    cue_cmag=32, cue_cspatial=32,   # stem widths (ratio experiments: 1:1 / 2:1 / 1:2)
+    cue_dup_input=False,      # F2 control: both cue branches see all 5ch (capacity/ensemble test)
+    cue_random_split=False,   # F1 control: non-semantic channel split
+    cue_adapter=False,        # F4/A3 control: cue reps via adapters on shared e4 (no separate cue encoders)
+    cue_fused_mode="kv4",     # C fusion for Z_fused: kv4 | concat | add | gate
+    cue_dual=False,           # D1: parallel spatial+magnitude cross-attention then combine
+    rayvit_mode="single",     # RayViT encoder: single | multiscale | hybrid
     zero_chan=-1,             # 5ch input ablation: zero out channel idx (0=logL,1=logR,2=ILD,3=cosIPD,4=sinIPD; -1=none)       # ray-grounding ablation: cos-ang-dist bias in coarse-sa (False=plain global SA)
     raydpt_gated_skip=False,  # E29: gated (vs raw-add) DPT encoder skips
     # --- EchoBin: distance-binned binaural directional weak guide (model_echo.EchoBin) ---

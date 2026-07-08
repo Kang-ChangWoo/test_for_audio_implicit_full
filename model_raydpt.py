@@ -24,7 +24,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from model import CrossBlock, SelfBlock, conv_bn, Refine
+from model import CrossBlock, SelfBlock, conv_bn, Refine, FFN
 from model_unet_coarse import UNet8Encoder
 from ray_features import RayBank
 
@@ -140,6 +140,37 @@ class CoarseGeoSelfAttn(nn.Module):
         return (t + o).transpose(1, 2).reshape(B, C, H, W)
 
 
+# ---- Cue-factorized branches + separate-K/V cross-attention ------------------
+class CueEncoder(nn.Module):
+    """Lightweight cue-specific encoder: 256x512 -> 16x32 (=512 tokens) x dim.
+    4 stride-2 conv blocks. Cheap branch producing coarse cue tokens aligned to the
+    ray coarse scale (so K/V routing is not confounded by token resolution)."""
+    def __init__(self, in_ch, dim):
+        super().__init__()
+        chs = [in_ch, 32, 64, 128, dim]
+        self.net = nn.Sequential(*[nn.Sequential(
+            nn.Conv2d(chs[i], chs[i + 1], 4, 2, 1), nn.BatchNorm2d(chs[i + 1]), nn.GELU())
+            for i in range(4)])
+
+    def forward(self, x):
+        z = self.net(x)                                  # (B,dim,16,32)
+        return z.flatten(2).transpose(1, 2)              # (B,512,dim)
+
+
+class CueCrossBlock(nn.Module):
+    """Cross-attention with SEPARATE key/value sources (per-branch LayerNorm on K,V)."""
+    def __init__(self, dim, heads):
+        super().__init__()
+        self.nq = nn.LayerNorm(dim); self.nk = nn.LayerNorm(dim); self.nv = nn.LayerNorm(dim)
+        self.attn = nn.MultiheadAttention(dim, heads, batch_first=True)
+        self.ffn = FFN(dim)
+
+    def forward(self, q, k, v):
+        a, _ = self.attn(self.nq(q), self.nk(k), self.nv(v))
+        q = q + a
+        return q + self.ffn(self.nq(q))
+
+
 # ---- RayDPT ------------------------------------------------------------------
 class RayDPT(nn.Module):
     def __init__(self, cfg):
@@ -148,6 +179,39 @@ class RayDPT(nn.Module):
         ngf = getattr(cfg, "ngf", 64); dim = cfg.dim; heads = cfg.n_heads
         nL = getattr(cfg, "ray_cross_layers", 2)
         self.enc = UNet8Encoder(getattr(cfg, "in_ch", 2), ngf)
+        # --- Cue factorization (Group A input stems + Group B K/V routing); RayDPT intact when off ---
+        self.cue_stems = getattr(cfg, "cue_stems", False)
+        if self.cue_stems:                                # two-stem input -> MAIN encoder
+            cm, cs = getattr(cfg, "cue_cmag", 32), getattr(cfg, "cue_cspatial", 32)
+            mk_stem = lambda ic, oc: nn.Sequential(nn.Conv2d(ic, oc, 3, 1, 1), nn.GELU(),
+                                                   nn.Conv2d(oc, oc, 3, 1, 1), nn.GELU())
+            self.stem_mag = mk_stem(2, cm); self.stem_spatial = mk_stem(3, cs)
+            self.enc = UNet8Encoder(cm + cs, ngf)         # encoder consumes fused stem output
+        self.cue_route = getattr(cfg, "cue_route", False)
+        if self.cue_route:                                # cue coarse branches + routed F16 (Group B)
+            self.cue_dup = getattr(cfg, "cue_dup_input", False)       # F2 control: both branches see all ch
+            self.cue_rand = getattr(cfg, "cue_random_split", False)   # F1 control: non-semantic split
+            self.cue_adapter = getattr(cfg, "cue_adapter", False)     # F4/A3: adapters on shared e4 (no cue enc)
+            self.cue_fused_mode = getattr(cfg, "cue_fused_mode", "kv4")   # C: kv4|concat|add|gate
+            self.cue_dual = getattr(cfg, "cue_dual", False)           # D1: parallel spatial+mag attention
+            self.mag_idx = [0, 3] if self.cue_rand else [0, 1]
+            self.spa_idx = [1, 2, 4] if self.cue_rand else [2, 3, 4]
+            mch = 5 if self.cue_dup else len(self.mag_idx)
+            sch = 5 if self.cue_dup else len(self.spa_idx)
+            if self.cue_adapter:
+                self.ad_mag = nn.Linear(dim, dim); self.ad_spatial = nn.Linear(dim, dim)
+            else:
+                self.cue_mag_enc = CueEncoder(mch, dim); self.cue_spatial_enc = CueEncoder(sch, dim)
+            if self.cue_fused_mode == "concat":
+                self.fuse_proj = nn.Linear(dim * 2, dim)
+            elif self.cue_fused_mode == "gate":
+                self.fuse_gate = nn.Parameter(torch.zeros(1))
+            self.cr16_route = nn.ModuleList([CueCrossBlock(dim, heads) for _ in range(nL)])
+            if self.cue_dual:
+                self.cr16_mag = nn.ModuleList([CueCrossBlock(dim, heads) for _ in range(nL)])
+                self.dual_proj = nn.Linear(dim * 2, dim)
+            self.key_src = getattr(cfg, "kv_key_source", "fused")
+            self.val_src = getattr(cfg, "kv_value_source", "fused")
 
         def bank(h, w):
             pc = copy.copy(cfg); pc.img_h, pc.img_w = h, w
@@ -198,7 +262,8 @@ class RayDPT(nn.Module):
         # E22/E27: coarse global geo self-attn; E29: gated DPT skips
         self.coarse_sa = getattr(cfg, "raydpt_coarse_sa", False)
         if self.coarse_sa:
-            self.csa = CoarseGeoSelfAttn(dim, heads, 16, 32, geo=getattr(cfg, "coarse_sa_geo", True))
+            _nb = getattr(cfg, "coarse_sa_blocks", 1)
+            self.csa = nn.ModuleList([CoarseGeoSelfAttn(dim, heads, 16, 32, geo=getattr(cfg, "coarse_sa_geo", True)) for _ in range(_nb)])
         self.gated_skip = getattr(cfg, "raydpt_gated_skip", False)
         if self.gated_skip:
             self.g4 = nn.Conv2d(dim * 2, dim, 1)
@@ -238,10 +303,36 @@ class RayDPT(nn.Module):
             return base + s
         return base + torch.sigmoid(gate(torch.cat([base, s], 1))) * s
 
+    def _csa(self, m):                                    # E51: stacked post-fusion geo self-attn
+        for blk in self.csa:
+            m = blk(m)
+        return m
+
     def forward(self, spec, coarse_feat=None, sh_basis=None):
         B = spec.size(0)
-        e1 = self.enc.e1(spec); e2 = self.enc.e2(e1); e3 = self.enc.e3(e2); e4 = self.enc.e4(e3)
+        enc_in = spec
+        if self.cue_stems:                                # Group A: two-stem input fusion
+            enc_in = torch.cat([self.stem_mag(spec[:, :2]), self.stem_spatial(spec[:, 2:5])], 1)
+        e1 = self.enc.e1(enc_in); e2 = self.enc.e2(e1); e3 = self.enc.e3(e2); e4 = self.enc.e4(e3)
         kv4 = self.kv_e4(e4.flatten(2).transpose(1, 2))        # (B,512,dim)
+        if self.cue_route:                                # Group B: cue-specific coarse K/V at F16
+            if self.cue_adapter:                          # F4: adapters on shared e4 (no cue encoders)
+                zm, zs = self.ad_mag(kv4), self.ad_spatial(kv4)
+            else:
+                mx = spec if self.cue_dup else spec[:, self.mag_idx]
+                sx = spec if self.cue_dup else spec[:, self.spa_idx]
+                zm, zs = self.cue_mag_enc(mx), self.cue_spatial_enc(sx)
+            if self.cue_fused_mode == "concat":
+                zf = self.fuse_proj(torch.cat([zm, zs], -1))
+            elif self.cue_fused_mode == "add":
+                zf = zm + zs
+            elif self.cue_fused_mode == "gate":
+                g = torch.sigmoid(self.fuse_gate); zf = g * zm + (1 - g) * zs
+            else:
+                zf = kv4
+            feat = {"fused": zf, "spatial": zs, "magnitude": zm}
+            self._cue_zm, self._cue_zs = zm, zs
+            self._cue_K = feat[self.key_src]; self._cue_V = feat[self.val_src]
         if self.lite:
             # 2-scale lite: ONE ray cross-attn at 32x64 (Q32 <- e4), e3/e2 projection
             # skips + local spherical attn. Isolates the DPT-fusion / ray-grid gain.
@@ -285,13 +376,26 @@ class RayDPT(nn.Module):
             g2 = self.g2 if self.gated_skip else None
             m16 = self._skip(F16, self.se4(e4), g4)
             if self.coarse_sa:
-                m16 = self.csa(m16)
+                m16 = self._csa(m16)
             d_c = torch.sigmoid(self.coarse_head(m16))
             x = self.lsa32(self.refine32(self._skip(self.up(m16) + F32, self.se3(e3), g3)))
             x = self.lsa64(self.refine64(self._skip(self.up(x) + F64, self.se2(e2), g2)))
         else:
             kv3 = self.kv_e3(e3.flatten(2).transpose(1, 2))    # (B,2048,dim)
-            F16 = self._cross(self.ray_proj, self.rf16, self.cr16, kv4, B, 16, 32)
+            if self.cue_route:                             # Group B: routed K/V at coarse F16
+                q0 = self.ray_proj(self.rf16)[None].expand(B, -1, -1)
+                if self.cue_dual:                          # D1: parallel spatial + magnitude attention
+                    qs, qm = q0, q0
+                    for blk in self.cr16_route: qs = blk(qs, self._cue_zs, self._cue_zs)
+                    for blk in self.cr16_mag: qm = blk(qm, self._cue_zm, self._cue_zm)
+                    q = self.dual_proj(torch.cat([qs, qm], -1))
+                else:
+                    q = q0
+                    for blk in self.cr16_route:
+                        q = blk(q, self._cue_K, self._cue_V)
+                F16 = q.transpose(1, 2).reshape(B, -1, 16, 32)
+            else:
+                F16 = self._cross(self.ray_proj, self.rf16, self.cr16, kv4, B, 16, 32)
             F32 = self._cross(self.ray_proj, self.rf32, self.cr32, kv3, B, 32, 64)
             F64 = self._cross(self.ray_proj, self.rf64, self.cr64, kv4, B, 64, 128)
             g4 = self.g4 if self.gated_skip else None
@@ -299,7 +403,7 @@ class RayDPT(nn.Module):
             g2 = self.g2 if self.gated_skip else None
             m16 = self._skip(F16, self.se4(e4), g4)            # 16x32
             if self.coarse_sa:
-                m16 = self.csa(m16)                            # E22/E27 global geo self-attn
+                m16 = self._csa(m16)                           # E22/E27/E51 geo self-attn
             d_c = torch.sigmoid(self.coarse_head(m16))         # (B,1,16,32) coarse layout
             x = self.lsa32(self.refine32(self._skip(self.up(m16) + F32, self.se3(e3), g3)))   # 32x64
             x = self.lsa64(self.refine64(self._skip(self.up(x) + F64, self.se2(e2), g2)))     # 64x128

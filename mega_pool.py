@@ -195,6 +195,152 @@ for _nm, _lr, _ex, _bs in _Q:
 
 
 
+
+
+
+
+
+# --- M (max-margin): maximise min(RMSE-margin, AbsRel-margin) over baselines. RMSE is the
+# bottleneck (ViT 1.424 strong), so push RMSE->1.40 via ALL inward levers (E51 2-3 block +
+# berHu-low + heavy normal/grad/scale) while holding AbsRel<0.51 (moderate w_rel). ---
+_M = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True --berhu-low True"
+_MC = [
+  ("M1",  "--coarse-sa-blocks 2 --w-rel 0.03 --w-normal 0.15 --w-grad 0.05 --w-scale 0.05"),
+  ("M2",  "--coarse-sa-blocks 2 --w-rel 0.04 --w-normal 0.2 --w-scale 0.1"),
+  ("M3",  "--coarse-sa-blocks 3 --w-rel 0.03 --w-normal 0.15 --w-grad 0.05"),
+  ("M4",  "--coarse-sa-blocks 2 --w-rel 0.03 --w-normal 0.2 --w-grad 0.05 --w-scale 0.1"),
+  ("M5",  "--coarse-sa-blocks 2 --w-rel 0.04 --w-normal 0.15 --w-scale 0.05 --w-depth-gamma 0.2"),
+  ("M6",  "--coarse-sa-blocks 2 --w-rel 0.04 --w-normal 0.2 --w-grad 0.05 --w-scale 0.05"),
+  ("M7",  "--coarse-sa-blocks 3 --w-rel 0.04 --w-normal 0.2 --w-grad 0.05 --w-scale 0.05"),
+  ("M8",  "--coarse-sa-blocks 2 --w-rel 0.03 --w-normal 0.25 --w-grad 0.05"),
+  ("M9",  "--coarse-sa-blocks 2 --w-rel 0.04 --w-normal 0.15 --w-grad 0.03 --w-scale 0.15"),
+  ("M10", "--coarse-sa-blocks 2 --w-rel 0.035 --w-normal 0.18 --w-grad 0.05 --w-scale 0.08 --w-ema 0.995"),
+  ("M11", "--coarse-sa-blocks 2 --w-rel 0.03 --w-normal 0.2 --w-scale 0.15 --w-depth-gamma 0.15"),
+  ("M12", "--coarse-sa-blocks 3 --w-rel 0.035 --w-normal 0.2 --w-grad 0.05 --w-scale 0.1"),
+]
+for _nm,_ex in _MC:
+    JOBS.append(fm(f"{_nm}_s0", 0, "raydpt", "4e-4", _M+" "+_ex, 24, IC5))
+
+# --- CF (Cue-Factorization, PRIORITY 1): cue-specific input stems (Group A) + configurable
+# ray K/V routing at coarse F16 (Group B). Parent baseline = Q8_csa_wrel05_normal10 (SAME recipe,
+# no cue). Minimally invasive: RayDPT intact; only audio-repr + F16 K/V source change. n=1 first. ---
+_CF = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True --w-rel 0.05 --w-normal 0.1"
+_CFC = [
+  ("CF_stems",    "--cue-stems True"),                                              # A1 two-stem input
+  ("CF_route_ff", "--cue-route True --kv-key-source fused --kv-value-source fused"),        # B0 control
+  ("CF_route_sf", "--cue-route True --kv-key-source spatial --kv-value-source fused"),      # B1
+  ("CF_route_mf", "--cue-route True --kv-key-source magnitude --kv-value-source fused"),    # B2 control vs B1
+  ("CF_route_sm", "--cue-route True --kv-key-source spatial --kv-value-source magnitude"),  # B3 role hypothesis
+  ("CF_route_ms", "--cue-route True --kv-key-source magnitude --kv-value-source spatial"),  # B4 reverse control
+]
+for _nm,_ex in _CFC:
+    JOBS.append(fm(f"{_nm}_s0", 0, "raydpt", "4e-4", _CF+" "+_ex, 24, IC5))
+
+# --- CF PRIORITY 2 (controls) + PRIORITY 3 (fusion/dual/ratio). Paired with the main
+# hypothesis routing (spatial-K/fused-V) so controls are interpretable. Promote-by-signal. ---
+_CF2 = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True --w-rel 0.05 --w-normal 0.1"
+_SF = "--cue-route True --kv-key-source spatial --kv-value-source fused"
+_CFP = [
+  # P2 controls
+  ("CF_capmatch", "--ngf 72"),                                          # F3 capacity-matched single-enc (no cue)
+  ("CF_shared_sf", _SF + " --cue-adapter True"),                        # F4/A3 shared-adapter
+  ("CF_dup_sf",    _SF + " --cue-dup-input True"),                      # F2 duplicate-input
+  ("CF_rand_sf",   _SF + " --cue-random-split True"),                  # F1 random split
+  # P3 fusion (C) / dual (D) / ratio
+  ("CF_fuse_add",  _SF + " --cue-fused-mode add"),
+  ("CF_fuse_gate", _SF + " --cue-fused-mode gate"),
+  ("CF_fuse_concat", _SF + " --cue-fused-mode concat"),
+  ("CF_dual",      "--cue-route True --cue-dual True"),                 # D1 parallel spatial+mag attn
+  ("CF_stems_r21", "--cue-stems True --cue-cmag 64 --cue-cspatial 32"), # mag-rich stem 2:1
+  ("CF_stems_r12", "--cue-stems True --cue-cmag 32 --cue-cspatial 64"), # spatial-rich stem 1:2
+]
+for _nm,_ex in _CFP:
+    JOBS.append(fm(f"{_nm}_s0", 0, "raydpt", "4e-4", _CF2+" "+_ex, 24, IC5))
+# --- RV (RayViT): pretrained ViT encoder (fine-tuned) + ray-conditioned cross-attn decoder.
+# 3 modes + anticipated-problem variants: frozen ViT (overfit), scratch (ImageNet-prior control),
+# hybrid+champion-loss / +2block (fine-detail + best recipe). lr3e-4, bs12 (86M ViT heavy). ---
+_RV = "--arch rayvit --in-ch 5 --flip-aug True --ray-cross-layers 2 --raydpt-coarse-sa True"
+_CH = "--w-rel 0.05 --w-normal 0.15 --w-grad 0.05"
+_RC = [
+  ("RV_single",        _RV + " --rayvit-mode single"),
+  ("RV_multiscale",    _RV + " --rayvit-mode multiscale"),
+  ("RV_hybrid",        _RV + " --rayvit-mode hybrid"),
+  ("RV_single_frozen", _RV + " --rayvit-mode single --vit-freeze True"),        # anticipate overfit
+  ("RV_hybrid_frozen", _RV + " --rayvit-mode hybrid --vit-freeze True"),
+  ("RV_single_scratch",_RV + " --rayvit-mode single --vit-pretrained False"),   # ImageNet-prior control
+  ("RV_hybrid_champ",  _RV + " --rayvit-mode hybrid " + _CH),                    # + champion loss
+  ("RV_hybrid_2block", _RV + " --rayvit-mode hybrid --coarse-sa-blocks 2 " + _CH),
+]
+for _nm,_ex in _RC:
+    JOBS.append(fm(f"{_nm}_s0", 0, "rayvit", "3e-4", _ex, 12, IC5))
+# --- S (SOTA): both-win frontier (P_b3/P_b4/P_r2 recipes) + 2 NEW audioresearch_audio levers:
+# E51 post-fusion geo self-attn x2 blocks (reopened frontier at convergence) + E117 berHu-on-
+# LOWPASS-term-only (berHu RMSE lever without main-term frontier slide). Aim: RMSE & AbsRel both SOTA. ---
+_S = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True"
+_PB3="--w-rel 0.05 --w-normal 0.15 --w-grad 0.05"; _PB4="--w-rel 0.03 --w-normal 0.1 --w-scale 0.05"; _PR2="--w-rel 0.05 --w-normal 0.1 --w-grad 0.05 --w-scale 0.1"
+_SC = [
+  ("S_e51_pb3",  f"--coarse-sa-blocks 2 {_PB3}"),
+  ("S_e51_pb4",  f"--coarse-sa-blocks 2 {_PB4}"),
+  ("S_e51_pr2",  f"--coarse-sa-blocks 2 {_PR2}"),
+  ("S_bhlow_pb3",f"--berhu-low True {_PB3}"),
+  ("S_bhlow_pb4",f"--berhu-low True {_PB4}"),
+  ("S_bhlow_pr2",f"--berhu-low True {_PR2}"),
+  ("S_full_pb3", f"--coarse-sa-blocks 2 --berhu-low True {_PB3}"),
+  ("S_full_pb4", f"--coarse-sa-blocks 2 --berhu-low True {_PB4}"),
+  ("S_full_pr2", f"--coarse-sa-blocks 2 --berhu-low True {_PR2}"),
+  ("S_full_a",   f"--coarse-sa-blocks 2 --berhu-low True --w-rel 0.05 --w-normal 0.15 --w-grad 0.05 --w-scale 0.1"),
+  ("S_ema_pb3",  f"--w-ema 0.995 {_PB3}"),
+  ("S_ema_full", f"--coarse-sa-blocks 2 --berhu-low True --w-ema 0.995 {_PB3}"),
+  ("S_ema_e51",  f"--coarse-sa-blocks 2 --w-ema 0.995 {_PB3}"),
+  ("S_bhlow_wlow075", f"--berhu-low True --w-low 0.75 {_PB3}"),
+  ("S_bhlow_wlow10",  f"--berhu-low True --w-low 1.0 {_PB3}"),
+  ("S_abs_g05",  f"--coarse-sa-blocks 2 --berhu-low True --w-depth-gamma -0.5 --w-normal 0.2"),
+  ("S_abs_rel08",f"--coarse-sa-blocks 2 --berhu-low True --w-rel 0.08 --w-normal 0.2"),
+  ("S_3block_pb3",  f"--coarse-sa-blocks 3 {_PB3}"),
+  ("S_3block_full", f"--coarse-sa-blocks 3 --berhu-low True {_PB3}"),
+  ("S_kitchen",  f"--coarse-sa-blocks 2 --berhu-low True --w-ema 0.995 --w-rel 0.05 --w-normal 0.15 --w-grad 0.05 --w-scale 0.1"),
+]
+for _nm,_ex in _SC:
+    JOBS.append(fm(f"{_nm}_s0", 0, "raydpt", "4e-4", _S+" "+_ex, 24, IC5))
+# --- P (Pareto/polarity): 20 configs spanning the RMSE<->AbsRel frontier. Each keeps a
+# COUNTER-lever so both stay below the baseline thresholds (RMSE<1.424, AbsRel<0.537) while
+# maximising spread. RMSE-lean: heavy structure(normal/grad/scale/low/berhu/gamma+) + light rel;
+# AbsRel-lean: heavy rel/gamma- + strong normal to hold RMSE. coarse-sa RayDPT 5ch base. ---
+_P = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True"
+_PC = [
+  # RMSE-leaning (low RMSE, keep AbsRel<0.537 via light rel)
+  ("P_r1", "--w-rel 0.03 --w-normal 0.2 --w-scale 0.1"),
+  ("P_r2", "--w-rel 0.03 --w-normal 0.1 --w-grad 0.05 --w-scale 0.1"),
+  ("P_r3", "--w-rel 0.03 --w-normal 0.2 --w-low 0.75"),
+  ("P_r4", "--w-rel 0.03 --w-scale 0.2 --w-normal 0.1"),
+  ("P_r5", "--berhu True --w-rel 0.05"),
+  ("P_r6", "--w-depth-gamma 0.3 --w-rel 0.05 --w-normal 0.1"),
+  # balanced knee
+  ("P_b1", "--w-rel 0.05 --w-normal 0.1 --w-grad 0.05"),
+  ("P_b2", "--w-rel 0.05 --w-normal 0.1 --w-scale 0.1"),
+  ("P_b3", "--w-rel 0.05 --w-normal 0.15 --w-grad 0.05"),
+  ("P_b4", "--w-rel 0.04 --w-normal 0.1 --w-scale 0.05"),
+  ("P_b5", "--w-rel 0.05 --w-grad 0.1 --w-scale 0.1"),
+  # AbsRel-leaning (low AbsRel, keep RMSE<1.424 via strong normal)
+  ("P_a1", "--w-rel 0.1 --w-normal 0.15"),
+  ("P_a2", "--w-rel 0.1 --w-normal 0.2 --w-scale 0.1"),
+  ("P_a3", "--w-depth-gamma -0.5 --w-normal 0.15"),
+  ("P_a4", "--w-depth-gamma -0.5 --w-normal 0.2 --w-scale 0.1"),
+  ("P_a5", "--w-rel 0.13 --w-normal 0.2 --w-grad 0.05"),
+  ("P_a6", "--w-depth-gamma -0.3 --w-normal 0.1 --w-rel 0.05"),
+  # extreme-but-guarded (max polarity + strong counter-lever)
+  ("P_x1", "--berhu True --w-rel 0.1 --w-normal 0.1"),
+  ("P_x2", "--w-depth-gamma -1.0 --w-normal 0.2 --w-scale 0.1"),
+  ("P_x3", "--w-depth-gamma 0.5 --w-rel 0.1 --w-normal 0.1"),
+]
+for _nm,_ex in _PC:
+    JOBS.append(fm(f"{_nm}_s0", 0, "raydpt", "4e-4", _P + " " + _ex, 24, IC5))
+# --- metric-best RayDPT (5ch) 3-seed confirm: best-RMSE (berhu weighting) + best-AbsRel
+# (depth-gamma -1.0). champion coarse-sa base; single-metric-optimised (frontier extremes). ---
+_B = "--ngf 64 --unet-downs 8 --in-ch 5 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True"
+for _sd in (1, 2):
+    JOBS.append(fm(f"F3_bestRMSE_s{_sd}",   _sd, "raydpt", "4e-4", _B + " --berhu True", 24, IC5))
+    JOBS.append(fm(f"F3_bestAbsRel_s{_sd}", _sd, "raydpt", "4e-4", _B + " --w-depth-gamma -1.0", 24, IC5))
 # --- Our RayDPT champion at NATIVE-BASELINE 2ch spectrogram input (isolates ARCHITECTURE
 # vs input richness: all-2ch fair comparison against B2_* baselines). Champion loss recipe. ---
 _CH2 = "--ngf 64 --unet-downs 8 --in-ch 2 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True --w-rel 0.05 --w-normal 0.1"
@@ -467,7 +613,7 @@ for _nm,_ar,_lr,_ex,_bs,_ca in _Q2:
 # explicit front-of-queue ordering: just-added RayDPT runs FIRST, then the other
 # richer-input / research-focus jobs, then everything else (stable within a rank).
 FRONT = [  # -2) AAAI final runs + published baselines (highest)
-         "F_champion", "F_raymlpcsa", "F2_raydpt", "B2_presnet", "B2_pvit", "B2_batvis", "B_pvit", "B_presnet", "B_batvis", "B_echodiff",
+         "F_champion", "F_raymlpcsa", "CF_", "RV_", "M1","M2","M3","M4","M5","M6","M7","M8","M9","M10","M11","M12", "S_", "P_r", "P_b", "P_a", "P_x", "F3_bestRMSE", "F3_bestAbsRel", "F2_raydpt", "B2_presnet", "B2_pvit", "B2_batvis", "B_pvit", "B_presnet", "B_batvis", "B_echodiff",
          # -1) fair control + Q7 3-seed confirm + pending ablations (HIGHEST)
          "Q12_unet", "Q7_csa_wrel03", "Q11_zc", "Q9_ground", "Q17_csa", "Q17_unet", "Q16_unet", "Q15_csa", "Q15_unet", "Q10_vit", "Q14_gamma", "Q14_berhu", "Q13_loss", "Q8_",
          # 0) no-ray ablation

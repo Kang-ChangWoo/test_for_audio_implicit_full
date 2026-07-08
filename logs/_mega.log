@@ -423,3 +423,213 @@
 [mega] ALL DONE
 [readme] updated BEST block: 224 groups, best=Q8_csa_wrel05_normal10 (0.7397)
 [mega] aggregated
+[mega] 261 jobs total
+[mega] launch F3_bestRMSE_s1 gpu0 (4 left)
+[mega] launch F3_bestRMSE_s2 gpu1 (4 left)
+[mega] launch F3_bestAbsRel_s1 gpu2 (4 left)
+[mega] launch F3_bestAbsRel_s2 gpu3 (4 left)
+[mega] 281 jobs total
+[mega] launch P_r1_s0 gpu4 (24 left)
+[mega] launch P_r2_s0 gpu5 (24 left)
+[mega] launch P_r3_s0 gpu6 (24 left)
+[mega] launch P_r4_s0 gpu7 (24 left)
+[mega] launch P_r5_s0 gpu2 (24 left)
+[mega] launch P_r6_s0 gpu1 (24 left)
+[mega] launch P_b1_s0 gpu0 (21 left)
+[mega] launch P_b2_s0 gpu3 (21 left)
+[mega] finished P_r3_s0 gpu6
+[mega] launch P_b3_s0 gpu6 (19 left)
+[mega] finished P_r4_s0 gpu7
+[mega] launch P_b4_s0 gpu7 (18 left)
+[mega] finished P_r2_s0 gpu5
+[mega] launch P_b5_s0 gpu5 (17 left)
+[mega] finished P_r1_s0 gpu4
+[mega] launch P_a1_s0 gpu4 (16 left)
+[mega] finished P_r5_s0 gpu2
+[mega] launch P_a2_s0 gpu2 (15 left)
+[mega] finished P_r6_s0 gpu1
+[mega] launch P_a3_s0 gpu1 (14 left)
+[mega] finished P_b1_s0 gpu0
+[mega] launch P_a4_s0 gpu0 (12 left)
+[mega] finished P_b2_s0 gpu3
+[mega] launch P_a5_s0 gpu3 (12 left)
+[mega] finished P_b3_s0 gpu6
+[mega] launch P_a6_s0 gpu6 (11 left)
+[mega] finished P_b4_s0 gpu7
+[mega] finished P_b5_s0 gpu5
+[mega] launch P_x1_s0 gpu5 (9 left)
+[mega] launch P_x2_s0 gpu7 (9 left)
+[mega] finished P_a1_s0 gpu4
+[mega] launch P_x3_s0 gpu4 (8 left)
+[mega] finished P_a2_s0 gpu2
+[mega] finished P_a3_s0 gpu1
+[mega] finished P_a4_s0 gpu0
+[mega] finished P_a5_s0 gpu3
+[mega] finished P_a6_s0 gpu6
+[mega] finished P_x2_s0 gpu7
+[mega] finished P_x1_s0 gpu5
+[mega] finished P_x3_s0 gpu4
+[mega] ALL DONE
+[readme] updated BEST block: 246 groups, best=Q8_csa_wrel05_normal10 (0.7397)
+[mega] aggregated
+[mega] 301 jobs total
+[mega] launch S_e51_pb3_s0 gpu0 (20 left)
+[mega] launch S_e51_pb4_s0 gpu1 (20 left)
+[mega] launch S_e51_pr2_s0 gpu2 (20 left)
+[mega] launch S_bhlow_pb3_s0 gpu3 (20 left)
+[mega] launch S_bhlow_pb4_s0 gpu4 (20 left)
+[mega] launch S_bhlow_pr2_s0 gpu5 (20 left)
+[mega] launch S_full_pb3_s0 gpu6 (20 left)
+[mega] launch S_full_pb4_s0 gpu7 (20 left)
+[mega] finished S_e51_pb3_s0 gpu0
+[mega] finished S_e51_pb4_s0 gpu1
+[mega] finished S_e51_pr2_s0 gpu2
+[mega] finished S_bhlow_pb3_s0 gpu3
+[mega] finished S_bhlow_pb4_s0 gpu4
+[mega] finished S_bhlow_pr2_s0 gpu5
+[mega] finished S_full_pb3_s0 gpu6
+[mega] finished S_full_pb4_s0 gpu7
+[mega] launch S_e51_pb3_s0 gpu0 (20 left)
+[mega] launch S_e51_pb4_s0 gpu1 (20 left)
+[mega] launch S_e51_pr2_s0 gpu2 (20 left)
+[mega] launch S_bhlow_pb3_s0 gpu3 (20 left)
+[mega] launch S_bhlow_pb4_s0 gpu4 (20 left)
+[mega] launch S_bhlow_pr2_s0 gpu5 (20 left)
+[mega] launch S_full_pb3_s0 gpu6 (20 left)
+[mega] launch S_full_pb4_s0 gpu7 (20 left)
+[mega] finished S_e51_pb3_s0 gpu0
+[mega] finished S_e51_pb4_s0 gpu1
+[mega] finished S_e51_pr2_s0 gpu2
+[mega] finished S_bhlow_pb3_s0 gpu3
+[mega] finished S_bhlow_pb4_s0 gpu4
+[mega] finished S_bhlow_pr2_s0 gpu5
+[mega] finished S_full_pb3_s0 gpu6
+[mega] finished S_full_pb4_s0 gpu7
+[mega] launch S_e51_pb3_s0 gpu0 (20 left)
+[mega] launch S_e51_pb4_s0 gpu1 (20 left)
+[mega] launch S_e51_pr2_s0 gpu2 (20 left)
+[mega] launch S_bhlow_pb3_s0 gpu3 (20 left)
+[mega] launch S_bhlow_pb4_s0 gpu4 (20 left)
+[mega] launch S_bhlow_pr2_s0 gpu5 (20 left)
+[mega] launch S_full_pb3_s0 gpu6 (20 left)
+[mega] launch S_full_pb4_s0 gpu7 (20 left)
+[mega] finished S_e51_pb3_s0 gpu0
+[mega] finished S_e51_pb4_s0 gpu1
+[mega] finished S_e51_pr2_s0 gpu2
+[mega] finished S_bhlow_pb3_s0 gpu3
+[mega] finished S_bhlow_pb4_s0 gpu4
+[mega] finished S_bhlow_pr2_s0 gpu5
+[mega] finished S_full_pb3_s0 gpu6
+[mega] finished S_full_pb4_s0 gpu7
+[mega] launch S_e51_pb3_s0 gpu0 (20 left)
+[mega] launch S_e51_pb4_s0 gpu1 (20 left)
+[mega] launch S_e51_pr2_s0 gpu2 (20 left)
+[mega] launch S_bhlow_pb3_s0 gpu3 (20 left)
+[mega] launch S_bhlow_pb4_s0 gpu4 (20 left)
+[mega] launch S_bhlow_pr2_s0 gpu5 (20 left)
+[mega] launch S_full_pb3_s0 gpu6 (20 left)
+[mega] launch S_full_pb4_s0 gpu7 (20 left)
+[mega] finished S_e51_pb3_s0 gpu0
+[mega] finished S_e51_pb4_s0 gpu1
+[mega] finished S_e51_pr2_s0 gpu2
+[mega] finished S_bhlow_pb3_s0 gpu3
+[mega] finished S_bhlow_pb4_s0 gpu4
+[mega] finished S_bhlow_pr2_s0 gpu5
+[mega] finished S_full_pb3_s0 gpu6
+[mega] finished S_full_pb4_s0 gpu7
+[mega] launch S_e51_pb3_s0 gpu0 (20 left)
+[mega] launch S_e51_pb4_s0 gpu1 (20 left)
+[mega] launch S_e51_pr2_s0 gpu2 (20 left)
+[mega] launch S_bhlow_pb3_s0 gpu3 (20 left)
+[mega] launch S_bhlow_pb4_s0 gpu4 (20 left)
+[mega] launch S_bhlow_pr2_s0 gpu5 (20 left)
+[mega] launch S_full_pb3_s0 gpu6 (20 left)
+[mega] launch S_full_pb4_s0 gpu7 (20 left)
+[mega] finished S_e51_pb3_s0 gpu0
+[mega] finished S_e51_pb4_s0 gpu1
+[mega] finished S_e51_pr2_s0 gpu2
+[mega] finished S_bhlow_pb3_s0 gpu3
+[mega] finished S_bhlow_pb4_s0 gpu4
+[mega] finished S_bhlow_pr2_s0 gpu5
+[mega] finished S_full_pb3_s0 gpu6
+[mega] finished S_full_pb4_s0 gpu7
+[mega] launch S_e51_pb3_s0 gpu0 (20 left)
+[mega] launch S_e51_pb4_s0 gpu1 (20 left)
+[mega] launch S_e51_pr2_s0 gpu2 (20 left)
+[mega] launch S_bhlow_pb3_s0 gpu3 (20 left)
+[mega] launch S_bhlow_pb4_s0 gpu4 (20 left)
+[mega] launch S_bhlow_pr2_s0 gpu5 (20 left)
+[mega] launch S_full_pb3_s0 gpu6 (20 left)
+[mega] launch S_full_pb4_s0 gpu7 (20 left)
+[mega] finished S_e51_pb3_s0 gpu0
+[mega] finished S_e51_pb4_s0 gpu1
+[mega] finished S_e51_pr2_s0 gpu2
+[mega] finished S_bhlow_pb3_s0 gpu3
+[mega] finished S_bhlow_pb4_s0 gpu4
+[mega] finished S_bhlow_pr2_s0 gpu5
+[mega] finished S_full_pb3_s0 gpu6
+[mega] finished S_full_pb4_s0 gpu7
+[mega] launch S_e51_pb3_s0 gpu0 (20 left)
+[mega] launch S_e51_pb4_s0 gpu1 (20 left)
+[mega] launch S_e51_pr2_s0 gpu2 (20 left)
+[mega] launch S_bhlow_pb3_s0 gpu3 (20 left)
+[mega] launch S_bhlow_pb4_s0 gpu4 (20 left)
+[mega] launch S_bhlow_pr2_s0 gpu5 (20 left)
+[mega] launch S_full_pb3_s0 gpu6 (20 left)
+[mega] launch S_full_pb4_s0 gpu7 (20 left)
+[mega] finished S_e51_pb3_s0 gpu0
+[mega] finished S_e51_pb4_s0 gpu1
+[mega] finished S_e51_pr2_s0 gpu2
+[mega] finished S_bhlow_pb3_s0 gpu3
+[mega] finished S_bhlow_pb4_s0 gpu4
+[mega] finished S_bhlow_pr2_s0 gpu5
+[mega] finished S_full_pb3_s0 gpu6
+[mega] finished S_full_pb4_s0 gpu7
+[mega] launch S_e51_pb3_s0 gpu0 (20 left)
+[mega] launch S_e51_pb4_s0 gpu1 (20 left)
+[mega] launch S_e51_pr2_s0 gpu2 (20 left)
+[mega] launch S_bhlow_pb3_s0 gpu3 (20 left)
+[mega] launch S_bhlow_pb4_s0 gpu4 (20 left)
+[mega] launch S_bhlow_pr2_s0 gpu5 (20 left)
+[mega] launch S_full_pb3_s0 gpu6 (20 left)
+[mega] launch S_full_pb4_s0 gpu7 (20 left)
+[mega] 301 jobs total
+[mega] launch S_full_pr2_s0 gpu6 (20 left)
+[mega] launch S_full_a_s0 gpu3 (20 left)
+[mega] launch S_ema_pb3_s0 gpu5 (18 left)
+[mega] launch S_ema_full_s0 gpu1 (16 left)
+[mega] launch S_ema_e51_s0 gpu7 (16 left)
+[mega] launch S_bhlow_wlow075_s0 gpu2 (14 left)
+[mega] launch S_bhlow_wlow10_s0 gpu0 (13 left)
+[mega] launch S_abs_g05_s0 gpu4 (12 left)
+[mega] 309 jobs total
+[mega] 321 jobs total
+[mega] launch M1_s0 gpu6 (31 left)
+[mega] launch M10_s0 gpu2 (30 left)
+[mega] launch M11_s0 gpu5 (30 left)
+[mega] launch M12_s0 gpu0 (28 left)
+[mega] launch M2_s0 gpu7 (27 left)
+[mega] launch M3_s0 gpu3 (26 left)
+[mega] launch M4_s0 gpu1 (25 left)
+[mega] launch M5_s0 gpu4 (24 left)
+[mega] finished M1_s0 gpu6
+[mega] launch M6_s0 gpu6 (23 left)
+[mega] finished M11_s0 gpu5
+[mega] launch M7_s0 gpu5 (22 left)
+[mega] finished M2_s0 gpu7
+[mega] launch M8_s0 gpu7 (21 left)
+[mega] finished M10_s0 gpu2
+[mega] launch M9_s0 gpu2 (20 left)
+[mega] finished M4_s0 gpu1
+[mega] launch RV_single_s0 gpu1 (19 left)
+[mega] finished M12_s0 gpu0
+[mega] launch RV_multiscale_s0 gpu0 (18 left)
+[mega] finished M3_s0 gpu3
+[mega] launch RV_hybrid_s0 gpu3 (17 left)
+[mega] 321 jobs total
+[mega] launch RV_single_frozen_s0 gpu4 (16 left)
+[mega] launch RV_hybrid_frozen_s0 gpu6 (16 left)
+[mega] launch RV_single_scratch_s0 gpu7 (14 left)
+[mega] launch RV_hybrid_champ_s0 gpu2 (13 left)
+[mega] launch RV_hybrid_2block_s0 gpu5 (12 left)
+[mega] 337 jobs total

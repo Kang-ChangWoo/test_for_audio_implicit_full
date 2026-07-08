@@ -173,6 +173,9 @@ def main():
     elif getattr(cfg, "arch", "fullmap") == "vit":
         from model_vit import ViTDepth
         model = ViTDepth(cfg).to(device)
+    elif getattr(cfg, "arch", "fullmap") == "rayvit":
+        from model_rayvit import RayViT
+        model = RayViT(cfg).to(device)
     elif getattr(cfg, "arch", "fullmap") in ("pvit", "presnet"):
         from model_baseline import PViT, PResNet
         model = (PViT if cfg.arch == "pvit" else PResNet)(cfg).to(device)
@@ -251,7 +254,13 @@ def main():
                     lc = masked_mae(out["extras"]["D_coarse"], gt_c, m_c)
                 else:
                     lc = masked_mae(F.adaptive_avg_pool2d(out["D"], (cfg.coarse_head_h, cfg.coarse_head_w)), gt_c, m_c)
-                ll = masked_mae(gaussian_blur_erp(out["D"], 3.0), gaussian_blur_erp(gt, 3.0), mask)
+                lpD = gaussian_blur_erp(out["D"], 3.0); lpG = gaussian_blur_erp(gt, 3.0)
+                if getattr(cfg, "berhu_low", False):                        # E117: berHu on low-pass term only
+                    e = (lpD - lpG).abs(); c = 0.2 * (e * mask).max().clamp(min=1e-6)
+                    eb = torch.where(e <= c, e, (e * e + c * c) / (2 * c))
+                    ll = (eb * mask).sum() / mask.sum().clamp(min=1e-6)
+                else:
+                    ll = masked_mae(lpD, lpG, mask)
                 loss = loss + cfg.w_coarse_layout * lc + cfg.w_low * ll
                 logs["lc"] = float(lc.detach()); logs["llow"] = float(ll.detach())
                 if "residual" in out["extras"]:
