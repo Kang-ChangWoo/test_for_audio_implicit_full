@@ -72,24 +72,23 @@ class MetricBank:
         """pred,gt,mask (B,1,H,W). pred/gt in METRES, mask in {0,1}."""
         B = pred.shape[0]
         w = self.wlat * mask                                  # cos-lat * valid
-        self._push("MAE", _wmae(pred, gt, w), B)
-        self._push("MAE_plain", _wmae(pred, gt, mask), B)     # mask-only (matches A0 0.802)
-        self._push("RMSE", math.sqrt((((pred - gt) ** 2) * w).sum().item()
-                                     / w.sum().clamp(min=1e-6).item()), B)
+        # BATCH-INVARIANT: compute PER-IMAGE metrics (B,), push their batch-mean with n=B so the
+        # accumulator yields the per-image average Sum_i(metric_i)/Sum_i(1) independent of batching.
+        pi = lambda num, den: (num.flatten(1).sum(1) / den.flatten(1).sum(1).clamp(min=1e-6))  # (B,)
+        self._push("MAE", float(pi((pred - gt).abs() * w, w).mean()), B)
+        self._push("MAE_plain", float(pi((pred - gt).abs() * mask, mask).mean()), B)
+        self._push("RMSE", float(pi(((pred - gt) ** 2) * w, w).clamp(min=0).sqrt().mean()), B)  # per-image RMSE
         ar = (pred - gt).abs() / gt.clamp(min=0.1)
-        self._push("AbsRel", float(((ar * w).sum() / w.sum().clamp(min=1e-6)).item()), B)
+        self._push("AbsRel", float(pi(ar * w, w).mean()), B)
         rt = torch.maximum(pred.clamp(min=0.1) / gt.clamp(min=0.1),
                            gt.clamp(min=0.1) / pred.clamp(min=0.1))
-        self._push("delta1", float((((rt < 1.25).float() * w).sum()
-                                    / w.sum().clamp(min=1e-6)).item()), B)
-        self._push("delta2", float((((rt < 1.25 ** 2).float() * w).sum()
-                                    / w.sum().clamp(min=1e-6)).item()), B)
-        self._push("delta3", float((((rt < 1.25 ** 3).float() * w).sum()
-                                    / w.sum().clamp(min=1e-6)).item()), B)
+        self._push("delta1", float(pi((rt < 1.25).float() * w, w).mean()), B)
+        self._push("delta2", float(pi((rt < 1.25 ** 2).float() * w, w).mean()), B)
+        self._push("delta3", float(pi((rt < 1.25 ** 3).float() * w, w).mean()), B)
         lg = (torch.log(pred.clamp(min=0.1)) - torch.log(gt.clamp(min=0.1)))
-        wsum = w.sum().clamp(min=1e-6)
-        v = ((lg ** 2) * w).sum() / wsum - (((lg * w).sum() / wsum) ** 2)
-        self._push("SILog", float((v.clamp(min=0).sqrt()).item()), B)
+        ws = w.flatten(1).sum(1).clamp(min=1e-6)
+        m1 = (lg * w).flatten(1).sum(1) / ws; m2 = ((lg ** 2) * w).flatten(1).sum(1) / ws
+        self._push("SILog", float((m2 - m1 ** 2).clamp(min=0).sqrt().mean()), B)   # per-image SILog
 
         # far-field-excluded MAE: drop the 10m-clamp ceiling pixels (gt>=9.99m)
         wff = w * (gt < 9.99 * (self.md / 10.0)).float()

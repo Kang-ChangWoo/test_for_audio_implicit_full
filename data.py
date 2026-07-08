@@ -196,8 +196,23 @@ class RawDataset(Dataset):
                 spec = self._spec2(wav) if self.in_ch == 2 else self._specN(wav, self.in_ch)
             depth, mask = self._depth(s, idx)
         except Exception as e:
+            # Do NOT silently duplicate the neighbour (that distorts the empirical distribution).
+            # Bounded, index-varying retry during TRAIN only; fail-fast during eval.
             print(f"[skip {s}/{idx}] {e}", flush=True)
-            return self[(i + 1) % len(self)]
+            if getattr(self, "split", "train") != "train":
+                raise
+            for step in range(1, 8):                       # bounded, deterministic-per-index probe
+                j = (i + step) % len(self)
+                sj, idxj = self.samples[j]
+                try:
+                    wavj = self._wave(sj, idxj)
+                    specj = self._spec2(wavj) if self.in_ch == 2 else self._specN(wavj, self.in_ch)
+                    dj, mj = self._depth(sj, idxj)
+                    o = {"spec": specj, "depth": dj, "mask": mj, "key": f"{sj}/{idxj}"}
+                    return o
+                except Exception:
+                    continue
+            raise RuntimeError(f"no valid sample within 8 of index {i}")
         out = {"spec": spec, "depth": depth, "mask": mask, "key": f"{s}/{idx}"}
         if wave is not None:
             out["wave"] = wave

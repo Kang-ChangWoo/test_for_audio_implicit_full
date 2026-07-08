@@ -221,6 +221,19 @@ _MC = [
 for _nm,_ex in _MC:
     JOBS.append(fm(f"{_nm}_s0", 0, "raydpt", "4e-4", _M+" "+_ex, 24, IC5))
 
+
+# --- FINAL v2 (protocol-corrected: masked coarse/low-pass/normal losses, batch-invariant metrics,
+# documented no-ray = learned-positional). 8 model families x 3 seeds, requested order. HIGHEST. ---
+_RB = "--flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True --w-rel 0.05"
+for _s in (0, 1, 2):
+    JOBS.append(fm(f"finalv2_batvision_2ch_s{_s}", _s, "batvis",   "2e-3", "--in-ch 2 --flip-aug True", 32, IC2))
+    JOBS.append(fm(f"finalv2_preunet_2ch_s{_s}",   _s, "presnet",  "3e-4", "--in-ch 2 --flip-aug True", 24, IC2))
+    JOBS.append(fm(f"finalv2_previt_2ch_s{_s}",    _s, "pvit",     "3e-4", "--in-ch 2 --flip-aug True", 16, IC2))
+    JOBS.append(fm(f"finalv2_echodiff_2ch_s{_s}",  _s, "echodiff", "2e-3", "--in-ch 2 --audio-src wave", 16, IC_WAVE))
+    JOBS.append(fm(f"finalv2_raydpt_2ch_ray_s{_s}",   _s, "raydpt", "4e-4", "--in-ch 2 " + _RB, 24, IC2))
+    JOBS.append(fm(f"finalv2_raydpt_5ch_ray_s{_s}",   _s, "raydpt", "4e-4", "--in-ch 5 " + _RB, 24, IC5))
+    JOBS.append(fm(f"finalv2_raydpt_2ch_noray_s{_s}", _s, "raydpt", "4e-4", "--in-ch 2 " + _RB + " --raydpt-noray True", 24, IC2))
+    JOBS.append(fm(f"finalv2_raydpt_5ch_noray_s{_s}", _s, "raydpt", "4e-4", "--in-ch 5 " + _RB + " --raydpt-noray True", 24, IC5))
 # --- CF (Cue-Factorization, PRIORITY 1): cue-specific input stems (Group A) + configurable
 # ray K/V routing at coarse F16 (Group B). Parent baseline = Q8_csa_wrel05_normal10 (SAME recipe,
 # no cue). Minimally invasive: RayDPT intact; only audio-repr + F16 K/V source change. n=1 first. ---
@@ -612,7 +625,10 @@ for _nm,_ar,_lr,_ex,_bs,_ca in _Q2:
 
 # explicit front-of-queue ordering: just-added RayDPT runs FIRST, then the other
 # richer-input / research-focus jobs, then everything else (stable within a rank).
-FRONT = [  # -2) AAAI final runs + published baselines (highest)
+FRONT = [  # FINAL v2 (highest priority, requested order)
+         "finalv2_batvision", "finalv2_preunet", "finalv2_previt", "finalv2_echodiff",
+         "finalv2_raydpt_2ch_ray", "finalv2_raydpt_5ch_ray", "finalv2_raydpt_2ch_noray", "finalv2_raydpt_5ch_noray",
+         # -2) AAAI final runs + published baselines (highest)
          "F_champion", "F_raymlpcsa", "CF_", "RV_", "M1","M2","M3","M4","M5","M6","M7","M8","M9","M10","M11","M12", "S_", "P_r", "P_b", "P_a", "P_x", "F3_bestRMSE", "F3_bestAbsRel", "F2_raydpt", "B2_presnet", "B2_pvit", "B2_batvis", "B_pvit", "B_presnet", "B_batvis", "B_echodiff",
          # -1) fair control + Q7 3-seed confirm + pending ablations (HIGHEST)
          "Q12_unet", "Q7_csa_wrel03", "Q11_zc", "Q9_ground", "Q17_csa", "Q17_unet", "Q16_unet", "Q15_csa", "Q15_unet", "Q10_vit", "Q14_gamma", "Q14_berhu", "Q13_loss", "Q8_",

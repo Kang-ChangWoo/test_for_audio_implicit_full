@@ -633,3 +633,12 @@
 [mega] launch RV_hybrid_champ_s0 gpu2 (13 left)
 [mega] launch RV_hybrid_2block_s0 gpu5 (12 left)
 [mega] 337 jobs total
+[mega] 361 jobs total
+[mega] launch finalv2_batvision_2ch_s0 gpu0 (52 left)
+[mega] launch finalv2_batvision_2ch_s1 gpu1 (52 left)
+[mega] launch finalv2_batvision_2ch_s2 gpu2 (52 left)
+[mega] launch finalv2_preunet_2ch_s0 gpu3 (52 left)
+[mega] launch finalv2_preunet_2ch_s1 gpu4 (52 left)
+[mega] launch finalv2_preunet_2ch_s2 gpu5 (52 left)
+[mega] launch finalv2_previt_2ch_s0 gpu6 (52 left)
+[mega] launch finalv2_previt_2ch_s1 gpu7 (52 left)

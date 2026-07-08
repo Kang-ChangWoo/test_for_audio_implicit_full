@@ -87,7 +87,8 @@ def normal_loss(D, gt, mask, dirs):
         dv = P[:, :, :-1, 1:] - P[:, :, :-1, :-1]          # azimuth grad
         return F.normalize(torch.cross(dv, du, dim=1), dim=1, eps=1e-6)
     npred = normals(D * dirs[None]); ngt = normals(gt * dirs[None])
-    m = mask[:, :, :-1, :-1]
+    # valid only where ALL 3 stencil points (i,j),(i+1,j),(i,j+1) are valid
+    m = mask[:, :, :-1, :-1] * mask[:, :, 1:, :-1] * mask[:, :, :-1, 1:]
     cos = (npred * ngt).sum(1, keepdim=True)
     return ((1 - cos) * m).sum() / m.sum().clamp(min=1e-6)
 
@@ -248,13 +249,18 @@ def main():
             if COARSE_ARCH:
                 # band-limited objective: dense + coarse-layout + low-pass (+ residual TV)
                 loss = cfg.w_dense * main
-                gt_c = F.adaptive_avg_pool2d(gt, (cfg.coarse_head_h, cfg.coarse_head_w))
+                # masked-normalized coarse GT: pool(gt*mask)/pool(mask) (NOT pool(gt) which zero-dilutes)
                 m_c = F.adaptive_avg_pool2d(mask, (cfg.coarse_head_h, cfg.coarse_head_w))
+                gt_c = F.adaptive_avg_pool2d(gt * mask, (cfg.coarse_head_h, cfg.coarse_head_w)) / m_c.clamp(min=1e-6)
+                valid_c = (m_c > 0).float()
                 if "D_coarse" in out["extras"] and out["extras"]["D_coarse"].shape[-2:] == gt_c.shape[-2:]:
-                    lc = masked_mae(out["extras"]["D_coarse"], gt_c, m_c)
+                    lc = masked_mae(out["extras"]["D_coarse"], gt_c, valid_c)
                 else:
-                    lc = masked_mae(F.adaptive_avg_pool2d(out["D"], (cfg.coarse_head_h, cfg.coarse_head_w)), gt_c, m_c)
-                lpD = gaussian_blur_erp(out["D"], 3.0); lpG = gaussian_blur_erp(gt, 3.0)
+                    lc = masked_mae(F.adaptive_avg_pool2d(out["D"], (cfg.coarse_head_h, cfg.coarse_head_w)), gt_c, valid_c)
+                # masked-normalized low-pass GT: blur(gt*mask)/blur(mask) (NOT blur(gt) with zero holes)
+                mb = gaussian_blur_erp(mask, 3.0)
+                lpD = gaussian_blur_erp(out["D"], 3.0)
+                lpG = gaussian_blur_erp(gt * mask, 3.0) / mb.clamp(min=1e-6)
                 if getattr(cfg, "berhu_low", False):                        # E117: berHu on low-pass term only
                     e = (lpD - lpG).abs(); c = 0.2 * (e * mask).max().clamp(min=1e-6)
                     eb = torch.where(e <= c, e, (e * e + c * c) / (2 * c))

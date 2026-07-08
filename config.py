@@ -71,7 +71,8 @@ DEFAULTS = dict(
     # Perceiver/Q-Former-style acoustic resampler: learned latents compress multi-scale
     # acoustic tokens into a compact scene memory; physical ERP ray queries read it.
     raydpt_resampler=False, resampler_latents=64, resampler_layers=3,
-    raydpt_noray=False,
+    raydpt_noray=False,       # w/o ray: LEARNED ABSOLUTE POSITIONAL queries (NOT direction-agnostic)
+    raydpt_shared_q=False,    # + shared query (single vector, true no-position) when raydpt_noray
     lsa_mode="spherical",         # local spherical attn ablation: spherical|nobias|planar|off           # ablation: replace physical spherical ray-direction queries
                                   # with LEARNED direction-agnostic queries (no ray conditioning)
 

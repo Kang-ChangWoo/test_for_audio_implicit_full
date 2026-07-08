@@ -250,10 +250,18 @@ class RayDPT(nn.Module):
         # ablation: no ray conditioning -> LEARNED direction-agnostic queries (same
         # decoder capacity, but queries carry NO spherical direction info).
         self.noray = getattr(cfg, "raydpt_noray", False)
+        # noray semantics (documented): default = LEARNED ABSOLUTE POSITIONAL queries (one param per
+        # ERP cell; capacity-matched, no explicit physical ray direction — NOT "direction-agnostic").
+        # raydpt_shared_q=True = SHARED query (single learned vector expanded to all cells) = true
+        # no-position condition (removes absolute positional identity at query init).
+        self.shared_q = getattr(cfg, "raydpt_shared_q", False)
         if self.noray:
-            self.q16 = nn.Parameter(torch.randn(16 * 32, dim) * 0.02)
-            self.q32 = nn.Parameter(torch.randn(32 * 64, dim) * 0.02)
-            self.q64 = nn.Parameter(torch.randn(64 * 128, dim) * 0.02)
+            if self.shared_q:
+                self.q_shared = nn.Parameter(torch.randn(1, dim) * 0.02)      # one shared query
+            else:
+                self.q16 = nn.Parameter(torch.randn(16 * 32, dim) * 0.02)     # learned positional
+                self.q32 = nn.Parameter(torch.randn(32 * 64, dim) * 0.02)
+                self.q64 = nn.Parameter(torch.randn(64 * 128, dim) * 0.02)
         # Task2 ablation: ray<->audio via a single GLOBAL mean-pooled audio code (no per-ray
         # cross-attn). ray bank features condition on that code (concat + MLP), then CSA.
         self.cross_mode = getattr(cfg, "cross_mode", "cross")
@@ -344,9 +352,14 @@ class RayDPT(nn.Module):
         elif self.noray:
             # ablation: same decoder but LEARNED (direction-agnostic) queries.
             kv3 = self.kv_e3(e3.flatten(2).transpose(1, 2))
-            F16 = self._cross_q(self.q16, self.cr16, kv4, B, 16, 32)
-            F32 = self._cross_q(self.q32, self.cr32, kv3, B, 32, 64)
-            F64 = self._cross_q(self.q64, self.cr64, kv4, B, 64, 128)
+            if self.shared_q:                              # true no-position: one shared query / cell
+                q16 = self.q_shared.expand(16 * 32, -1); q32 = self.q_shared.expand(32 * 64, -1)
+                q64 = self.q_shared.expand(64 * 128, -1)
+            else:
+                q16, q32, q64 = self.q16, self.q32, self.q64
+            F16 = self._cross_q(q16, self.cr16, kv4, B, 16, 32)
+            F32 = self._cross_q(q32, self.cr32, kv3, B, 32, 64)
+            F64 = self._cross_q(q64, self.cr64, kv4, B, 64, 128)
             m16 = F16 + self.se4(e4)
             d_c = torch.sigmoid(self.coarse_head(m16))
             x = self.lsa32(self.refine32(self.up(m16) + F32 + self.se3(e3)))
