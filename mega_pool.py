@@ -224,6 +224,24 @@ for _nm,_ex in _MC:
 
 
 
+
+
+# --- FINAL v3 multi-res STFT (S19, repo global champion): 2ch magnitude x 3 windows (6ch),
+# champion loss stack, NO TTA (eval-only ~0.002 gain here, excluded per request). ---
+IC6MRES = f"{CK}/ic6_256x512_planar_mres"
+_V3M = ("--in-ch 6 --audio-src mres --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True "
+        "--depth-type planar --w-rel 0.1 --w-normal 0.15 --w-grad 0.05 --w-ema 0.995")
+for _s in (0, 1, 2):
+    JOBS.append(fm(f"finalv3_raydpt_mres_champ_s{_s}",     _s, "raydpt", "4e-4", _V3M, 24, IC6MRES))
+    JOBS.append(fm(f"finalv3_raydpt_mres_champ_e51_s{_s}", _s, "raydpt", "4e-4", _V3M + " --coarse-sa-blocks 2", 24, IC6MRES))
+# --- 5ch baselines (planar): BatVision/pUNet/pViT on ic5_planar; EchoDiffusion on ic5_planar_wave.
+# Complements the 2ch finalv2 baselines for a channel-matched comparison vs RayDPT 5ch. ---
+IC5PW = f"{CK}/ic5_256x512_planar_wave"
+for _s in (0, 1, 2):
+    JOBS.append(fm(f"finalv2_batvision_5ch_s{_s}", _s, "batvis",   "2e-3", "--in-ch 5 --flip-aug True --depth-type planar", 32, IC5P))
+    JOBS.append(fm(f"finalv2_preunet_5ch_s{_s}",   _s, "presnet",  "3e-4", "--in-ch 5 --flip-aug True --depth-type planar", 24, IC5P))
+    JOBS.append(fm(f"finalv2_previt_5ch_s{_s}",    _s, "pvit",     "3e-4", "--in-ch 5 --flip-aug True --depth-type planar", 16, IC5P))
+    JOBS.append(fm(f"finalv2_echodiff_5ch_s{_s}",  _s, "echodiff", "2e-3", "--in-ch 5 --audio-src wave --depth-type planar", 16, IC5PW))
 # --- FINAL v3: repo champion recipes (auto_audio_depth_estimation) applied to PLANAR, 2ch-focused.
 # Champion stack = w_rel0.1 (E2) + EMA0.995 (E16) + coarse-geo-self-attn + grad-loss (E34/P_b3),
 # + E127/E128 TTA (eval-time L/R-flip). Variants: E51 (2-block coarse-sa), E117 (berHu-low RMSE lever). ---
@@ -639,6 +657,8 @@ for _nm,_ar,_lr,_ex,_bs,_ca in _Q2:
 # richer-input / research-focus jobs, then everything else (stable within a rank).
 FRONT = [  # FINAL v3 (repo champion recipes on planar, 2ch-focus) — highest
          "finalv3_raydpt_2ch_champ", "finalv3_raydpt_2ch_champ_e51", "finalv3_raydpt_2ch_champ_bhlow", "finalv3_raydpt_5ch_champ",
+         "finalv3_raydpt_mres_champ", "finalv3_raydpt_mres_champ_e51",
+         "finalv2_batvision_5ch", "finalv2_preunet_5ch", "finalv2_previt_5ch", "finalv2_echodiff_5ch",
          # FINAL v2 (requested order)
          "finalv2_batvision", "finalv2_preunet", "finalv2_previt", "finalv2_echodiff",
          "finalv2_raydpt_2ch_ray", "finalv2_raydpt_5ch_ray", "finalv2_raydpt_2ch_noray", "finalv2_raydpt_5ch_noray",

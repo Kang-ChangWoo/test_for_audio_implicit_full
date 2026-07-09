@@ -41,7 +41,8 @@ class RawDataset(Dataset):
         self.log_spec = getattr(cfg, "log_spec", True)   # 2ch mag: log1p vs raw
         self.win_m = getattr(cfg, "audio_window_m", 0) or self.md   # truncation window [m]
         self.cut = int(2.0 * self.win_m / _C * self.sr)
-        self.src = getattr(cfg, "audio_src", "binaural")            # binaural | foa
+        self.src = getattr(cfg, "audio_src", "binaural")            # binaural | foa | mres
+        self.mres_wins = getattr(cfg, "mres_wins", [128, 400, 1024])   # S19 multi-res STFT windows
         self.spec = T.Spectrogram(n_fft=_NFFT, win_length=_WIN, hop_length=_HOP, power=1.0)
         self._win = torch.hann_window(_WIN)
         scenes = json.load(open(os.path.join(self.root, SPLIT)))[split]
@@ -87,6 +88,20 @@ class RawDataset(Dataset):
         if self.log_spec:
             sp = torch.log1p(sp)
         return F.interpolate(sp.unsqueeze(0), (self.H, self.W), mode="nearest").squeeze(0).float()
+
+    def _spec_mres(self, wav):
+        """S19 multi-resolution STFT: 2ch binaural magnitude at K window sizes (short/med/long
+        time-freq resolution tradeoffs), each resized to (H,W) and concatenated -> (2K,H,W).
+        Short win = sharp time (early reflections/ITD); long win = sharp freq (room modes)."""
+        chans = []
+        for w in self.mres_wins:                               # e.g. [128, 400, 1024]
+            nfft = 1 << (int(w) - 1).bit_length()              # next pow2 >= w
+            sp = torch.stft(wav, nfft, _HOP, int(w),
+                            torch.hann_window(int(w)), return_complex=True).abs()  # (2,F,T')
+            if self.log_spec:
+                sp = torch.log1p(sp)
+            chans.append(F.interpolate(sp.unsqueeze(0), (self.H, self.W), mode="nearest").squeeze(0))
+        return torch.cat(chans, 0).float()                     # (2*K, H, W)
 
     def _specN(self, wav, n):
         """RIR spatial feature, first n of [logL,logR,ILD,cosIPD,sinIPD] (keeps phase/ITD).
@@ -194,7 +209,10 @@ class RawDataset(Dataset):
                 wave = self._wave_fixed(wav)                                 # (2,cut) raw
             else:
                 wav = self._wave(s, idx)
-                spec = self._spec2(wav) if self.in_ch == 2 else self._specN(wav, self.in_ch)
+                if self.src == "mres":
+                    spec = self._spec_mres(wav)
+                else:
+                    spec = self._spec2(wav) if self.in_ch == 2 else self._specN(wav, self.in_ch)
             depth, mask = self._depth(s, idx)
         except Exception as e:
             # Do NOT silently duplicate the neighbour (that distorts the empirical distribution).
@@ -249,6 +267,8 @@ def _cache_dir(cfg):
         tag += "_raz"          # 5ch RIR + range-azimuth steered map (5+R ch)
     elif src == "wave":
         tag += "_wave"         # 5ch RIR spec + raw binaural waveform (extra array)
+    elif src == "mres":
+        tag += "_mres"         # S19 multi-resolution STFT (2ch x K windows)
     return os.path.join(base, f"ic{getattr(cfg,'in_ch',2)}_{cfg.img_h}x{cfg.img_w}{tag}")
 
 

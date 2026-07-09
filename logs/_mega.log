@@ -737,3 +737,21 @@
 [mega] launch finalv3_raydpt_2ch_champ_bhlow_s1 gpu5 (40 left)
 [mega] launch finalv3_raydpt_2ch_champ_s2 gpu6 (40 left)
 [mega] launch finalv3_raydpt_2ch_champ_e51_s2 gpu7 (40 left)
+[mega] finished finalv3_raydpt_2ch_champ_s2 gpu6
+[mega] launch finalv3_raydpt_2ch_champ_bhlow_s2 gpu6 (39 left)
+[mega] finished finalv3_raydpt_2ch_champ_s0 gpu0
+[mega] launch finalv3_raydpt_5ch_champ_s0 gpu0 (38 left)
+[mega] finished finalv3_raydpt_2ch_champ_bhlow_s0 gpu2
+[mega] finished finalv3_raydpt_2ch_champ_s1 gpu3
+[mega] launch finalv3_raydpt_5ch_champ_s1 gpu2 (36 left)
+[mega] launch finalv3_raydpt_5ch_champ_s2 gpu3 (36 left)
+[mega] finished finalv3_raydpt_2ch_champ_bhlow_s1 gpu5
+[mega] launch CF_stems_s0 gpu5 (35 left)
+[mega] finished finalv3_raydpt_2ch_champ_e51_s2 gpu7
+[mega] launch CF_route_ff_s0 gpu7 (34 left)
+[mega] finished finalv3_raydpt_2ch_champ_e51_s0 gpu1
+[mega] launch CF_route_sf_s0 gpu1 (33 left)
+[mega] finished finalv3_raydpt_2ch_champ_e51_s1 gpu4
+[mega] launch CF_route_mf_s0 gpu4 (32 left)
+[mega] 385 jobs total
+[mega] 391 jobs total
