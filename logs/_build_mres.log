@@ -1,3 +1,21 @@
 building train...
 [train] 28800 samples / 72 scenes (raw 256x512, in_ch=6)
   cache[train ic6] 3200/28800
+  cache[train ic6] 6400/28800
+  cache[train ic6] 9600/28800
+  cache[train ic6] 12800/28800
+  cache[train ic6] 16000/28800
+  cache[train ic6] 19200/28800
+  cache[train ic6] 22400/28800
+  cache[train ic6] 25600/28800
+  cache[train ic6] 28800/28800
+[cache] train ic6: 28800 -> /root/implicit_full_cache/ic6_256x512_planar_mres
+building val...
+[val] 3543 samples / 9 scenes (raw 256x512, in_ch=6)
+  cache[val ic6] 3200/3543
+[cache] val ic6: 3543 -> /root/implicit_full_cache/ic6_256x512_planar_mres
+building test...
+[test] 3600 samples / 9 scenes (raw 256x512, in_ch=6)
+  cache[test ic6] 3200/3600
+[cache] test ic6: 3600 -> /root/implicit_full_cache/ic6_256x512_planar_mres
+ic6_planar_mres DONE

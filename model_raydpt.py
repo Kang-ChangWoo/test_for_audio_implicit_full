@@ -178,7 +178,13 @@ class RayDPT(nn.Module):
         self.H, self.W = cfg.img_h, cfg.img_w
         ngf = getattr(cfg, "ngf", 64); dim = cfg.dim; heads = cfg.n_heads
         nL = getattr(cfg, "ray_cross_layers", 2)
-        self.enc = UNet8Encoder(getattr(cfg, "in_ch", 2), ngf)
+        # e5-e8 are dead in RayDPT (forward only uses e1-e4) -> depth=4 drops them (16.8M params).
+        # use_global=True brings them back to feed the e8 (1x2) scene-scale global bottleneck.
+        self.use_global = getattr(cfg, "raydpt_use_global", False)
+        self.enc = UNet8Encoder(getattr(cfg, "in_ch", 2), ngf, depth=8 if self.use_global else 4)
+        if self.use_global:
+            self.global_proj = nn.Linear(ngf * 8, dim)        # e8 (B,ngf*8,1,2) -> 2 global tokens
+            self.global_marker = nn.Parameter(torch.zeros(1, dim))   # learned "this is a global token"
         # --- Cue factorization (Group A input stems + Group B K/V routing); RayDPT intact when off ---
         self.cue_stems = getattr(cfg, "cue_stems", False)
         if self.cue_stems:                                # two-stem input -> MAIN encoder
@@ -186,7 +192,7 @@ class RayDPT(nn.Module):
             mk_stem = lambda ic, oc: nn.Sequential(nn.Conv2d(ic, oc, 3, 1, 1), nn.GELU(),
                                                    nn.Conv2d(oc, oc, 3, 1, 1), nn.GELU())
             self.stem_mag = mk_stem(2, cm); self.stem_spatial = mk_stem(3, cs)
-            self.enc = UNet8Encoder(cm + cs, ngf)         # encoder consumes fused stem output
+            self.enc = UNet8Encoder(cm + cs, ngf, depth=8 if self.use_global else 4)  # fused stem input
         self.cue_route = getattr(cfg, "cue_route", False)
         if self.cue_route:                                # cue coarse branches + routed F16 (Group B)
             self.cue_dup = getattr(cfg, "cue_dup_input", False)       # F2 control: both branches see all ch
@@ -323,6 +329,10 @@ class RayDPT(nn.Module):
             enc_in = torch.cat([self.stem_mag(spec[:, :2]), self.stem_spatial(spec[:, 2:5])], 1)
         e1 = self.enc.e1(enc_in); e2 = self.enc.e2(e1); e3 = self.enc.e3(e2); e4 = self.enc.e4(e3)
         kv4 = self.kv_e4(e4.flatten(2).transpose(1, 2))        # (B,512,dim)
+        if self.use_global:                               # e8 (1x2) scene-scale global tokens
+            e8 = self.enc.e8(self.enc.e7(self.enc.e6(self.enc.e5(e4))))       # (B,ngf*8,1,2)
+            self._gt = self.global_proj(e8.flatten(2).transpose(1, 2)) + self.global_marker  # (B,2,dim)
+        pg = (lambda kv: torch.cat([self._gt, kv], 1)) if self.use_global else (lambda kv: kv)
         if self.cue_route:                                # Group B: cue-specific coarse K/V at F16
             if self.cue_adapter:                          # F4: adapters on shared e4 (no cue encoders)
                 zm, zs = self.ad_mag(kv4), self.ad_spatial(kv4)
@@ -340,11 +350,11 @@ class RayDPT(nn.Module):
                 zf = kv4
             feat = {"fused": zf, "spatial": zs, "magnitude": zm}
             self._cue_zm, self._cue_zs = zm, zs
-            self._cue_K = feat[self.key_src]; self._cue_V = feat[self.val_src]
+            self._cue_K = pg(feat[self.key_src]); self._cue_V = pg(feat[self.val_src])
         if self.lite:
             # 2-scale lite: ONE ray cross-attn at 32x64 (Q32 <- e4), e3/e2 projection
             # skips + local spherical attn. Isolates the DPT-fusion / ray-grid gain.
-            F32 = self._cross(self.ray_proj, self.rf32, self.cr32, kv4, B, 32, 64)
+            F32 = self._cross(self.ray_proj, self.rf32, self.cr32, pg(kv4), B, 32, 64)
             m = F32 + self.se3(e3)                              # 32x64
             d_c = torch.sigmoid(self.coarse_head(F.adaptive_avg_pool2d(m, (16, 32))))
             x = self.lsa32(self.refine32(m))                   # 32x64
@@ -357,9 +367,9 @@ class RayDPT(nn.Module):
                 q64 = self.q_shared.expand(64 * 128, -1)
             else:
                 q16, q32, q64 = self.q16, self.q32, self.q64
-            F16 = self._cross_q(q16, self.cr16, kv4, B, 16, 32)
-            F32 = self._cross_q(q32, self.cr32, kv3, B, 32, 64)
-            F64 = self._cross_q(q64, self.cr64, kv4, B, 64, 128)
+            F16 = self._cross_q(q16, self.cr16, pg(kv4), B, 16, 32)
+            F32 = self._cross_q(q32, self.cr32, pg(kv3), B, 32, 64)
+            F64 = self._cross_q(q64, self.cr64, pg(kv4), B, 64, 128)
             m16 = F16 + self.se4(e4)
             d_c = torch.sigmoid(self.coarse_head(m16))
             x = self.lsa32(self.refine32(self.up(m16) + F32 + self.se3(e3)))
@@ -371,16 +381,16 @@ class RayDPT(nn.Module):
             kv2 = self.kv_e2(self.e2_pool(e2).flatten(2).transpose(1, 2))            # 512  (pooled 16x32)
             kv32 = torch.cat([kv4, kv3], 1)                                          # 2560
             kv64 = torch.cat([kv4, kv3s, kv2], 1)                                    # 1536 (compact)
-            F16 = self._cross(self.ray_proj, self.rf16, self.cr16, kv4, B, 16, 32)
-            F32 = self._cross(self.ray_proj, self.rf32, self.cr32, kv32, B, 32, 64)
-            F64 = self._cross(self.ray_proj, self.rf64, self.cr64, kv64, B, 64, 128)
+            F16 = self._cross(self.ray_proj, self.rf16, self.cr16, pg(kv4), B, 16, 32)
+            F32 = self._cross(self.ray_proj, self.rf32, self.cr32, pg(kv32), B, 32, 64)
+            F64 = self._cross(self.ray_proj, self.rf64, self.cr64, pg(kv64), B, 64, 128)
             m16 = F16 + self.se4(e4)                            # e4 same coord at coarsest -> keep
             d_c = torch.sigmoid(self.coarse_head(m16))
             x = self.lsa32(self.refine32(self.up(m16) + F32))  # e3 enters via kv32 (no raw skip)
             x = self.lsa64(self.refine64(self.up(x) + F64))    # e2 enters via kv2  (no raw skip)
         elif self.cross_mode == "global":
             # single global audio code (mean-pool of coarse tokens) — NO per-ray retrieval.
-            g = kv4.mean(dim=1)                                # (B,dim) global acoustic code
+            g = pg(kv4).mean(dim=1)                            # (B,dim) global acoustic code (+e8 tokens)
             F16 = self._global(self.ray_proj, self.rf16, g, B, 16, 32)
             F32 = self._global(self.ray_proj, self.rf32, g, B, 32, 64)
             F64 = self._global(self.ray_proj, self.rf64, g, B, 64, 128)
@@ -408,9 +418,9 @@ class RayDPT(nn.Module):
                         q = blk(q, self._cue_K, self._cue_V)
                 F16 = q.transpose(1, 2).reshape(B, -1, 16, 32)
             else:
-                F16 = self._cross(self.ray_proj, self.rf16, self.cr16, kv4, B, 16, 32)
-            F32 = self._cross(self.ray_proj, self.rf32, self.cr32, kv3, B, 32, 64)
-            F64 = self._cross(self.ray_proj, self.rf64, self.cr64, kv4, B, 64, 128)
+                F16 = self._cross(self.ray_proj, self.rf16, self.cr16, pg(kv4), B, 16, 32)
+            F32 = self._cross(self.ray_proj, self.rf32, self.cr32, pg(kv3), B, 32, 64)
+            F64 = self._cross(self.ray_proj, self.rf64, self.cr64, pg(kv4), B, 64, 128)
             g4 = self.g4 if self.gated_skip else None
             g3 = self.g3 if self.gated_skip else None
             g2 = self.g2 if self.gated_skip else None
@@ -448,7 +458,11 @@ class RayDPTResampler(nn.Module):
         nL = getattr(cfg, "ray_cross_layers", 2)
         nR = getattr(cfg, "resampler_layers", 3)
         N = getattr(cfg, "resampler_latents", 64)
-        self.enc = UNet8Encoder(getattr(cfg, "in_ch", 2), ngf)
+        self.use_global = getattr(cfg, "raydpt_use_global", False)
+        self.enc = UNet8Encoder(getattr(cfg, "in_ch", 2), ngf, depth=8 if self.use_global else 4)
+        if self.use_global:
+            self.global_proj = nn.Linear(ngf * 8, dim)
+            self.global_marker = nn.Parameter(torch.zeros(1, dim))
 
         def bank(h, w):
             pc = copy.copy(cfg); pc.img_h, pc.img_w = h, w
@@ -496,6 +510,10 @@ class RayDPTResampler(nn.Module):
         A3 = self.kv_e3(e3.flatten(2).transpose(1, 2)) + self.scale_emb[1]      # 2048
         A2 = self.kv_e2(self.e2_pool(e2).flatten(2).transpose(1, 2)) + self.scale_emb[2]  # 2048
         A = torch.cat([A4, A3, A2], dim=1)                                       # (B, ~4608, dim)
+        if self.use_global:                                                       # e8 scene-scale tokens
+            e8 = self.enc.e8(self.enc.e7(self.enc.e6(self.enc.e5(e4))))           # (B,ngf*8,1,2)
+            gt = self.global_proj(e8.flatten(2).transpose(1, 2)) + self.global_marker  # (B,2,dim)
+            A = torch.cat([gt, A], dim=1)                                         # prepend to resampler input
         L = self.latents[None].expand(B, -1, -1)                                 # (B, N, dim)
         for cb, sb in zip(self.rs_cross, self.rs_self):
             L = cb(L, A); L = sb(L)                                              # compact scene memory

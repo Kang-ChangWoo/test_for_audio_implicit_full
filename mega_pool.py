@@ -226,6 +226,15 @@ for _nm,_ex in _MC:
 
 
 
+
+# --- G8: dead-encoder cleanup (E116) + e8 global-token attempt. 2ch planar, champion loss, no TTA.
+# Attempt 1 (g8clean): use_global=False -> e5-e8 dropped (24.8->7.9M). Attempt 2 (g8global): use_global
+# =True -> forward e5-e8, feed e8 (1x2 scene bottleneck) as global KV tokens to all cross-attn. ---
+_G8 = ("--in-ch 2 --flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True "
+       "--depth-type planar --w-rel 0.1 --w-normal 0.15 --w-grad 0.05 --w-ema 0.995")
+for _s in (0, 1, 2):
+    JOBS.append(fm(f"finalv3_raydpt_2ch_g8clean_s{_s}",  _s, "raydpt", "4e-4", _G8, 24, IC2P))
+    JOBS.append(fm(f"finalv3_raydpt_2ch_g8global_s{_s}", _s, "raydpt", "4e-4", _G8 + " --raydpt-use-global True", 24, IC2P))
 # --- FINAL v3 multi-res STFT (S19, repo global champion): 2ch magnitude x 3 windows (6ch),
 # champion loss stack, NO TTA (eval-only ~0.002 gain here, excluded per request). ---
 IC6MRES = f"{CK}/ic6_256x512_planar_mres"
@@ -657,7 +666,7 @@ for _nm,_ar,_lr,_ex,_bs,_ca in _Q2:
 # richer-input / research-focus jobs, then everything else (stable within a rank).
 FRONT = [  # FINAL v3 (repo champion recipes on planar, 2ch-focus) — highest
          "finalv3_raydpt_2ch_champ", "finalv3_raydpt_2ch_champ_e51", "finalv3_raydpt_2ch_champ_bhlow", "finalv3_raydpt_5ch_champ",
-         "finalv3_raydpt_mres_champ", "finalv3_raydpt_mres_champ_e51",
+         "finalv3_raydpt_2ch_g8clean", "finalv3_raydpt_2ch_g8global", "finalv3_raydpt_mres_champ", "finalv3_raydpt_mres_champ_e51",
          "finalv2_batvision_5ch", "finalv2_preunet_5ch", "finalv2_previt_5ch", "finalv2_echodiff_5ch",
          # FINAL v2 (requested order)
          "finalv2_batvision", "finalv2_preunet", "finalv2_previt", "finalv2_echodiff",

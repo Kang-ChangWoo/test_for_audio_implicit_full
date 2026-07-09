@@ -30,21 +30,23 @@ from sh import erp_grid, sh_basis_matrix  # noqa: E402
 class UNet8Encoder(nn.Module):
     """Explicit pix2pix-style 8-down encoder (256x512 -> 1x2). Exposes the e4 mid
     feature (16x32, ngf*8 = strong globally-integrated tokens) and the e8 bottleneck."""
-    def __init__(self, in_ch, ngf=64):
+    def __init__(self, in_ch, ngf=64, depth=8):
         super().__init__()
-        self.e1 = Down(in_ch,   ngf,     norm=False)   # 128x256
-        self.e2 = Down(ngf,     ngf * 2)               # 64x128
+        self.depth = depth                             # 8 = full pix2pix (default, unchanged);
+        self.e1 = Down(in_ch,   ngf,     norm=False)   # 128x256   4 = e1-e4 only (RayDPT cleanup:
+        self.e2 = Down(ngf,     ngf * 2)               # 64x128       e5-e8 dead in that model)
         self.e3 = Down(ngf * 2, ngf * 4)               # 32x64
         self.e4 = Down(ngf * 4, ngf * 8)               # 16x32   <- token / coarse stage
-        self.e5 = Down(ngf * 8, ngf * 8)               # 8x16
-        self.e6 = Down(ngf * 8, ngf * 8)               # 4x8
-        self.e7 = Down(ngf * 8, ngf * 8)               # 2x4
-        self.e8 = Down(ngf * 8, ngf * 8, norm=False)   # 1x2     <- global bottleneck
+        if depth >= 8:
+            self.e5 = Down(ngf * 8, ngf * 8)           # 8x16
+            self.e6 = Down(ngf * 8, ngf * 8)           # 4x8
+            self.e7 = Down(ngf * 8, ngf * 8)           # 2x4
+            self.e8 = Down(ngf * 8, ngf * 8, norm=False)  # 1x2  <- global bottleneck
         self.cmid, self.cdeep = ngf * 4, ngf * 8
 
     def forward(self, spec):
         e1 = self.e1(spec); e2 = self.e2(e1); e3 = self.e3(e2); e4 = self.e4(e3)
-        e8 = self.e8(self.e7(self.e6(self.e5(e4))))
+        e8 = self.e8(self.e7(self.e6(self.e5(e4)))) if self.depth >= 8 else None
         return {"e3": e3, "e4": e4, "bottleneck": e8}
 
 
