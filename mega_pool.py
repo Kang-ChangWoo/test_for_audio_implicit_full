@@ -227,6 +227,24 @@ for _nm,_ex in _MC:
 
 
 
+
+# --- FINAL v4: INPUT-INFORMATION axis (Tier 2-4, multi-view excluded per request). The honest
+# metrics (RMSE/d1) only move with more signal, not model tweaks. All planar, champion loss, no TTA. ---
+IC10MRES5 = f"{CK}/ic10_256x512_planar_mres5"
+IC5W15    = f"{CK}/ic5_256x512_planar_w15"
+IC6GCC    = f"{CK}/ic6_256x512_planar_gcc"
+IC13RAZ   = f"{CK}/ic13_256x512_planar_raz"
+_V4 = ("--flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True --depth-type planar "
+       "--w-rel 0.1 --w-normal 0.15 --w-grad 0.05 --w-ema 0.995")
+for _s in (0, 1, 2):
+    # Tier 2 input representations
+    JOBS.append(fm(f"finalv4_mres5_s{_s}",   _s, "raydpt", "4e-4", "--in-ch 10 --audio-src mres5 " + _V4, 20, IC10MRES5))  # S19-exact
+    JOBS.append(fm(f"finalv4_win15_s{_s}",    _s, "raydpt", "4e-4", "--in-ch 5 --audio-window-m 15 " + _V4, 24, IC5W15))    # late reverb
+    JOBS.append(fm(f"finalv4_gcc_s{_s}",      _s, "raydpt", "4e-4", "--in-ch 6 --audio-src gcc " + _V4, 24, IC6GCC))        # ToF/ITD
+    JOBS.append(fm(f"finalv4_raz_s{_s}",      _s, "raydpt", "4e-4", "--in-ch 13 --audio-src raz " + _V4, 20, IC13RAZ))      # dir+range
+# Tier 4 uncertainty (calibrated) — prob head on 2ch planar champion
+for _s in (0, 1, 2):
+    JOBS.append(prob(f"finalv4_prob_2ch_s{_s}", _s, "--prob-k 5 --in-ch 2 --depth-type planar --raydpt-coarse-sa True --w-rel 0.1 --w-normal 0.15 --amp True --flip-aug True", 24, IC2P))
 # --- G8: dead-encoder cleanup (E116) + e8 global-token attempt. 2ch planar, champion loss, no TTA.
 # Attempt 1 (g8clean): use_global=False -> e5-e8 dropped (24.8->7.9M). Attempt 2 (g8global): use_global
 # =True -> forward e5-e8, feed e8 (1x2 scene bottleneck) as global KV tokens to all cross-attn. ---
@@ -666,7 +684,7 @@ for _nm,_ar,_lr,_ex,_bs,_ca in _Q2:
 # richer-input / research-focus jobs, then everything else (stable within a rank).
 FRONT = [  # FINAL v3 (repo champion recipes on planar, 2ch-focus) — highest
          "finalv3_raydpt_2ch_champ", "finalv3_raydpt_2ch_champ_e51", "finalv3_raydpt_2ch_champ_bhlow", "finalv3_raydpt_5ch_champ",
-         "finalv3_raydpt_2ch_g8clean", "finalv3_raydpt_2ch_g8global", "finalv3_raydpt_mres_champ", "finalv3_raydpt_mres_champ_e51",
+         "finalv4_mres5", "finalv4_win15", "finalv4_gcc", "finalv4_raz", "finalv4_prob", "finalv3_raydpt_2ch_g8clean", "finalv3_raydpt_2ch_g8global", "finalv3_raydpt_mres_champ", "finalv3_raydpt_mres_champ_e51",
          "finalv2_batvision_5ch", "finalv2_preunet_5ch", "finalv2_previt_5ch", "finalv2_echodiff_5ch",
          # FINAL v2 (requested order)
          "finalv2_batvision", "finalv2_preunet", "finalv2_previt", "finalv2_echodiff",

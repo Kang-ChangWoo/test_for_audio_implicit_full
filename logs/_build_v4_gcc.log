@@ -1,0 +1,6 @@
+gcc/train building...
+[train] 28800 samples / 72 scenes (raw 256x512, in_ch=6)
+  cache[train ic6] 3200/28800
+  cache[train ic6] 6400/28800
+  cache[train ic6] 9600/28800
+  cache[train ic6] 12800/28800

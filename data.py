@@ -103,13 +103,14 @@ class RawDataset(Dataset):
             chans.append(F.interpolate(sp.unsqueeze(0), (self.H, self.W), mode="nearest").squeeze(0))
         return torch.cat(chans, 0).float()                     # (2*K, H, W)
 
-    def _specN(self, wav, n):
+    def _specN(self, wav, n, nfft=_NFFT, win=_WIN):
         """RIR spatial feature, first n of [logL,logR,ILD,cosIPD,sinIPD] (keeps phase/ITD).
-        n=3 -> [logL,logR,ILD]; n=5 -> full ILD+IPD."""
+        n=3 -> [logL,logR,ILD]; n=5 -> full ILD+IPD. nfft/win selectable for multi-res."""
         x = wav
         if x.shape[1] < self.cut:
             x = F.pad(x, (0, self.cut - x.shape[1]))
-        st = torch.stft(x, _NFFT, _HOP, _WIN, self._win, return_complex=True)   # (2,F,T')
+        w = self._win if win == _WIN else torch.hann_window(win)
+        st = torch.stft(x, nfft, _HOP, win, w, return_complex=True)              # (2,F,T')
         L, R = st[0], st[1]
         eps = 1e-6
         lmag = torch.log1p(L.abs()); rmag = torch.log1p(R.abs())
@@ -117,6 +118,14 @@ class RawDataset(Dataset):
         ipd = torch.angle(L * torch.conj(R))
         feat = torch.stack([lmag, rmag, ild, torch.cos(ipd), torch.sin(ipd)], 0)[:n]  # (n,F,T')
         return F.interpolate(feat.unsqueeze(0), (self.H, self.W), mode="nearest").squeeze(0).float()
+
+    def _spec_mres5(self, wav):
+        """S19-EXACT multi-res STFT: 5ch RIR feature at n_fft=512 (fine FREQUENCY, room modes)
+        + 5ch at n_fft=128, win=128 (fine TIME, echo-delay=distance) = 10ch. The short-window
+        fine-time features add real depth signal (repo global champion, RMSE -7.3%)."""
+        f512 = self._specN(wav, 5, nfft=512, win=_WIN)     # (5,H,W) fine-freq
+        f128 = self._specN(wav, 5, nfft=128, win=128)      # (5,H,W) fine-time
+        return torch.cat([f512, f128], 0)                  # (10,H,W)
 
     def _spec_raz(self, wav, R=8):
         """Range-Azimuth steered-response acoustic image (ToF + binaural direction physics).
@@ -209,7 +218,9 @@ class RawDataset(Dataset):
                 wave = self._wave_fixed(wav)                                 # (2,cut) raw
             else:
                 wav = self._wave(s, idx)
-                if self.src == "mres":
+                if self.src == "mres5":
+                    spec = self._spec_mres5(wav)
+                elif self.src == "mres":
                     spec = self._spec_mres(wav)
                 else:
                     spec = self._spec2(wav) if self.in_ch == 2 else self._specN(wav, self.in_ch)
@@ -268,7 +279,9 @@ def _cache_dir(cfg):
     elif src == "wave":
         tag += "_wave"         # 5ch RIR spec + raw binaural waveform (extra array)
     elif src == "mres":
-        tag += "_mres"         # S19 multi-resolution STFT (2ch x K windows)
+        tag += "_mres"         # multi-resolution STFT (2ch x K windows)
+    elif src == "mres5":
+        tag += "_mres5"        # S19-exact: 5ch@512 + 5ch@128 (10ch)
     return os.path.join(base, f"ic{getattr(cfg,'in_ch',2)}_{cfg.img_h}x{cfg.img_w}{tag}")
 
 
