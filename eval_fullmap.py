@@ -104,6 +104,12 @@ def evrun(model, loader, cfg, extra, device, mode="stereo", shuffle=False, swap=
             wave = wave[:, [1, 0]]
         D = (model(spec, wave) if wave_arch else
              model(spec, extra.get("coarse_feat"), extra.get("sh_basis")))["D"] * cfg.max_depth
+        if getattr(cfg, "eval_tta_flip", False):          # E127/E128 TTA: avg with L/R-mirrored input
+            spec_f = swap_audio_lr(spec)
+            wave_f = wave[:, [1, 0]] if wave is not None else None
+            Df = (model(spec_f, wave_f) if wave_arch else
+                  model(spec_f, extra.get("coarse_feat"), extra.get("sh_basis")))["D"] * cfg.max_depth
+            D = 0.5 * (D + torch.flip(Df, dims=[-1]))      # mirror prediction back, average
         mb.add(D, b["depth"].to(device) * cfg.max_depth, b["mask"].to(device))
         seen += spec.size(0)
         if max_n and seen >= max_n:

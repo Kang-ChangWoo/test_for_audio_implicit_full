@@ -1,0 +1,33 @@
+=== [raydpt_2ch_ray] 3/3 완주 07-09 03:36 ===
+=== RayDPT raydpt_2ch_ray : PLANAR(n=3) vs RADIAL(P_b3 champion) ===
+metric              planar  radial(P_b3)  planar÷.86   판정(scale-inv)
+MAE_plain    0.6644±0.003        0.7431       0.773   스케일영향
+RMSE         1.2404±0.006        1.4161       1.442   스케일영향
+AbsRel       0.4891±0.015        0.5087           —   planar✅ (진짜)
+delta1       0.4469±0.002        0.4560           —   radial✅ (진짜)
+
+=== [raydpt_5ch_ray] 3/3 완주 07-09 03:36 ===
+=== RayDPT raydpt_5ch_ray : PLANAR(n=3) vs RADIAL(P_b3 champion) ===
+metric              planar  radial(P_b3)  planar÷.86   판정(scale-inv)
+MAE_plain    0.6573±0.007        0.7431       0.764   스케일영향
+RMSE         1.2287±0.004        1.4161       1.429   스케일영향
+AbsRel       0.4919±0.009        0.5087           —   planar✅ (진짜)
+delta1       0.4494±0.011        0.4560           —   radial✅ (진짜)
+
+=== [raydpt_2ch_noray] 3/3 완주 07-09 03:36 ===
+=== RayDPT raydpt_2ch_noray : PLANAR(n=3) vs RADIAL(P_b3 champion) ===
+metric              planar  radial(P_b3)  planar÷.86   판정(scale-inv)
+MAE_plain    0.6705±0.002        0.7431       0.780   스케일영향
+RMSE         1.2464±0.004        1.4161       1.449   스케일영향
+AbsRel       0.5038±0.008        0.5087           —   planar✅ (진짜)
+delta1       0.4394±0.006        0.4560           —   radial✅ (진짜)
+
+=== [raydpt_5ch_noray] 3/3 완주 07-09 03:36 ===
+=== RayDPT raydpt_5ch_noray : PLANAR(n=3) vs RADIAL(P_b3 champion) ===
+metric              planar  radial(P_b3)  planar÷.86   판정(scale-inv)
+MAE_plain    0.6564±0.001        0.7431       0.763   스케일영향
+RMSE         1.2248±0.002        1.4161       1.424   스케일영향
+AbsRel       0.5057±0.004        0.5087           —   planar✅ (진짜)
+delta1       0.4530±0.002        0.4560           —   radial✅ (진짜)
+
+[watcher] RayDPT 4 config 전부 리포트 완료

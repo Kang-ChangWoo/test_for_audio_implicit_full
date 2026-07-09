@@ -691,3 +691,49 @@
 [mega] finished finalv2_batvision_2ch_s1 gpu1
 [mega] launch finalv2_echodiff_2ch_s0 gpu0 (21 left)
 [mega] launch finalv2_echodiff_2ch_s1 gpu1 (21 left)
+[mega] finished finalv2_preunet_2ch_s0 gpu3
+[mega] finished finalv2_preunet_2ch_s2 gpu5
+[mega] launch finalv2_echodiff_2ch_s2 gpu3 (19 left)
+[mega] launch finalv2_raydpt_2ch_ray_s0 gpu5 (19 left)
+[mega] finished finalv2_preunet_2ch_s1 gpu4
+[mega] launch finalv2_raydpt_2ch_ray_s1 gpu4 (18 left)
+[mega] finished finalv2_echodiff_2ch_s0 gpu0
+[mega] launch finalv2_raydpt_2ch_ray_s2 gpu0 (17 left)
+[mega] finished finalv2_echodiff_2ch_s1 gpu1
+[mega] launch finalv2_raydpt_5ch_ray_s0 gpu1 (16 left)
+[mega] finished finalv2_previt_2ch_s0 gpu6
+[mega] launch finalv2_raydpt_5ch_ray_s1 gpu6 (15 left)
+[mega] finished finalv2_previt_2ch_s1 gpu7
+[mega] launch finalv2_raydpt_5ch_ray_s2 gpu7 (14 left)
+[mega] finished finalv2_echodiff_2ch_s2 gpu3
+[mega] launch finalv2_raydpt_2ch_noray_s0 gpu3 (13 left)
+[mega] finished finalv2_previt_2ch_s2 gpu2
+[mega] launch finalv2_raydpt_2ch_noray_s1 gpu2 (12 left)
+[mega] finished finalv2_raydpt_2ch_ray_s0 gpu5
+[mega] launch finalv2_raydpt_2ch_noray_s2 gpu5 (11 left)
+[mega] finished finalv2_raydpt_2ch_ray_s1 gpu4
+[mega] launch finalv2_raydpt_5ch_noray_s0 gpu4 (10 left)
+[mega] finished finalv2_raydpt_2ch_ray_s2 gpu0
+[mega] launch finalv2_raydpt_5ch_noray_s1 gpu0 (9 left)
+[mega] finished finalv2_raydpt_5ch_ray_s0 gpu1
+[mega] launch finalv2_raydpt_5ch_noray_s2 gpu1 (8 left)
+[mega] finished finalv2_raydpt_5ch_ray_s1 gpu6
+[mega] finished finalv2_raydpt_5ch_ray_s2 gpu7
+[mega] finished finalv2_raydpt_2ch_noray_s0 gpu3
+[mega] finished finalv2_raydpt_2ch_noray_s1 gpu2
+[mega] finished finalv2_raydpt_2ch_noray_s2 gpu5
+[mega] finished finalv2_raydpt_5ch_noray_s0 gpu4
+[mega] finished finalv2_raydpt_5ch_noray_s1 gpu0
+[mega] finished finalv2_raydpt_5ch_noray_s2 gpu1
+[mega] ALL DONE
+[readme] updated BEST block: 282 groups, best=finalv2_raydpt_5ch_noray (0.6564)
+[mega] aggregated
+[mega] 373 jobs total
+[mega] launch finalv3_raydpt_2ch_champ_s0 gpu0 (40 left)
+[mega] launch finalv3_raydpt_2ch_champ_e51_s0 gpu1 (40 left)
+[mega] launch finalv3_raydpt_2ch_champ_bhlow_s0 gpu2 (40 left)
+[mega] launch finalv3_raydpt_2ch_champ_s1 gpu3 (40 left)
+[mega] launch finalv3_raydpt_2ch_champ_e51_s1 gpu4 (40 left)
+[mega] launch finalv3_raydpt_2ch_champ_bhlow_s1 gpu5 (40 left)
+[mega] launch finalv3_raydpt_2ch_champ_s2 gpu6 (40 left)
+[mega] launch finalv3_raydpt_2ch_champ_e51_s2 gpu7 (40 left)

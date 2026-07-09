@@ -1,0 +1,9 @@
+[2ch] preunet+previt 6/6 완주 17:43
+=== planar(finalv2) vs radial — scale-invariant(AbsRel/δ1)이 진짜 비교 ===
+model                 MAE_plain(pl/ra)       AbsRel(pl/ra)         δ1(pl/ra)
+BatVision                  0.658/0.760         0.542/0.537       0.449/0.446  AbsRel:radial
+                  scale환산 MAE 0.766 vs radial 0.760  (n_pl=3)
+pretrained UNet            0.694/0.796         0.616/0.600       0.430/0.425  AbsRel:radial
+                  scale환산 MAE 0.806 vs radial 0.796  (n_pl=3)
+pretrained ViT             0.660/0.762         0.562/0.564       0.444/0.442  AbsRel:planar✅
+                  scale환산 MAE 0.768 vs radial 0.762  (n_pl=3)

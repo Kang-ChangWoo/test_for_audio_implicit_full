@@ -1,0 +1,6 @@
+[batch1] 6/9 완주
+=== finalv2 첫 배치 결과 (planar depth, 수정된 metric, 3-seed) ===
+model              MAE_plain    RMSE  AbsRel     d1  seeds
+BatVision             0.6584  1.2228  0.5424  0.449  n=3
+pretrained UNet       0.6935  1.2592  0.6164  0.430  n=3
+pretrained ViT      (미완)

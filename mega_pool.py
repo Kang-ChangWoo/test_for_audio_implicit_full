@@ -223,6 +223,17 @@ for _nm,_ex in _MC:
     JOBS.append(fm(f"{_nm}_s0", 0, "raydpt", "4e-4", _M+" "+_ex, 24, IC5))
 
 
+
+# --- FINAL v3: repo champion recipes (auto_audio_depth_estimation) applied to PLANAR, 2ch-focused.
+# Champion stack = w_rel0.1 (E2) + EMA0.995 (E16) + coarse-geo-self-attn + grad-loss (E34/P_b3),
+# + E127/E128 TTA (eval-time L/R-flip). Variants: E51 (2-block coarse-sa), E117 (berHu-low RMSE lever). ---
+_V3 = ("--flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True --depth-type planar "
+       "--w-rel 0.1 --w-normal 0.15 --w-grad 0.05 --w-ema 0.995 --eval-tta-flip True")
+for _s in (0, 1, 2):
+    JOBS.append(fm(f"finalv3_raydpt_2ch_champ_s{_s}",      _s, "raydpt", "4e-4", "--in-ch 2 " + _V3, 24, IC2P))
+    JOBS.append(fm(f"finalv3_raydpt_2ch_champ_e51_s{_s}",  _s, "raydpt", "4e-4", "--in-ch 2 " + _V3 + " --coarse-sa-blocks 2", 24, IC2P))
+    JOBS.append(fm(f"finalv3_raydpt_2ch_champ_bhlow_s{_s}",_s, "raydpt", "4e-4", "--in-ch 2 " + _V3 + " --berhu-low True", 24, IC2P))
+    JOBS.append(fm(f"finalv3_raydpt_5ch_champ_s{_s}",      _s, "raydpt", "4e-4", "--in-ch 5 " + _V3, 24, IC5P))
 # --- FINAL v2 (protocol-corrected: masked coarse/low-pass/normal losses, batch-invariant metrics,
 # documented no-ray = learned-positional). 8 model families x 3 seeds, requested order. HIGHEST. ---
 _RB = "--flip-aug True --ray-cross-layers 2 --amp True --raydpt-coarse-sa True --w-rel 0.05"
@@ -626,7 +637,9 @@ for _nm,_ar,_lr,_ex,_bs,_ca in _Q2:
 
 # explicit front-of-queue ordering: just-added RayDPT runs FIRST, then the other
 # richer-input / research-focus jobs, then everything else (stable within a rank).
-FRONT = [  # FINAL v2 (highest priority, requested order)
+FRONT = [  # FINAL v3 (repo champion recipes on planar, 2ch-focus) — highest
+         "finalv3_raydpt_2ch_champ", "finalv3_raydpt_2ch_champ_e51", "finalv3_raydpt_2ch_champ_bhlow", "finalv3_raydpt_5ch_champ",
+         # FINAL v2 (requested order)
          "finalv2_batvision", "finalv2_preunet", "finalv2_previt", "finalv2_echodiff",
          "finalv2_raydpt_2ch_ray", "finalv2_raydpt_5ch_ray", "finalv2_raydpt_2ch_noray", "finalv2_raydpt_5ch_noray",
          # -2) AAAI final runs + published baselines (highest)

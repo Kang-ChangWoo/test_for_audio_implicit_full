@@ -1,0 +1,3 @@
+=== RayViT (ViT 인코더 + ray cross-attn) 결과 ===
+  완주 0/8
+[기준] RayDPT(U-Net8 enc) champion: MAE 0.884 RMSE 1.416 AbsRel 0.509 | U-Net8 0.893 | pretrained ViT(full) 0.903
